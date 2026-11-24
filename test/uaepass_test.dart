@@ -1,5 +1,26 @@
-import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:uaepass/src/model/uaepass_buttons.dart';
+import 'package:uaepass/uaepass.dart';
 
-class MockUaepassPlatform with MockPlatformInterfaceMixin {}
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
 
-void main() {}
+  test('bundles the artwork for every sign-in button variant', () async {
+    final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+    final assets = manifest.listAssets();
+
+    for (final language in UaepassLang.values) {
+      for (final type in UaepassButtonType.values) {
+        for (final theme in UaePassButtonTheme.values) {
+          final image = UaepassButtons.signInButton(
+            lang: language,
+            type: type,
+            theme: theme,
+          );
+          expect(assets, contains(image));
+        }
+      }
+    }
+  });
+}

@@ -1,7 +1,8 @@
 // ignore_for_file: prefer_constructors_over_static_methods
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
+import 'src/configuration.dart';
 import 'src/enums.dart';
 import 'src/helper.dart';
 import 'src/model/uaepass_token.dart';
@@ -20,6 +21,7 @@ class Uaepass {
     required this.appScheme,
     required this.clientId,
     required this.clientSecret,
+    required this.redirectUri,
   });
 
   static Uaepass init({
@@ -27,17 +29,18 @@ class Uaepass {
     required String appScheme,
     required String clientId,
     required String clientSecret,
+    String redirectUri = Configuration.redirectURL,
     bool fullscreen = true,
     bool showMessages = true,
-  }) =>
-      _instance = Uaepass._(
-        env: env,
-        fullscreen: fullscreen,
-        showMessages: showMessages,
-        appScheme: appScheme,
-        clientId: clientId,
-        clientSecret: clientSecret,
-      );
+  }) => _instance = Uaepass._(
+    env: env,
+    fullscreen: fullscreen,
+    showMessages: showMessages,
+    appScheme: appScheme,
+    clientId: clientId,
+    clientSecret: clientSecret,
+    redirectUri: Uri.parse(redirectUri),
+  );
 
   static Uaepass get instance {
     if (_instance == null) {
@@ -51,6 +54,7 @@ class Uaepass {
   final String appScheme;
   final String clientId;
   final String clientSecret;
+  final Uri redirectUri;
   final bool showMessages;
   final bool fullscreen;
   String? _code;
@@ -68,25 +72,39 @@ class Uaepass {
 
   /// Check if user is logged in
   bool isLoggedIn() {
-    return _code != null;
+    return _token != null && _user != null;
   }
 
   /// Initiate UAEPass login
   Future<void> login(BuildContext context) async {
-    final code = await Navigator.push(
+    final code = await Navigator.push<String>(
       context,
-      MaterialPageRoute(
+      MaterialPageRoute<String>(
         builder: (context) => const UaepassLoginView(),
         fullscreenDialog: fullscreen,
       ),
     );
 
     if (code == null) return;
-    _code = code;
-
-    if (code == null) return;
-    _token = await Helper.getTokenAsync(code!);
-    if (_token == null) return;
-    _user = await Helper.getUser(_token!.accessToken!);
+    try {
+      final token = await Helper.getTokenAsync(code);
+      final accessToken = token?.accessToken;
+      if (accessToken == null || accessToken.isEmpty) {
+        throw const FormatException('Missing UAE PASS access token');
+      }
+      final user = await Helper.getUser(accessToken);
+      if (user == null) {
+        throw const FormatException('Missing UAE PASS profile');
+      }
+      _code = code;
+      _token = token;
+      _user = user;
+    } on Exception {
+      if (showMessages && context.mounted) {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          const SnackBar(content: Text('Could not complete UAE PASS sign-in.')),
+        );
+      }
+    }
   }
 }

@@ -7,7 +7,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity: FlutterActivity() {
-    private val channel = "poc.uaepass/channel1"
+    private val channel = "poc.uaepass/channel"
     private var methodChannel: MethodChannel? = null
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
@@ -17,6 +17,9 @@ class MainActivity: FlutterActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        methodChannel?.invokeMethod("didRecieveTranscript", "")
+        val callback = intent.data ?: return
+        if (callback.scheme == "poc") {
+            methodChannel?.invokeMethod("didRecieveTranscript", callback.toString())
+        }
     }
 }

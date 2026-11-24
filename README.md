@@ -6,11 +6,14 @@
 
 ## Installation
 
+Requires Flutter 3.50.1 with Dart 3.14 or later, Android API 24 or later, and iOS 15 or later. The example uses CocoaPods on iOS and was verified with JDK 25 on Android.
+
 In your `pubspec.yaml` file within your Flutter Project:
 
 ```yaml
 dependencies:
   uaepass: <latest_version>
+  material_ui: ^1.11.1
 ```
 
 ### iOS
@@ -31,38 +34,12 @@ Add the below to `info.plist`
 </array>
 <key>LSApplicationQueriesSchemes</key>
 <array>
-    <string>uaepass</string> // for Production
-    <string>uaepassstg</string> // for Staging
+    <string>uaepass</string>
+    <string>uaepassstg</string>
 </array>
 ```
 
-Update `AppDelegate.swift` as per below
-
-```swift
-import UIKit
-import Flutter
-
-@UIApplicationMain
-@objc class AppDelegate: FlutterAppDelegate {
-   private var methodChannel: FlutterMethodChannel?
-
-  override func application(
-    _ application: UIApplication,
-    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
-  ) -> Bool {
-    let controller = window.rootViewController as! FlutterViewController
-    methodChannel = FlutterMethodChannel(name: "{custom App Scheme}.uaepass/channel", binaryMessenger: controller.binaryMessenger)
-
-    GeneratedPluginRegistrant.register(with: self)
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-  }
-
-   override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-      methodChannel?.invokeMethod("didRecieveTranscript", arguments: url.absoluteString)
-      return true
-    }
-}
-```
+Register the callback channel when Flutter initializes its engine and handle the URL in the scene delegate. Replace `poc` with the same scheme passed to `Uaepass.init`. [Example AppDelegate and SceneDelegate](example/ios/Runner/AppDelegate.swift) · [Example scene configuration](example/ios/Runner/Info.plist)
 
 ### Android
 
@@ -73,9 +50,9 @@ Add the below to `AndroidManifest.xml`
     <action android:name="android.intent.action.VIEW" />
     <category android:name="android.intent.category.DEFAULT" />
     <category android:name="android.intent.category.BROWSABLE" />
-    <data
-        android:scheme="{custom App Scheme}"
-        android:host="uaepass" />
+    <data android:scheme="{custom App Scheme}" />
+    <data android:host="success" />
+    <data android:host="failure" />
 </intent-filter>
 ```
 
@@ -93,30 +70,9 @@ Add the below to `AndroidManifest.xml`
 </manifest>
 ```
 
-Update `MainActivity.kt` as per below
+Use `singleTask` for the example's `MainActivity` so the callback resumes the WebView that started sign-in. Forward the callback using the same scheme passed to `Uaepass.init`. [Example MainActivity](example/android/app/src/main/kotlin/com/example/uaepass_example/MainActivity.kt) · [Example manifest](example/android/app/src/main/AndroidManifest.xml)
 
-```kotlin
-import io.flutter.embedding.android.FlutterActivity
-import android.content.Intent
-import androidx.annotation.NonNull
-import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.plugin.common.MethodChannel
-
-class MainActivity: FlutterActivity() {
-    private val channel = "poc.uaepass/channel1"
-    private var methodChannel: MethodChannel? = null
-
-    override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
-        super.configureFlutterEngine(flutterEngine)
-        methodChannel = MethodChannel(flutterEngine.dartExecutor, channel)
-    }
-
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        methodChannel?.invokeMethod("didRecieveTranscript", "")
-    }
-}
-```
+Set `redirectUri` to the callback registered for your UAE PASS client. The staging example uses the public sandbox client and a loopback callback that the app intercepts. When the staging app is unavailable on the test device, sign in through the embedded web form and confirm the request on a device with your UAE PASS staging account. [UAE PASS staging authentication guide](https://docs.uaepass.ae/quick-start-guide-uae-pass-staging-environment/conduct-a-poc-with-uae-pass-authentication)
 
 ## Use it
 
@@ -131,7 +87,7 @@ UaepassLoginButton();
 <?code-excerpt "basic.dart (basic-example)"?>
 
 ```dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:uaepass/uaepass.dart';
 
 void main() {
@@ -140,6 +96,7 @@ void main() {
     appScheme: '{custom App Scheme}',
     clientId: 'sandbox_stage',
     clientSecret: 'sandbox_stage',
+    redirectUri: 'https://localhost:8000',
   );
   runApp(
     const MaterialApp(

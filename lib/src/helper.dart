@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:url_launcher/url_launcher_string.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../uaepass.dart';
 import 'configuration.dart';
@@ -9,91 +9,130 @@ import 'model/uaepass_token.dart';
 import 'model/uaepass_user.dart';
 
 class UaePassAuthUrl {
-  late String appUrl;
-  late String successUrl;
+  const UaePassAuthUrl({
+    required this.appUrl,
+    required this.successUrl,
+    required this.failureUrl,
+  });
+
+  final Uri appUrl;
+  final Uri successUrl;
+  final Uri failureUrl;
 }
 
 mixin Helper {
-  static Future<String> getLoginUrl() async {
-    final baseUrl = Configuration.authroizeUrl;
-    const redirectUrl = Configuration.redirectURL;
-    const scope = Configuration.scope;
-    const state = 'ShNP22hyl1jUU2RGjTRkpg==';
-    const responseType = Configuration.responseType;
+  static const _requestTimeout = Duration(seconds: 20);
 
-    var appInstalled = true;
-    var acrValues = '';
-
-    if (await canLaunchUrlString(
-      '${Configuration.uaePassScheme}digitalid-users-ids',
-    )) {
-      appInstalled = true;
-    }
-
-    if (Configuration.app2App && appInstalled) {
-      acrValues = Configuration.acrValuesMobile;
-    } else {
-      acrValues = Configuration.acrValuesWeb;
-    }
-
-    return '$baseUrl?'
-        'redirect_uri=$redirectUrl'
-        '&client_id=${Uaepass.instance.clientId}'
-        '&state=$state'
-        '&response_type=$responseType'
-        '&scope=$scope'
-        '&acr_values=$acrValues';
+  static Future<Uri> getLoginUrl(String state) async {
+    final installed = await canLaunchUrl(
+      Uri(scheme: Configuration.uaePassScheme, host: 'digitalid-users-ids'),
+    );
+    return authorizationUrl(state: state, appInstalled: installed);
   }
 
-  static UaePassAuthUrl getUaePassOpenUrl(Uri url) {
-    final newUrl = '${Configuration.uaePassScheme}${url.host}${url.path}';
-    final uaePassAuthUrl = UaePassAuthUrl();
+  static Uri authorizationUrl({
+    required String state,
+    required bool appInstalled,
+  }) {
+    final uaepass = Uaepass.instance;
+    return Uri.parse(Configuration.authorizeUrl).replace(
+      queryParameters: {
+        'redirect_uri': uaepass.redirectUri.toString(),
+        'client_id': uaepass.clientId,
+        'state': state,
+        'response_type': Configuration.responseType,
+        'scope': Configuration.scope,
+        'acr_values': appInstalled
+            ? Configuration.acrValuesMobile
+            : Configuration.acrValuesWeb,
+      },
+    );
+  }
 
-    uaePassAuthUrl.appUrl = '$newUrl?'
-        'successurl=${Configuration.successScheme}'
-        '&failureurl=${Configuration.failScheme}'
-        '&closeondone=true';
-    uaePassAuthUrl.successUrl = url.queryParameters['successurl'].toString();
+  static bool isAuthorizationRedirect(Uri url) {
+    final redirect = Uaepass.instance.redirectUri;
+    return url.scheme == redirect.scheme &&
+        url.host == redirect.host &&
+        url.port == redirect.port &&
+        (url.path.isEmpty ? '/' : url.path) ==
+            (redirect.path.isEmpty ? '/' : redirect.path);
+  }
 
-    return uaePassAuthUrl;
+  static bool isUaePassHandoff(Uri url) {
+    // The staging authorization page can emit the shared UAE PASS scheme.
+    return url.scheme == 'uaepass' || url.scheme == Configuration.uaePassScheme;
+  }
+
+  static UaePassAuthUrl? getUaePassOpenUrl(Uri url, String state) {
+    final parameters = {
+      for (final entry in url.queryParametersAll.entries)
+        entry.key: entry.value,
+    };
+    final callbacks = <String, Uri>{};
+    for (final name in parameters.keys.toList()) {
+      final key = name.toLowerCase();
+      if (key != 'successurl' && key != 'failureurl') continue;
+
+      final values = parameters[name]!;
+      if (values.length != 1 || callbacks.containsKey(key)) return null;
+      final original = Uri.tryParse(values.single);
+      if (original == null ||
+          original.scheme != 'https' ||
+          original.host.isEmpty) {
+        return null;
+      }
+      callbacks[key] = original;
+      parameters[name] = [
+        Uri(
+          scheme: Uaepass.instance.appScheme,
+          host: key == 'successurl' ? 'success' : 'failure',
+          queryParameters: {'state': state},
+        ).toString(),
+      ];
+    }
+
+    final successUrl = callbacks['successurl'];
+    final failureUrl = callbacks['failureurl'];
+    if (successUrl == null || failureUrl == null) return null;
+    return UaePassAuthUrl(
+      appUrl: url.replace(
+        scheme: Configuration.uaePassScheme,
+        queryParameters: parameters,
+      ),
+      successUrl: successUrl,
+      failureUrl: failureUrl,
+    );
   }
 
   static Future<UaepassToken?> getTokenAsync(String code) async {
-    final response = await http.post(
-      Uri.parse(Configuration.tokenUrl),
-      headers: <String, String>{
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: {
-        'redirect_uri': Configuration.redirectURL,
-        'client_id': Uaepass.instance.clientId,
-        'client_secret': Uaepass.instance.clientSecret,
+    final uaepass = Uaepass.instance;
+    final credentials = base64Encode(
+      utf8.encode('${uaepass.clientId}:${uaepass.clientSecret}'),
+    );
+    final uri = Uri.parse(Configuration.tokenUrl).replace(
+      queryParameters: {
         'grant_type': Configuration.grantType,
-        'code': code
+        'redirect_uri': uaepass.redirectUri.toString(),
+        'code': code,
       },
     );
+    final response = await http
+        .post(uri, headers: {'Authorization': 'Basic $credentials'})
+        .timeout(_requestTimeout);
 
-    if (response.statusCode == 200) {
-      return UaepassToken.fromJson(jsonDecode(response.body));
-    } else {
-      return null;
-    }
+    if (response.statusCode != 200) return null;
+    return UaepassToken.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
   }
 
   static Future<UaepassUser?> getUser(String accessToken) async {
-    final headers = {'Authorization': 'Bearer $accessToken'};
+    final response = await http
+        .get(
+          Uri.parse(Configuration.profileUrl),
+          headers: {'Authorization': 'Bearer $accessToken'},
+        )
+        .timeout(_requestTimeout);
 
-    final response = await http.get(
-      Uri.parse(
-        'https://stg-id.uaepass.ae/idshub/userinfo',
-      ),
-      headers: headers,
-    );
-
-    if (response.statusCode == 200) {
-      return UaepassUser.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
-    } else {
-      return null;
-    }
+    if (response.statusCode != 200) return null;
+    return UaepassUser.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
   }
 }

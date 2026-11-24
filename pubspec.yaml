@@ -5,21 +5,21 @@ repository: https://github.com/Alkhajeh/Flutter-UAEPass
 issue_tracker: https://github.com/Alkhajeh/Flutter-UAEPass/issues
 
 environment:
-  sdk: ">=2.17.0 <3.0.0"
-  flutter: ">=2.5.0"
+  sdk: ^3.14.0
+  flutter: ">=3.50.1"
 
 dependencies:
   flutter:
     sdk: flutter
-  flutter_inappwebview: ^5.7.2+3
-  http: ^0.13.5
-  plugin_platform_interface: ^2.0.2
-  url_launcher: ^6.1.8
+  flutter_inappwebview: ^6.1.5
+  http: ^1.6.0
+  material_ui: ^1.11.1
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   plugin:
@@ -31,4 +31,5 @@ flutter:
         pluginClass: UaepassPlugin
 
   assets:
-    - images/
+    - images/login/
+    - images/sign_in/

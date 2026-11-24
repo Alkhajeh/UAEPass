@@ -1,23 +1,33 @@
-import UIKit
 import Flutter
+import UIKit
 
-@UIApplicationMain
-@objc class AppDelegate: FlutterAppDelegate {
-   private var methodChannel: FlutterMethodChannel?
+@main
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+  private var methodChannel: FlutterMethodChannel?
 
-  override func application(
-    _ application: UIApplication,
-    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
-  ) -> Bool {
-    let controller = window.rootViewController as! FlutterViewController
-    methodChannel = FlutterMethodChannel(name: "poc.uaepass/channel", binaryMessenger: controller.binaryMessenger)
-
-    GeneratedPluginRegistrant.register(with: self)
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
+    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    methodChannel = FlutterMethodChannel(
+      name: "poc.uaepass/channel",
+      binaryMessenger: engineBridge.applicationRegistrar.messenger()
+    )
   }
 
-   override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-      methodChannel?.invokeMethod("didRecieveTranscript", arguments: url.absoluteString)
-      return true
+  fileprivate func handleUaePassCallback(_ url: URL) {
+    methodChannel?.invokeMethod("didRecieveTranscript", arguments: url.absoluteString)
+  }
+}
+
+class SceneDelegate: FlutterSceneDelegate {
+  override func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+    let appDelegate = UIApplication.shared.delegate as? AppDelegate
+    var otherContexts = URLContexts
+    for context in URLContexts where context.url.scheme == "poc" {
+      appDelegate?.handleUaePassCallback(context.url)
+      otherContexts.remove(context)
     }
+    if !otherContexts.isEmpty {
+      super.scene(scene, openURLContexts: otherContexts)
+    }
+  }
 }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:uaepass/uaepass.dart';
 
@@ -8,6 +8,7 @@ void main() {
     appScheme: 'poc',
     clientId: 'sandbox_stage',
     clientSecret: 'sandbox_stage',
+    redirectUri: 'https://localhost:8000',
   );
   runApp(const MyApp());
 }
@@ -141,9 +142,7 @@ class _MyAppState extends State<MyApp> {
                 type: UaepassButtonType.sharp,
                 theme: UaePassButtonTheme.dark,
               ),
-              const SizedBox(
-                height: 50,
-              )
+              const SizedBox(height: 50),
             ],
           ),
         ),

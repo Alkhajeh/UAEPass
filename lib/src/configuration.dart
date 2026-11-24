@@ -3,24 +3,19 @@
 import '../uaepass.dart';
 
 class Configuration {
-  static const bool app2App = true;
-
   static String get baseUrl => Uaepass.instance.env == UaePassEnv.stg
       ? 'https://stg-id.uaepass.ae'
       : 'https://id.uaepass.ae';
 
-  static String authroizeUrl = '$baseUrl/idshub/authorize';
-  static String tokenUrl = '$baseUrl/idshub/token';
-  static String profileUrl = '$baseUrl/idshub/userinfo';
+  static String get authorizeUrl => '$baseUrl/idshub/authorize';
+  static String get tokenUrl => '$baseUrl/idshub/token';
+  static String get profileUrl => '$baseUrl/idshub/userinfo';
   static String tokenTXUrl = '$baseUrl/trustedx-authserver/oauth/main-as/token';
   static String createDocumentUrl =
       '$baseUrl/trustedx-resources/esignsp/v2/signer_processes';
 
   static String get uaePassScheme =>
-      Uaepass.instance.env == UaePassEnv.stg ? 'uaepassstg://' : 'uaepass://';
-
-  static String successScheme = '${Uaepass.instance.appScheme}://success';
-  static String failScheme = '${Uaepass.instance.appScheme}://failure';
+      Uaepass.instance.env == UaePassEnv.stg ? 'uaepassstg' : 'uaepass';
 
   static const String redirectURL =
       'https://dev-ds.smartdubai.ae/auth/auth-return';
