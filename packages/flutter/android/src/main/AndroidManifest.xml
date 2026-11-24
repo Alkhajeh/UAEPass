@@ -1,1 +1,16 @@
-<manifest />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <queries>
+        <package android:name="ae.uaepass.mainapp" />
+        <package android:name="ae.uaepass.mainapp.stg" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="uaepass" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="uaepassstg" />
+        </intent>
+    </queries>
+</manifest>

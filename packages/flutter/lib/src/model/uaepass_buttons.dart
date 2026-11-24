@@ -1,28 +1,9 @@
-// ignore_for_file: avoid_classes_with_only_static_members
+import '../enums.dart';
 
-import '../../uaepass.dart';
-
-extension ParseToString on Enum {
-  String toShortString() {
-    return toString().split('.').last;
-  }
-}
-
-class UaepassButtons {
-  static const String imagesPath = 'images/';
-  static String getLanguage(UaepassLang lang) =>
-      lang == UaepassLang.en ? 'EN' : 'AR';
-
-  static String loginButton({UaepassLang lang = UaepassLang.en}) =>
-      '${imagesPath}login/Sharp_${getLanguage(lang)}.png';
-
-  static String loginButtonRounded({UaepassLang lang = UaepassLang.en}) =>
-      '${imagesPath}login/Outline_${getLanguage(lang)}.png';
-
+abstract final class UaepassButtons {
   static String signInButton({
     UaepassButtonType type = UaepassButtonType.normal,
     UaePassButtonTheme theme = UaePassButtonTheme.outline,
     UaepassLang lang = UaepassLang.en,
-  }) =>
-      '${imagesPath}sign_in/${type.toShortString()}_${theme.toShortString()}_${lang.toShortString()}.png';
+  }) => 'images/sign_in/${type.name}_${theme.name}_${lang.name}.png';
 }

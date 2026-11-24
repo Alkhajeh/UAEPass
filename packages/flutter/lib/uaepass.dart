@@ -1,110 +1,273 @@
-// ignore_for_file: prefer_constructors_over_static_methods
+import 'dart:async';
 
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'src/configuration.dart';
 import 'src/enums.dart';
 import 'src/helper.dart';
+import 'src/model/uaepass_login_result.dart';
 import 'src/model/uaepass_token.dart';
 import 'src/model/uaepass_user.dart';
 import 'src/uaepass_login_view.dart';
 
 export 'src/enums.dart';
+export 'src/model/uaepass_login_result.dart';
+export 'src/model/uaepass_token.dart';
+export 'src/model/uaepass_user.dart';
 export 'src/uaepass_login_button.dart';
 
-class Uaepass {
-  static Uaepass? _instance;
+/// The UAE PASS authentication client used by [UaepassLoginButton].
+final class Uaepass {
   Uaepass._({
     required this.env,
-    required this.fullscreen,
-    required this.showMessages,
     required this.appScheme,
     required this.clientId,
-    required this.clientSecret,
     required this.redirectUri,
+    required this.fullscreen,
+    required this.showMessages,
   });
 
+  static const _callbackChannel = MethodChannel(
+    'ae.uaepass/flutter_auth/callbacks',
+  );
+  static const _sandboxClientId = 'sandbox_stage';
+
+  static Uaepass? _instance;
+  static bool _attemptInProgress = false;
+
+  /// Configures the client with the redirect registered for the UAE PASS app.
   static Uaepass init({
     required UaePassEnv env,
     required String appScheme,
     required String clientId,
-    required String clientSecret,
-    String redirectUri = Configuration.redirectURL,
+    required String redirectUri,
     bool fullscreen = true,
     bool showMessages = true,
-  }) => _instance = Uaepass._(
-    env: env,
-    fullscreen: fullscreen,
-    showMessages: showMessages,
-    appScheme: appScheme,
-    clientId: clientId,
-    clientSecret: clientSecret,
-    redirectUri: Uri.parse(redirectUri),
-  );
-
-  static Uaepass get instance {
-    if (_instance == null) {
-      throw Exception('Initialize UAEPass plugin first.');
+  }) {
+    if (_attemptInProgress) {
+      throw StateError('Wait for the current UAE PASS sign-in to finish.');
+    }
+    if (!RegExp(r'^[a-z][a-z0-9+.-]*$').hasMatch(appScheme) ||
+        const {'http', 'https', 'uaepass', 'uaepassstg'}.contains(appScheme)) {
+      throw ArgumentError.value(
+        appScheme,
+        'appScheme',
+        'Use a custom URI scheme.',
+      );
+    }
+    final redirect = Uri.tryParse(redirectUri);
+    if (redirect == null ||
+        redirect.scheme != 'https' ||
+        redirect.host.isEmpty ||
+        redirect.userInfo.isNotEmpty ||
+        redirect.hasFragment ||
+        redirect.queryParameters.keys.any(
+          const {'code', 'state', 'error'}.contains,
+        )) {
+      throw ArgumentError.value(
+        redirectUri,
+        'redirectUri',
+        'Use your registered HTTPS callback URI.',
+      );
+    }
+    if (clientId.trim().isEmpty) {
+      throw ArgumentError.value(
+        clientId,
+        'clientId',
+        'A client ID is required.',
+      );
     }
 
-    return _instance!;
+    return _instance = Uaepass._(
+      env: env,
+      appScheme: appScheme,
+      clientId: clientId,
+      redirectUri: redirect,
+      fullscreen: fullscreen,
+      showMessages: showMessages,
+    );
   }
+
+  /// Configures sign-in with the UAE PASS public staging sandbox credentials.
+  ///
+  /// For your own staging or production client, use [init].
+  static Uaepass initSandbox({
+    required String appScheme,
+    String redirectUri = 'https://localhost:8000',
+    bool fullscreen = true,
+    bool showMessages = true,
+  }) => init(
+    env: UaePassEnv.stg,
+    appScheme: appScheme,
+    clientId: _sandboxClientId,
+    redirectUri: redirectUri,
+    fullscreen: fullscreen,
+    showMessages: showMessages,
+  );
+
+  /// The configured client. Call [init] or [initSandbox] first.
+  static Uaepass get instance =>
+      _instance ?? (throw StateError('Initialize the UAE PASS plugin first.'));
 
   final UaePassEnv env;
   final String appScheme;
   final String clientId;
-  final String clientSecret;
   final Uri redirectUri;
   final bool showMessages;
   final bool fullscreen;
   String? _code;
-  UaepassToken? _token;
-  UaepassUser? _user;
+  UaepassSession? _session;
 
-  /// Get authorization code
+  /// The code from the most recent successful exchange. It has been consumed.
   String? get code => _code;
 
-  /// Get user token
-  UaepassToken? get token => _token;
+  /// The optional provider token from the most recent successful exchange.
+  UaepassToken? get token => _session?.token;
 
-  /// Get user information
-  UaepassUser? get user => _user;
+  /// The profile from the most recent successful exchange.
+  UaepassUser? get user => _session?.user;
 
-  /// Check if user is logged in
-  bool isLoggedIn() {
-    return _token != null && _user != null;
+  /// Whether this client has completed sign-in during its lifetime.
+  ///
+  /// Your application owns its session lifetime and checks expiry separately.
+  bool isLoggedIn() => _session != null;
+
+  /// Opens UAE PASS and returns a grant, cancellation, or failure.
+  ///
+  /// Send a successful grant to your backend for exchange.
+  Future<UaepassAuthorizationResult> authorize(BuildContext context) =>
+      _runAttempt(context, (result, _) => result);
+
+  /// Authorizes with UAE PASS and returns the session from [exchangeCode].
+  ///
+  /// Provide a callback that sends the grant to your backend. The public
+  /// staging sandbox can use the SDK's built-in exchange.
+  Future<UaepassLoginResult> login(
+    BuildContext context, {
+    UaepassCodeExchange? exchangeCode,
+  }) async {
+    final exchange =
+        exchangeCode ??
+        (env == UaePassEnv.stg && clientId == _sandboxClientId
+            ? exchangeSandboxCode
+            : null);
+    if (exchange == null) {
+      return const UaepassLoginFailure(
+        UaepassLoginFailureReason.exchangeNotConfigured,
+      );
+    }
+
+    return _runAttempt(context, (result, messenger) async {
+      switch (result) {
+        case UaepassAuthorizationSuccess(:final authorization):
+          try {
+            final session = await exchange(authorization);
+            _code = authorization.code;
+            _session = session;
+            return UaepassLoginSuccess(session);
+          } catch (_) {
+            _showFailure(messenger);
+            return const UaepassLoginFailure(
+              UaepassLoginFailureReason.exchangeFailed,
+            );
+          }
+        case UaepassAuthorizationCancelled():
+          return const UaepassLoginCancelled();
+        case UaepassAuthorizationFailure(:final reason):
+          return UaepassLoginFailure(switch (reason) {
+            UaepassAuthorizationFailureReason.alreadyInProgress =>
+              UaepassLoginFailureReason.alreadyInProgress,
+            UaepassAuthorizationFailureReason.authorizationFailed =>
+              UaepassLoginFailureReason.authorizationFailed,
+          });
+      }
+    });
   }
 
-  /// Initiate UAEPass login
-  Future<void> login(BuildContext context) async {
-    final code = await Navigator.push<String>(
-      context,
-      MaterialPageRoute<String>(
-        builder: (context) => const UaepassLoginView(),
-        fullscreenDialog: fullscreen,
-      ),
-    );
+  Future<T> _runAttempt<T>(
+    BuildContext context,
+    FutureOr<T> Function(UaepassAuthorizationResult, ScaffoldMessengerState?)
+    complete,
+  ) async {
+    if (_attemptInProgress) {
+      return complete(
+        const UaepassAuthorizationFailure(
+          UaepassAuthorizationFailureReason.alreadyInProgress,
+        ),
+        null,
+      );
+    }
 
-    if (code == null) return;
+    final messenger = showMessages ? ScaffoldMessenger.maybeOf(context) : null;
+    _attemptInProgress = true;
     try {
-      final token = await Helper.getTokenAsync(code);
-      final accessToken = token?.accessToken;
-      if (accessToken == null || accessToken.isEmpty) {
-        throw const FormatException('Missing UAE PASS access token');
+      final result = await _authorize(context);
+      if (result is UaepassAuthorizationFailure) _showFailure(messenger);
+      return await complete(result, messenger);
+    } finally {
+      _attemptInProgress = false;
+    }
+  }
+
+  Future<UaepassAuthorizationResult> _authorize(BuildContext context) async {
+    const failed = UaepassAuthorizationFailure(
+      UaepassAuthorizationFailureReason.authorizationFailed,
+    );
+    final callbacks = StreamController<String>.broadcast();
+    _callbackChannel.setMethodCallHandler((call) async {
+      final arguments = call.arguments;
+      if (call.method == 'onCallback' && arguments is String) {
+        callbacks.add(arguments);
       }
-      final user = await Helper.getUser(accessToken);
-      if (user == null) {
-        throw const FormatException('Missing UAE PASS profile');
+    });
+
+    try {
+      await _callbackChannel.invokeMethod<void>('setCallbackScheme', appScheme);
+      if (!context.mounted) return const UaepassAuthorizationCancelled();
+
+      final result = await Navigator.of(context).push<UaepassWebViewResult>(
+        MaterialPageRoute<UaepassWebViewResult>(
+          builder: (_) => UaepassLoginView(
+            flow: UaepassAuthFlow(
+              env: env,
+              redirectUri: redirectUri,
+              clientId: clientId,
+              appScheme: appScheme,
+            ),
+            callbacks: callbacks.stream,
+          ),
+          fullscreenDialog: fullscreen,
+        ),
+      );
+
+      if (result == null || result.status == UaepassWebViewStatus.cancelled) {
+        return const UaepassAuthorizationCancelled();
       }
-      _code = code;
-      _token = token;
-      _user = user;
+      final code = result.code;
+      if (result.status != UaepassWebViewStatus.authorized || code == null) {
+        return failed;
+      }
+      return UaepassAuthorizationSuccess(
+        UaepassAuthorization(code: code, redirectUri: redirectUri),
+      );
     } on Exception {
-      if (showMessages && context.mounted) {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(content: Text('Could not complete UAE PASS sign-in.')),
-        );
+      return failed;
+    } finally {
+      _callbackChannel.setMethodCallHandler(null);
+      unawaited(callbacks.close());
+      try {
+        await _callbackChannel.invokeMethod<void>('setCallbackScheme');
+      } on Exception {
+        // The engine may have detached while the sign-in route was open.
       }
+    }
+  }
+
+  void _showFailure(ScaffoldMessengerState? messenger) {
+    if (messenger != null && messenger.mounted) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Could not complete UAE PASS sign-in.')),
+      );
     }
   }
 }

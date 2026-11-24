@@ -10,8 +10,9 @@ void main() {
     app.main();
     await tester.pumpAndSettle();
 
-    expect(find.text('UAE Pass'), findsOneWidget);
-    expect(find.byType(UaepassLoginButton), findsWidgets);
+    expect(find.text('UAE PASS'), findsOneWidget);
+    expect(find.byType(UaepassLoginButton), findsOneWidget);
+    expect(find.bySemanticsLabel('Sign in with UAE PASS'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);

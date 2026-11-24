@@ -1,166 +1,48 @@
 import 'package:material_ui/material_ui.dart';
-
 import 'package:uaepass/uaepass.dart';
 
 void main() {
-  Uaepass.init(
-    env: UaePassEnv.stg,
-    appScheme: 'poc',
-    clientId: 'sandbox_stage',
-    clientSecret: 'sandbox_stage',
-    redirectUri: 'https://localhost:8000',
-  );
-  runApp(const MyApp());
+  Uaepass.initSandbox(appScheme: 'poc', showMessages: false);
+  runApp(const MaterialApp(home: SignInExample()));
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+class SignInExample extends StatefulWidget {
+  const SignInExample({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  State<SignInExample> createState() => _SignInExampleState();
 }
 
-class _MyAppState extends State<MyApp> {
-  final _uaepassPlugin = Uaepass.instance;
-  bool isLoggedIn = false;
+class _SignInExampleState extends State<SignInExample> {
+  UaepassLoginResult? _result;
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          backgroundColor: const Color(0xFF55C9B2),
-          foregroundColor: Colors.black,
-          title: const Text('UAE Pass'),
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(10),
+    final message = switch (_result) {
+      UaepassLoginSuccess(:final session) =>
+        'Signed in as ${session.user.fullnameEN ?? 'UAE PASS user'}',
+      UaepassLoginCancelled() => 'Sign-in cancelled.',
+      UaepassLoginFailure() => 'Could not complete UAE PASS sign-in.',
+      null => 'Sign in with your UAE PASS staging account.',
+    };
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('UAE PASS')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              if (isLoggedIn)
-                Column(
-                  children: [
-                    Text('Name: ${_uaepassPlugin.user?.fullnameEN}'),
-                    Text('Name: ${_uaepassPlugin.user?.fullnameAR}'),
-                    Text(_uaepassPlugin.isLoggedIn().toString()),
-                  ],
-                ),
-              Text('Default', style: Theme.of(context).textTheme.headlineSmall),
-              uaepassButton(
-                lang: UaepassLang.en,
-                type: UaepassButtonType.normal,
-                theme: UaePassButtonTheme.white,
+              Text(message, textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              UaepassLoginButton(
+                onResult: (result) => setState(() => _result = result),
               ),
-              uaepassButton(
-                lang: UaepassLang.ar,
-                type: UaepassButtonType.normal,
-                theme: UaePassButtonTheme.white,
-              ),
-              uaepassButton(
-                lang: UaepassLang.en,
-                type: UaepassButtonType.normal,
-                theme: UaePassButtonTheme.outline,
-              ),
-              uaepassButton(
-                lang: UaepassLang.ar,
-                type: UaepassButtonType.normal,
-                theme: UaePassButtonTheme.outline,
-              ),
-              uaepassButton(
-                lang: UaepassLang.en,
-                type: UaepassButtonType.normal,
-                theme: UaePassButtonTheme.dark,
-              ),
-              uaepassButton(
-                lang: UaepassLang.ar,
-                type: UaepassButtonType.normal,
-                theme: UaePassButtonTheme.dark,
-              ),
-              const Divider(),
-              Text('Pill', style: Theme.of(context).textTheme.headlineSmall),
-              uaepassButton(
-                lang: UaepassLang.en,
-                type: UaepassButtonType.pill,
-                theme: UaePassButtonTheme.white,
-              ),
-              uaepassButton(
-                lang: UaepassLang.ar,
-                type: UaepassButtonType.pill,
-                theme: UaePassButtonTheme.white,
-              ),
-              uaepassButton(
-                lang: UaepassLang.en,
-                type: UaepassButtonType.pill,
-                theme: UaePassButtonTheme.outline,
-              ),
-              uaepassButton(
-                lang: UaepassLang.ar,
-                type: UaepassButtonType.pill,
-                theme: UaePassButtonTheme.outline,
-              ),
-              uaepassButton(
-                lang: UaepassLang.en,
-                type: UaepassButtonType.pill,
-                theme: UaePassButtonTheme.dark,
-              ),
-              uaepassButton(
-                lang: UaepassLang.ar,
-                type: UaepassButtonType.pill,
-                theme: UaePassButtonTheme.dark,
-              ),
-              const Divider(),
-              Text('Sharp', style: Theme.of(context).textTheme.headlineSmall),
-              uaepassButton(
-                lang: UaepassLang.en,
-                type: UaepassButtonType.sharp,
-                theme: UaePassButtonTheme.white,
-              ),
-              uaepassButton(
-                lang: UaepassLang.ar,
-                type: UaepassButtonType.sharp,
-                theme: UaePassButtonTheme.white,
-              ),
-              uaepassButton(
-                lang: UaepassLang.en,
-                type: UaepassButtonType.sharp,
-                theme: UaePassButtonTheme.outline,
-              ),
-              uaepassButton(
-                lang: UaepassLang.ar,
-                type: UaepassButtonType.sharp,
-                theme: UaePassButtonTheme.outline,
-              ),
-              uaepassButton(
-                lang: UaepassLang.en,
-                type: UaepassButtonType.sharp,
-                theme: UaePassButtonTheme.dark,
-              ),
-              uaepassButton(
-                lang: UaepassLang.ar,
-                type: UaepassButtonType.sharp,
-                theme: UaePassButtonTheme.dark,
-              ),
-              const SizedBox(height: 50),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  UaepassLoginButton uaepassButton({
-    required UaepassButtonType type,
-    required UaePassButtonTheme theme,
-    required UaepassLang lang,
-  }) {
-    return UaepassLoginButton(
-      type: type,
-      theme: theme,
-      lang: lang,
-      onCallback: () =>
-          setState(() => isLoggedIn = Uaepass.instance.isLoggedIn()),
     );
   }
 }

@@ -1,29 +1,34 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:flutter/services.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
-import '../uaepass.dart';
 import 'helper.dart';
 
 class UaepassLoginView extends StatefulWidget {
-  const UaepassLoginView({super.key});
+  const UaepassLoginView({
+    required this.flow,
+    required this.callbacks,
+    super.key,
+  });
+
+  final UaepassAuthFlow flow;
+  final Stream<String> callbacks;
 
   @override
   State<UaepassLoginView> createState() => _UaepassLoginViewState();
 }
 
 class _UaepassLoginViewState extends State<UaepassLoginView> {
-  final _channel = MethodChannel(
-    '${Uaepass.instance.appScheme}.uaepass/channel',
-  );
+  static const _failed = (status: UaepassWebViewStatus.failed, code: null);
+
   late final String _state;
-  late final Future<Uri> _loginUrl;
-  InAppWebViewController? _webView;
-  UaePassAuthUrl? _pendingHandoff;
+  late final StreamSubscription<String> _callbackSubscription;
+  WebViewController? _webView;
+  UaepassAppHandoff? _pendingHandoff;
   bool _finished = false;
 
   @override
@@ -31,76 +36,79 @@ class _UaepassLoginViewState extends State<UaepassLoginView> {
     super.initState();
     final random = Random.secure();
     _state = base64UrlEncode(List.generate(32, (_) => random.nextInt(256)));
-    _loginUrl = Helper.getLoginUrl(_state);
-    _channel.setMethodCallHandler(_resumeAuthentication);
+    _callbackSubscription = widget.callbacks.listen(_resumeAuthentication);
+    unawaited(_start());
   }
 
   @override
   void dispose() {
-    _channel.setMethodCallHandler(null);
+    unawaited(_callbackSubscription.cancel());
     super.dispose();
   }
 
-  Future<void> _resumeAuthentication(MethodCall call) async {
-    final handoff = _pendingHandoff;
-    final webView = _webView;
-    final arguments = call.arguments;
-    if (_finished ||
-        handoff == null ||
-        webView == null ||
-        call.method != 'didRecieveTranscript' ||
-        arguments is! String) {
-      return;
-    }
+  Future<void> _start() async {
+    try {
+      final url = await widget.flow.getLoginUrl(_state);
+      if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
 
-    final url = Uri.tryParse(arguments);
-    if (url == null ||
-        url.scheme != Uaepass.instance.appScheme ||
-        url.queryParameters['state'] != _state) {
-      return;
-    }
-
-    final destination = switch (url.host) {
-      'success' => handoff.successUrl,
-      'failure' => handoff.failureUrl,
-      _ => null,
-    };
-    if (destination == null) return;
-    _pendingHandoff = null;
-    await webView.loadUrl(urlRequest: URLRequest(url: WebUri.uri(destination)));
-  }
-
-  bool _completeAuthorization(Uri url) {
-    if (!Helper.isAuthorizationRedirect(url)) return false;
-    if (_finished || !mounted) return true;
-    _finished = true;
-
-    final parameters = url.queryParameters;
-    final code = parameters['code'];
-    final validState = parameters['state'] == _state;
-    if (validState && code != null && code.isNotEmpty) {
-      Navigator.pop(context, code);
-    } else {
-      _showMessage(
-        validState && parameters['error'] == 'access_denied'
-            ? 'UAE PASS sign-in was cancelled.'
-            : 'UAE PASS returned an invalid sign-in response.',
+      final webView = WebViewController();
+      await webView.setJavaScriptMode(JavaScriptMode.unrestricted);
+      await webView.setNavigationDelegate(
+        NavigationDelegate(
+          onNavigationRequest: _handleNavigation,
+          onPageStarted: (url) => _handleRedirect(Uri.tryParse(url)),
+          onWebResourceError: (error) {
+            final url = Uri.tryParse(error.url ?? '');
+            if (error.isForMainFrame == true &&
+                _pendingHandoff == null &&
+                (url == null || !widget.flow.isUaePassHandoff(url))) {
+              _finish(_failed);
+            }
+          },
+        ),
       );
-      Navigator.pop(context);
+      if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+      setState(() => _webView = webView);
+      await webView.loadRequest(url);
+    } on Exception {
+      _finish(_failed);
     }
-    return true;
   }
 
-  void _showMessage(String message) {
-    if (Uaepass.instance.showMessages && mounted) {
-      ScaffoldMessenger.maybeOf(context)
-          ?.showSnackBar(SnackBar(content: Text(message)));
+  Future<NavigationDecision> _handleNavigation(
+    NavigationRequest request,
+  ) async {
+    if (!request.isMainFrame) return NavigationDecision.navigate;
+    if (_finished || !mounted) return NavigationDecision.prevent;
+
+    final url = Uri.tryParse(request.url);
+    if (url == null || _handleRedirect(url)) return NavigationDecision.prevent;
+    if (widget.flow.isUaePassHandoff(url)) {
+      await _launchUaePass(url);
+      return NavigationDecision.prevent;
     }
+
+    if (url.scheme == 'https' &&
+        url.port == 443 &&
+        url.userInfo.isEmpty &&
+        (url.host == 'uaepass.ae' || url.host.endsWith('.uaepass.ae'))) {
+      return NavigationDecision.navigate;
+    }
+    _finish(_failed);
+    return NavigationDecision.prevent;
+  }
+
+  bool _handleRedirect(Uri? url) {
+    if (url == null) return false;
+    final result = widget.flow.authorizationResult(url, _state);
+    if (result == null) return false;
+    _finish(result);
+    return true;
   }
 
   Future<void> _launchUaePass(Uri url) async {
     if (_pendingHandoff != null) return;
-    final handoff = Helper.getUaePassOpenUrl(url, _state);
+    final handoff = widget.flow.appHandoff(url, _state);
     if (handoff != null) {
       _pendingHandoff = handoff;
       try {
@@ -110,70 +118,60 @@ class _UaepassLoginViewState extends State<UaepassLoginView> {
         )) {
           return;
         }
-      } on PlatformException {
-        // Show the same message for a platform failure or a rejected launch.
+      } on Exception {
+        // The attempt failed to launch the UAE PASS app.
       }
-      _pendingHandoff = null;
     }
-    _showMessage('Could not open the UAE PASS app.');
+    _finish(_failed);
+  }
+
+  Future<void> _resumeAuthentication(String callback) async {
+    final handoff = _pendingHandoff;
+    final webView = _webView;
+    if (_finished || handoff == null || webView == null) return;
+
+    final url = Uri.tryParse(callback);
+    if (url == null ||
+        url.scheme != widget.flow.appScheme ||
+        url.userInfo.isNotEmpty ||
+        url.hasPort ||
+        (url.path.isNotEmpty && url.path != '/') ||
+        url.hasFragment) {
+      return;
+    }
+    final state = url.queryParametersAll['state'];
+    if (state == null || state.length != 1 || state.single != _state) return;
+    final destination = switch (url.host) {
+      'success' => handoff.successUrl,
+      'failure' => handoff.failureUrl,
+      _ => null,
+    };
+    if (destination == null) return;
+    _pendingHandoff = null;
+    try {
+      await webView.loadRequest(destination);
+    } on Exception {
+      _finish(_failed);
+    }
+  }
+
+  void _finish(UaepassWebViewResult result) {
+    if (_finished || !mounted || ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
+    _finished = true;
+    _pendingHandoff = null;
+    Navigator.of(context).pop(result);
   }
 
   @override
   Widget build(BuildContext context) {
+    final webView = _webView;
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF55C9B2),
-        foregroundColor: Colors.black,
-        title: const Text('UAE Pass'),
-      ),
-      body: FutureBuilder<Uri>(
-        future: _loginUrl,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return const Center(
-              child: Text('Could not start UAE PASS sign-in.'),
-            );
-          }
-          final url = snapshot.data;
-          if (url == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return InAppWebView(
-            initialUrlRequest: URLRequest(url: WebUri.uri(url)),
-            initialSettings: InAppWebViewSettings(
-              cacheEnabled: false,
-              transparentBackground: true,
-              useShouldOverrideUrlLoading: true,
-              supportZoom: false,
-            ),
-            onWebViewCreated: (controller) => _webView = controller,
-            onLoadStart: (controller, url) {
-              if (url != null && _completeAuthorization(url)) {
-                controller.stopLoading();
-              }
-            },
-            shouldOverrideUrlLoading: (controller, action) async {
-              final url = action.request.url;
-              if (!action.isForMainFrame || url == null) {
-                return NavigationActionPolicy.ALLOW;
-              }
-              if (_completeAuthorization(url)) {
-                return NavigationActionPolicy.CANCEL;
-              }
-              if (Helper.isUaePassHandoff(url)) {
-                await _launchUaePass(url);
-                return NavigationActionPolicy.CANCEL;
-              }
-              return NavigationActionPolicy.ALLOW;
-            },
-            onReceivedError: (controller, request, error) {
-              if (request.isForMainFrame == true && !_finished) {
-                _showMessage('Could not load the UAE PASS sign-in page.');
-              }
-            },
-          );
-        },
-      ),
+      appBar: AppBar(title: const Text('UAE PASS')),
+      body: webView == null
+          ? const Center(child: CircularProgressIndicator())
+          : WebViewWidget(controller: webView),
     );
   }
 }

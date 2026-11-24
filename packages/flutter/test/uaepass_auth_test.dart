@@ -3,134 +3,165 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:uaepass/src/configuration.dart';
 import 'package:uaepass/src/helper.dart';
 import 'package:uaepass/uaepass.dart';
 
-void init(UaePassEnv environment) {
-  Uaepass.init(
-    env: environment,
-    appScheme: 'poc',
-    clientId: 'test-client',
-    clientSecret: 'test-secret',
-    redirectUri: 'https://localhost:8000/callback',
-  );
-}
-
 void main() {
-  test('selects the staging web flow when UAE PASS is unavailable', () {
-    init(UaePassEnv.stg);
-    final url = Helper.authorizationUrl(
-      state: 'test state',
-      appInstalled: false,
-    );
+  final redirectUri = Uri.parse('https://app.example/callback?channel=mobile');
+  final staging = UaepassAuthFlow(
+    env: UaePassEnv.stg,
+    redirectUri: redirectUri,
+    clientId: 'app-client',
+    appScheme: 'poc',
+  );
+  final production = UaepassAuthFlow(
+    env: UaePassEnv.prod,
+    redirectUri: redirectUri,
+    clientId: 'app-client',
+    appScheme: 'poc',
+  );
 
-    expect(url.host, 'stg-id.uaepass.ae');
-    expect(url.queryParameters['acr_values'], Configuration.acrValuesWeb);
-    expect(
-      url.queryParameters['redirect_uri'],
-      'https://localhost:8000/callback',
-    );
-    expect(url.queryParameters['state'], 'test state');
-    expect(
-      Helper.isAuthorizationRedirect(
-        Uri.parse('https://localhost:8000/callback?code=code'),
-      ),
-      isTrue,
-    );
-    expect(
-      Helper.isAuthorizationRedirect(
-        Uri.parse('https://localhost:8001/callback?code=code'),
-      ),
-      isFalse,
-    );
-
-    final mobileUrl = Helper.authorizationUrl(
-      state: 'test state',
+  test('uses the selected environment and installed-app flow', () {
+    final web = staging.authorizationUrl(state: 'state', appInstalled: false);
+    final mobile = production.authorizationUrl(
+      state: 'state',
       appInstalled: true,
     );
+    expect(web.host, 'stg-id.uaepass.ae');
+    expect(mobile.host, 'id.uaepass.ae');
     expect(
-      mobileUrl.queryParameters['acr_values'],
-      Configuration.acrValuesMobile,
+      web.queryParameters,
+      containsPair(
+        'acr_values',
+        'urn:safelayer:tws:policies:authentication:level:low',
+      ),
+    );
+    expect(
+      mobile.queryParameters,
+      containsPair(
+        'acr_values',
+        'urn:digitalid:authentication:flow:mobileondevice',
+      ),
+    );
+    expect(web.queryParameters['redirect_uri'], redirectUri.toString());
+    expect(web.queryParameters['state'], 'state');
+  });
+
+  test('accepts a single code bound to the configured redirect and state', () {
+    final response = Uri.parse(
+      'https://app.example/callback?channel=mobile&code=code&state=state',
+    );
+    expect(staging.authorizationResult(response, 'state'), (
+      status: UaepassWebViewStatus.authorized,
+      code: 'code',
+    ));
+    expect(
+      staging.authorizationResult(
+        response.replace(host: 'other.example'),
+        'state',
+      ),
+      isNull,
+    );
+
+    for (final invalidQuery in [
+      'code=code&state=state',
+      'channel=mobile&code=code&state=wrong',
+      'channel=mobile&code=code&state=state&state=state',
+      'channel=mobile&code=code&code=other&state=state',
+      'channel=mobile&code=code&error=access_denied&state=state',
+    ]) {
+      expect(
+        staging
+            .authorizationResult(response.replace(query: invalidQuery), 'state')
+            ?.status,
+        UaepassWebViewStatus.failed,
+      );
+    }
+
+    final cancelled = response.replace(
+      query: 'channel=mobile&error=access_denied&state=state',
+    );
+    expect(
+      staging.authorizationResult(cancelled, 'state')?.status,
+      UaepassWebViewStatus.cancelled,
     );
   });
 
-  test('preserves the UAE PASS handoff parameters and both return URLs', () {
-    init(UaePassEnv.stg);
-    final source = Uri.parse('uaepass://digitalid-users-ids/signatures/test')
-        .replace(
-          queryParameters: {
-            'successURL':
-                'https://stg-ids.uaepass.ae/resume?status=success&id=123',
-            'failureURL':
-                'https://stg-ids.uaepass.ae/resume?status=failure&id=123',
-            'closeondone': 'true',
-            'session': ['one', 'two'],
-          },
-        );
-
-    expect(Helper.isUaePassHandoff(source), isTrue);
-    expect(
-      Helper.isUaePassHandoff(source.replace(scheme: 'uaepassstg')),
-      isTrue,
+  test('preserves the handoff and restricts return hosts by environment', () {
+    final nativeUrl = Uri.parse(
+      'uaepass://digitalid-users-ids/signatures/test',
     );
-    final handoff = Helper.getUaePassOpenUrl(source, 'test-state')!;
+    final handoffUrl = nativeUrl.replace(
+      queryParameters: {
+        'successURL': 'https://stg-ids.uaepass.ae/resume?status=success',
+        'failureURL': 'https://stg-id.uaepass.ae/resume?status=failure',
+        'session': ['one', 'two'],
+      },
+    );
+    final handoff = staging.appHandoff(handoffUrl, 'state')!;
     expect(handoff.appUrl.scheme, 'uaepassstg');
-    expect(handoff.appUrl.path, '/signatures/test');
+    expect(handoff.appUrl.path, nativeUrl.path);
     expect(handoff.successUrl.queryParameters['status'], 'success');
     expect(handoff.failureUrl.queryParameters['status'], 'failure');
     expect(handoff.appUrl.queryParametersAll['session'], ['one', 'two']);
-    expect(handoff.appUrl.queryParameters['closeondone'], 'true');
     expect(
       handoff.appUrl.queryParameters['successURL'],
-      'poc://success?state=test-state',
+      'poc://success?state=state',
     );
     expect(
       handoff.appUrl.queryParameters['failureURL'],
-      'poc://failure?state=test-state',
+      'poc://failure?state=state',
     );
+    expect(production.appHandoff(handoffUrl, 'state'), isNull);
 
-    init(UaePassEnv.prod);
-    expect(
-      Helper.isUaePassHandoff(source.replace(scheme: 'uaepassstg')),
-      isFalse,
-    );
-    expect(
-      Helper.getUaePassOpenUrl(source, 'test-state')!.appUrl.scheme,
-      'uaepass',
-    );
+    for (final invalidHost in [
+      'https://id.uaepass.ae/resume',
+      'https://stg-id.uaepass.ae.other.example/resume',
+      'https://stg-id.uaepass.ae:8443/resume',
+    ]) {
+      final invalid = handoffUrl.replace(
+        queryParameters: {
+          ...handoffUrl.queryParameters,
+          'successURL': invalidHost,
+        },
+      );
+      expect(staging.appHandoff(invalid, 'state'), isNull);
+    }
   });
 
-  test('uses the documented token headers and selected API host', () async {
-    init(UaePassEnv.stg);
-    final requests = <http.Request>[];
-    final client = MockClient((request) async {
-      requests.add(request);
-      return request.url.path.endsWith('/token')
-          ? http.Response('{"access_token":"test-token"}', 200)
-          : http.Response('{"sub":"test-subject"}', 200);
-    });
+  test(
+    'the built-in exchange sends only the fixed public sandbox credentials',
+    () async {
+      final requests = <http.Request>[];
+      final client = MockClient((request) async {
+        requests.add(request);
+        return request.url.path.endsWith('/token')
+            ? http.Response('{"access_token":"test-token"}', 200)
+            : http.Response('{"sub":"test-subject"}', 200);
+      });
 
-    await http.runWithClient(() async {
-      final token = await Helper.getTokenAsync('test-code');
-      await Helper.getUser(token!.accessToken!);
-      init(UaePassEnv.prod);
-      await Helper.getUser('production-token');
-    }, () => client);
+      final session = await http.runWithClient(
+        () => exchangeSandboxCode(
+          UaepassAuthorization(code: 'test-code', redirectUri: redirectUri),
+        ),
+        () => client,
+      );
 
-    expect(requests[0].method, 'POST');
-    expect(requests[0].url.queryParameters, {
-      'grant_type': 'authorization_code',
-      'redirect_uri': 'https://localhost:8000/callback',
-      'code': 'test-code',
-    });
-    expect(
-      requests[0].headers['authorization'],
-      'Basic ${base64Encode(utf8.encode('test-client:test-secret'))}',
-    );
-    expect(requests[1].url.host, 'stg-id.uaepass.ae');
-    expect(requests[1].headers['authorization'], 'Bearer test-token');
-    expect(requests[2].url.host, 'id.uaepass.ae');
-    expect(requests[2].headers['authorization'], 'Bearer production-token');
-  });
+      expect(session.user.sub, 'test-subject');
+      expect(session.token?.accessToken, 'test-token');
+      expect(requests[0].method, 'POST');
+      expect(requests[0].url.host, 'stg-id.uaepass.ae');
+      expect(requests[0].url.queryParameters, {
+        'grant_type': 'authorization_code',
+        'redirect_uri': redirectUri.toString(),
+        'code': 'test-code',
+      });
+      expect(
+        requests[0].headers['authorization'],
+        'Basic ${base64Encode(utf8.encode('sandbox_stage:sandbox_stage'))}',
+      );
+      expect(requests[1].url.host, 'stg-id.uaepass.ae');
+      expect(requests[1].headers['authorization'], 'Bearer test-token');
+    },
+  );
 }
