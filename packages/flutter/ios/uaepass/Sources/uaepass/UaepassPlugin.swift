@@ -19,21 +19,39 @@ public final class UaepassPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycle
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-    guard call.method == "setCallbackScheme" else {
+    switch call.method {
+    case "setCallbackScheme":
+      if call.arguments == nil || call.arguments is NSNull {
+        callbackScheme = nil
+      } else if let scheme = call.arguments as? String, !scheme.isEmpty {
+        callbackScheme = scheme
+      } else {
+        result(FlutterError(
+          code: "invalid_scheme", message: "Expected a nonempty callback scheme or null.", details: nil))
+        return
+      }
+      result(nil)
+    case "isAppInstalled":
+      let url: URL?
+      switch call.arguments as? String {
+      case "staging": url = URL(string: "uaepassstg://")
+      case "production": url = URL(string: "uaepass://")
+      default: url = nil
+      }
+      result(url.map { UIApplication.shared.canOpenURL($0) } ?? false)
+    case "launchApp":
+      guard let rawURI = call.arguments as? String, let uri = URL(string: rawURI),
+        uri.scheme == "uaepass" || uri.scheme == "uaepassstg"
+      else {
+        result(false)
+        return
+      }
+      UIApplication.shared.open(uri, options: [:]) { opened in
+        result(opened)
+      }
+    default:
       result(FlutterMethodNotImplemented)
-      return
     }
-
-    if call.arguments == nil || call.arguments is NSNull {
-      callbackScheme = nil
-    } else if let scheme = call.arguments as? String, !scheme.isEmpty {
-      callbackScheme = scheme
-    } else {
-      result(FlutterError(
-        code: "invalid_scheme", message: "Expected a nonempty callback scheme or null.", details: nil))
-      return
-    }
-    result(nil)
   }
 
   public func application(

@@ -4,13 +4,5 @@
     <queries>
         <package android:name="ae.uaepass.mainapp" />
         <package android:name="ae.uaepass.mainapp.stg" />
-        <intent>
-            <action android:name="android.intent.action.VIEW" />
-            <data android:scheme="uaepass" />
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW" />
-            <data android:scheme="uaepassstg" />
-        </intent>
     </queries>
 </manifest>

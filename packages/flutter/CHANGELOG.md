@@ -1,10 +1,11 @@
 ## Unreleased
 
-- Configure the registered redirect URI in `Uaepass.init`. Call `authorize()` for a typed grant, cancellation, or failure, and exchange a successful grant on your backend.
-- Use `login(exchangeCode: ...)` to authorize and return a completed session. The public staging sandbox provides a built-in exchange. The login button supports both flows.
-- Replace `flutter_inappwebview` with `webview_flutter` and remove the example's legacy Android Gradle workaround.
-- Handle app-to-app callbacks in the plugin. Android declarations cover network access and UAE PASS app visibility. iOS supports Swift Package Manager and CocoaPods.
-- Document the migration from `0.0.x` and publish only the supported sign-in button artwork.
+- Add the instance-based `UaePassClient`. Use `authorize()` for a typed grant and `login()` for an app-owned session returned by your backend exchange.
+- Route UAE PASS detection and app handoff through native Android and iOS bridges, with an embedded WebView for the flow.
+- Add official English and Arabic button artwork for sign-in, login, registration, sign-up, and authorization, plus logo-only buttons.
+- Add `UaePassSignInButton` for provider-owned pages. Sign-in, login, registration, sign-up, authorization, and logo-only artwork all start the same UAE PASS authentication flow, with automatic disabling during the attempt and typed outcomes. Redesign the bilingual example with live staging sign-in, offline outcomes, and an artwork gallery.
+- Ignore late app handoffs and callbacks after dismissing authorization. Return a typed failure when WebView startup fails.
+- Clarify host app setup and surface the active button preview in the example gallery.
 
 ## 0.0.5
 
