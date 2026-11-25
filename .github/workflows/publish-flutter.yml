@@ -1,0 +1,22 @@
+name: Publish Flutter package to pub.dev
+
+on:
+  push:
+    tags:
+      - 'flutter-v[0-9]+.[0-9]+.[0-9]+*'
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    uses: ./.github/workflows/flutter.yml
+
+  publish:
+    needs: checks
+    permissions:
+      contents: read
+      id-token: write
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
+    with:
+      working-directory: packages/flutter

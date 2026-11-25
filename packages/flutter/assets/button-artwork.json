@@ -1,0 +1,3052 @@
+{
+  "archives": [
+    {
+      "archive": "UAE PASS Buttons.zip",
+      "source": "https://docs.uaepass.ae/guidelines/design-guidelines/button-guidelines/button-assets",
+      "sha256": "e8cc099e2b662cf643b8c33d6c6e6432f4aa9b552b6575aa5fc2ce769a581122"
+    },
+    {
+      "archive": "UAE_PASS_Buttons_PNGs-2.zip",
+      "source": "https://docs.uaepass.ae/guidelines/design-guidelines/uaepass-button-guideline",
+      "sha256": "1c0efa21f638a7054305029ac3aee70e8c3dd462188a0d9ac38370490931a707"
+    },
+    {
+      "archive": "SVGs.zip",
+      "source": "https://docs.uaepass.ae/guidelines/design-guidelines/uaepass-button-guideline",
+      "sha256": "559eb6f3e8c466b2ac6b27f555bb6575ee5bd28fe2c18a9d566ace40028033dc"
+    }
+  ],
+  "notes": [
+    "Identical density families share one asset. Paths retain wording, locale, shape, style, and state.",
+    "The Arabic sign-in and login labels match. Arabic Sign in black uses the Login with artwork for a legible fingerprint.",
+    "The Arabic sign-up and registration labels match. Arabic Sign up black uses the Register Account with artwork for a legible fingerprint.",
+    "Authorize artwork is supplied as one PNG per variant, at 4x.",
+    "Black icon artwork is supplied by the older official archives because the current files show a black fingerprint on black. The 2x and 3x files are rasterized from the older SVGs."
+  ],
+  "buttons": {
+    "sign_in/en/rounded_white_active": {
+      "asset": "assets/buttons/sign_in/en/rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Default/Active.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Default/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Default/Active@3x.png"
+      }
+    },
+    "sign_in/en/rounded_white_focused": {
+      "asset": "assets/buttons/sign_in/en/rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Default.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Default@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Default@3x.png"
+      }
+    },
+    "sign_in/en/rounded_white_pressed": {
+      "asset": "assets/buttons/sign_in/en/rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Default/Pressed.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Default/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Default/Pressed@3x.png"
+      }
+    },
+    "sign_in/en/rounded_white_disabled": {
+      "asset": "assets/buttons/sign_in/en/rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Default/Disabled.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Default/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Default/Disabled@3x.png"
+      }
+    },
+    "sign_in/en/rounded_white_outline_active": {
+      "asset": "assets/buttons/sign_in/en/rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Default/Active-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Default/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Default/Active@3x-1.png"
+      }
+    },
+    "sign_in/en/rounded_white_outline_focused": {
+      "asset": "assets/buttons/sign_in/en/rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Default/Focus.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Default/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Default/Focus@3x.png"
+      }
+    },
+    "sign_in/en/rounded_white_outline_pressed": {
+      "asset": "assets/buttons/sign_in/en/rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Default/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Default/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Default/Pressed@3x-1.png"
+      }
+    },
+    "sign_in/en/rounded_white_outline_disabled": {
+      "asset": "assets/buttons/sign_in/en/rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Default/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Default/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Default/Disabled@3x-1.png"
+      }
+    },
+    "sign_in/en/rounded_black_active": {
+      "asset": "assets/buttons/sign_in/en/rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Default/Active-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Default/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Default/Active@3x-2.png"
+      }
+    },
+    "sign_in/en/rounded_black_focused": {
+      "asset": "assets/buttons/sign_in/en/rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Default/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Default/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Default/Focus@3x-1.png"
+      }
+    },
+    "sign_in/en/rounded_black_pressed": {
+      "asset": "assets/buttons/sign_in/en/rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Default/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Default/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Default/Pressed@3x-2.png"
+      }
+    },
+    "sign_in/en/rounded_black_disabled": {
+      "asset": "assets/buttons/sign_in/en/rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Default/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Default/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Default/Disabled@3x-2.png"
+      }
+    },
+    "sign_in/en/fully_rounded_white_active": {
+      "asset": "assets/buttons/sign_in/en/fully_rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Active.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Active@3x.png"
+      }
+    },
+    "sign_in/en/fully_rounded_white_focused": {
+      "asset": "assets/buttons/sign_in/en/fully_rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Focus.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Focus@3x.png"
+      }
+    },
+    "sign_in/en/fully_rounded_white_pressed": {
+      "asset": "assets/buttons/sign_in/en/fully_rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Pressed.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Pressed@3x.png"
+      }
+    },
+    "sign_in/en/fully_rounded_white_disabled": {
+      "asset": "assets/buttons/sign_in/en/fully_rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Disabled.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Disabled@3x.png"
+      }
+    },
+    "sign_in/en/fully_rounded_white_outline_active": {
+      "asset": "assets/buttons/sign_in/en/fully_rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Active-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Active@3x-1.png"
+      }
+    },
+    "sign_in/en/fully_rounded_white_outline_focused": {
+      "asset": "assets/buttons/sign_in/en/fully_rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Focus@3x-1.png"
+      }
+    },
+    "sign_in/en/fully_rounded_white_outline_pressed": {
+      "asset": "assets/buttons/sign_in/en/fully_rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Pressed@3x-1.png"
+      }
+    },
+    "sign_in/en/fully_rounded_white_outline_disabled": {
+      "asset": "assets/buttons/sign_in/en/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Disabled@3x-1.png"
+      }
+    },
+    "sign_in/en/fully_rounded_black_active": {
+      "asset": "assets/buttons/sign_in/en/fully_rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Active-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Active@3x-2.png"
+      }
+    },
+    "sign_in/en/fully_rounded_black_focused": {
+      "asset": "assets/buttons/sign_in/en/fully_rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Focus@3x-2.png"
+      }
+    },
+    "sign_in/en/fully_rounded_black_pressed": {
+      "asset": "assets/buttons/sign_in/en/fully_rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Pressed@3x-2.png"
+      }
+    },
+    "sign_in/en/fully_rounded_black_disabled": {
+      "asset": "assets/buttons/sign_in/en/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Pill/Disabled@3x-2.png"
+      }
+    },
+    "sign_in/en/square_corners_white_active": {
+      "asset": "assets/buttons/sign_in/en/square_corners_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Active.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Active@3x.png"
+      }
+    },
+    "sign_in/en/square_corners_white_focused": {
+      "asset": "assets/buttons/sign_in/en/square_corners_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Focus.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Focus@3x.png"
+      }
+    },
+    "sign_in/en/square_corners_white_pressed": {
+      "asset": "assets/buttons/sign_in/en/square_corners_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Pressed.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Pressed@3x.png"
+      }
+    },
+    "sign_in/en/square_corners_white_disabled": {
+      "asset": "assets/buttons/sign_in/en/square_corners_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Disabled.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Disabled@3x.png"
+      }
+    },
+    "sign_in/en/square_corners_white_outline_active": {
+      "asset": "assets/buttons/sign_in/en/square_corners_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Active-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Active@3x-1.png"
+      }
+    },
+    "sign_in/en/square_corners_white_outline_focused": {
+      "asset": "assets/buttons/sign_in/en/square_corners_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Focus@3x-1.png"
+      }
+    },
+    "sign_in/en/square_corners_white_outline_pressed": {
+      "asset": "assets/buttons/sign_in/en/square_corners_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Pressed@3x-1.png"
+      }
+    },
+    "sign_in/en/square_corners_white_outline_disabled": {
+      "asset": "assets/buttons/sign_in/en/square_corners_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Disabled@3x-1.png"
+      }
+    },
+    "sign_in/en/square_corners_black_active": {
+      "asset": "assets/buttons/sign_in/en/square_corners_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Active-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Active@3x-2.png"
+      }
+    },
+    "sign_in/en/square_corners_black_focused": {
+      "asset": "assets/buttons/sign_in/en/square_corners_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Focus@3x-2.png"
+      }
+    },
+    "sign_in/en/square_corners_black_pressed": {
+      "asset": "assets/buttons/sign_in/en/square_corners_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Pressed@3x-2.png"
+      }
+    },
+    "sign_in/en/square_corners_black_disabled": {
+      "asset": "assets/buttons/sign_in/en/square_corners_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign in with/Sharp/Disabled@3x-2.png"
+      }
+    },
+    "sign_in/ar/rounded_white_active": {
+      "asset": "assets/buttons/sign_in/ar/rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Default/Active.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Default/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Default/Active@3x.png"
+      }
+    },
+    "sign_in/ar/rounded_white_focused": {
+      "asset": "assets/buttons/sign_in/ar/rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Default/Focus.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Default/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Default/Focus@3x.png"
+      }
+    },
+    "sign_in/ar/rounded_white_pressed": {
+      "asset": "assets/buttons/sign_in/ar/rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Default/Pressed.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Default/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Default/Pressed@3x.png"
+      }
+    },
+    "sign_in/ar/rounded_white_disabled": {
+      "asset": "assets/buttons/sign_in/ar/rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Default/Disabled.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Default/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Default/Disabled@3x.png"
+      }
+    },
+    "sign_in/ar/rounded_white_outline_active": {
+      "asset": "assets/buttons/sign_in/ar/rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Default/Active-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Default/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Default/Active@3x-1.png"
+      }
+    },
+    "sign_in/ar/rounded_white_outline_focused": {
+      "asset": "assets/buttons/sign_in/ar/rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Default/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Default/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Default/Focus@3x-1.png"
+      }
+    },
+    "sign_in/ar/rounded_white_outline_pressed": {
+      "asset": "assets/buttons/sign_in/ar/rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Default/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Default/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Default/Pressed@3x-1.png"
+      }
+    },
+    "sign_in/ar/rounded_white_outline_disabled": {
+      "asset": "assets/buttons/sign_in/ar/rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Default/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Default/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Default/Disabled@3x-1.png"
+      }
+    },
+    "sign_in/ar/rounded_black_active": {
+      "asset": "assets/buttons/sign_in/ar/rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Default/Active-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Default/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Default/Active@3x-2.png"
+      }
+    },
+    "sign_in/ar/rounded_black_focused": {
+      "asset": "assets/buttons/sign_in/ar/rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Default/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Default/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Default/Focus@3x-2.png"
+      }
+    },
+    "sign_in/ar/rounded_black_pressed": {
+      "asset": "assets/buttons/sign_in/ar/rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Default/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Default/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Default/Pressed@3x-2.png"
+      }
+    },
+    "sign_in/ar/rounded_black_disabled": {
+      "asset": "assets/buttons/sign_in/ar/rounded_black_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Default/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Default/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Default/Disabled@3x-2.png"
+      }
+    },
+    "sign_in/ar/fully_rounded_white_active": {
+      "asset": "assets/buttons/sign_in/ar/fully_rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Active.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Active@3x.png"
+      }
+    },
+    "sign_in/ar/fully_rounded_white_focused": {
+      "asset": "assets/buttons/sign_in/ar/fully_rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Focus.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Focus@3x.png"
+      }
+    },
+    "sign_in/ar/fully_rounded_white_pressed": {
+      "asset": "assets/buttons/sign_in/ar/fully_rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Pressed.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Pressed@3x.png"
+      }
+    },
+    "sign_in/ar/fully_rounded_white_disabled": {
+      "asset": "assets/buttons/sign_in/ar/fully_rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Disabled.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Disabled@3x.png"
+      }
+    },
+    "sign_in/ar/fully_rounded_white_outline_active": {
+      "asset": "assets/buttons/sign_in/ar/fully_rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Active-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Active@3x-1.png"
+      }
+    },
+    "sign_in/ar/fully_rounded_white_outline_focused": {
+      "asset": "assets/buttons/sign_in/ar/fully_rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Focus@3x-1.png"
+      }
+    },
+    "sign_in/ar/fully_rounded_white_outline_pressed": {
+      "asset": "assets/buttons/sign_in/ar/fully_rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Pressed@3x-1.png"
+      }
+    },
+    "sign_in/ar/fully_rounded_white_outline_disabled": {
+      "asset": "assets/buttons/sign_in/ar/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Pill/Disabled@3x-1.png"
+      }
+    },
+    "sign_in/ar/fully_rounded_black_active": {
+      "asset": "assets/buttons/sign_in/ar/fully_rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Pill/Active-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Pill/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Pill/Active@3x-2.png"
+      }
+    },
+    "sign_in/ar/fully_rounded_black_focused": {
+      "asset": "assets/buttons/sign_in/ar/fully_rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Pill/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Pill/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Pill/Focus@3x-2.png"
+      }
+    },
+    "sign_in/ar/fully_rounded_black_pressed": {
+      "asset": "assets/buttons/sign_in/ar/fully_rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Pill/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Pill/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Pill/Pressed@3x-2.png"
+      }
+    },
+    "sign_in/ar/fully_rounded_black_disabled": {
+      "asset": "assets/buttons/sign_in/ar/fully_rounded_black_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Pill/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Pill/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Pill/Disabled@3x-2.png"
+      }
+    },
+    "sign_in/ar/square_corners_white_active": {
+      "asset": "assets/buttons/sign_in/ar/square_corners_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Active.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Active@3x.png"
+      }
+    },
+    "sign_in/ar/square_corners_white_focused": {
+      "asset": "assets/buttons/sign_in/ar/square_corners_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Focus.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Focus@3x.png"
+      }
+    },
+    "sign_in/ar/square_corners_white_pressed": {
+      "asset": "assets/buttons/sign_in/ar/square_corners_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Pressed.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Pressed@3x.png"
+      }
+    },
+    "sign_in/ar/square_corners_white_disabled": {
+      "asset": "assets/buttons/sign_in/ar/square_corners_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Disabled.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Disabled@3x.png"
+      }
+    },
+    "sign_in/ar/square_corners_white_outline_active": {
+      "asset": "assets/buttons/sign_in/ar/square_corners_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Active-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Active@3x-1.png"
+      }
+    },
+    "sign_in/ar/square_corners_white_outline_focused": {
+      "asset": "assets/buttons/sign_in/ar/square_corners_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Focus@3x-1.png"
+      }
+    },
+    "sign_in/ar/square_corners_white_outline_pressed": {
+      "asset": "assets/buttons/sign_in/ar/square_corners_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Pressed@3x-1.png"
+      }
+    },
+    "sign_in/ar/square_corners_white_outline_disabled": {
+      "asset": "assets/buttons/sign_in/ar/square_corners_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign in with/Sharp/Disabled@3x-1.png"
+      }
+    },
+    "sign_in/ar/square_corners_black_active": {
+      "asset": "assets/buttons/sign_in/ar/square_corners_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Sharp/Active-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Sharp/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Sharp/Active@3x-2.png"
+      }
+    },
+    "sign_in/ar/square_corners_black_focused": {
+      "asset": "assets/buttons/sign_in/ar/square_corners_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Sharp/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Sharp/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Sharp/Focus@3x-2.png"
+      }
+    },
+    "sign_in/ar/square_corners_black_pressed": {
+      "asset": "assets/buttons/sign_in/ar/square_corners_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Sharp/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Sharp/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Sharp/Pressed@3x-2.png"
+      }
+    },
+    "sign_in/ar/square_corners_black_disabled": {
+      "asset": "assets/buttons/sign_in/ar/square_corners_black_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Sharp/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Sharp/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Sharp/Disabled@3x-2.png"
+      }
+    },
+    "login/en/rounded_white_active": {
+      "asset": "assets/buttons/login/en/rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Default/Active.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Default/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Default/Active@3x.png"
+      }
+    },
+    "login/en/rounded_white_focused": {
+      "asset": "assets/buttons/login/en/rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Default/Focus.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Default/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Default/Focus@3x.png"
+      }
+    },
+    "login/en/rounded_white_pressed": {
+      "asset": "assets/buttons/login/en/rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Default/Pressed.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Default/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Default/Pressed@3x.png"
+      }
+    },
+    "login/en/rounded_white_disabled": {
+      "asset": "assets/buttons/login/en/rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Default/Disabled.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Default/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Default/Disabled@3x.png"
+      }
+    },
+    "login/en/rounded_white_outline_active": {
+      "asset": "assets/buttons/login/en/rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Default/Active-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Default/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Default/Active@3x-1.png"
+      }
+    },
+    "login/en/rounded_white_outline_focused": {
+      "asset": "assets/buttons/login/en/rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Default/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Default/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Default/Focus@3x-1.png"
+      }
+    },
+    "login/en/rounded_white_outline_pressed": {
+      "asset": "assets/buttons/login/en/rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Default/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Default/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Default/Pressed@3x-1.png"
+      }
+    },
+    "login/en/rounded_white_outline_disabled": {
+      "asset": "assets/buttons/login/en/rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Default/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Default/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Default/Disabled@3x-1.png"
+      }
+    },
+    "login/en/rounded_black_active": {
+      "asset": "assets/buttons/login/en/rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Default/Active-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Default/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Default/Active@3x-2.png"
+      }
+    },
+    "login/en/rounded_black_focused": {
+      "asset": "assets/buttons/login/en/rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Default/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Default/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Default/Focus@3x-2.png"
+      }
+    },
+    "login/en/rounded_black_pressed": {
+      "asset": "assets/buttons/login/en/rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Default/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Default/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Default/Pressed@3x-2.png"
+      }
+    },
+    "login/en/rounded_black_disabled": {
+      "asset": "assets/buttons/login/en/rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Default/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Default/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Default/Disabled@3x-2.png"
+      }
+    },
+    "login/en/fully_rounded_white_active": {
+      "asset": "assets/buttons/login/en/fully_rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Pill/Active.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Pill/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Pill/Active@3x.png"
+      }
+    },
+    "login/en/fully_rounded_white_focused": {
+      "asset": "assets/buttons/login/en/fully_rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Pill/Focus.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Pill/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Pill/Focus@3x.png"
+      }
+    },
+    "login/en/fully_rounded_white_pressed": {
+      "asset": "assets/buttons/login/en/fully_rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Pill/Pressed.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Pill/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Pill/Pressed@3x.png"
+      }
+    },
+    "login/en/fully_rounded_white_disabled": {
+      "asset": "assets/buttons/login/en/fully_rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Pill/Disabled.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Pill/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Pill/Disabled@3x.png"
+      }
+    },
+    "login/en/fully_rounded_white_outline_active": {
+      "asset": "assets/buttons/login/en/fully_rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Pill/Active-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Pill/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Pill/Active@3x-1.png"
+      }
+    },
+    "login/en/fully_rounded_white_outline_focused": {
+      "asset": "assets/buttons/login/en/fully_rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Pill/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Pill/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Pill/Focus@3x-1.png"
+      }
+    },
+    "login/en/fully_rounded_white_outline_pressed": {
+      "asset": "assets/buttons/login/en/fully_rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Pill/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Pill/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Pill/Pressed@3x-1.png"
+      }
+    },
+    "login/en/fully_rounded_white_outline_disabled": {
+      "asset": "assets/buttons/login/en/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Pill/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Pill/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Pill/Disabled@3x-1.png"
+      }
+    },
+    "login/en/fully_rounded_black_active": {
+      "asset": "assets/buttons/login/en/fully_rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Pill/Active-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Pill/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Pill/Active@3x-2.png"
+      }
+    },
+    "login/en/fully_rounded_black_focused": {
+      "asset": "assets/buttons/login/en/fully_rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Pill/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Pill/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Pill/Focus@3x-2.png"
+      }
+    },
+    "login/en/fully_rounded_black_pressed": {
+      "asset": "assets/buttons/login/en/fully_rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Pill/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Pill/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Pill/Pressed@3x-2.png"
+      }
+    },
+    "login/en/fully_rounded_black_disabled": {
+      "asset": "assets/buttons/login/en/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Pill/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Pill/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Pill/Disabled@3x-2.png"
+      }
+    },
+    "login/en/square_corners_white_active": {
+      "asset": "assets/buttons/login/en/square_corners_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Sharp/Active.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Sharp/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Sharp/Active@3x.png"
+      }
+    },
+    "login/en/square_corners_white_focused": {
+      "asset": "assets/buttons/login/en/square_corners_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Sharp/Focus.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Sharp/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Sharp/Focus@3x.png"
+      }
+    },
+    "login/en/square_corners_white_pressed": {
+      "asset": "assets/buttons/login/en/square_corners_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Sharp/Pressed.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Sharp/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Sharp/Pressed@3x.png"
+      }
+    },
+    "login/en/square_corners_white_disabled": {
+      "asset": "assets/buttons/login/en/square_corners_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Sharp/Disabled.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Sharp/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Sharp/Disabled@3x.png"
+      }
+    },
+    "login/en/square_corners_white_outline_active": {
+      "asset": "assets/buttons/login/en/square_corners_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Sharp/Active-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Sharp/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Sharp/Active@3x-1.png"
+      }
+    },
+    "login/en/square_corners_white_outline_focused": {
+      "asset": "assets/buttons/login/en/square_corners_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Sharp/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Sharp/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Sharp/Focus@3x-1.png"
+      }
+    },
+    "login/en/square_corners_white_outline_pressed": {
+      "asset": "assets/buttons/login/en/square_corners_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Sharp/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Sharp/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Sharp/Pressed@3x-1.png"
+      }
+    },
+    "login/en/square_corners_white_outline_disabled": {
+      "asset": "assets/buttons/login/en/square_corners_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Sharp/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Sharp/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Sharp/Disabled@3x-1.png"
+      }
+    },
+    "login/en/square_corners_black_active": {
+      "asset": "assets/buttons/login/en/square_corners_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Sharp/Active-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Sharp/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Sharp/Active@3x-2.png"
+      }
+    },
+    "login/en/square_corners_black_focused": {
+      "asset": "assets/buttons/login/en/square_corners_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Sharp/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Sharp/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Sharp/Focus@3x-2.png"
+      }
+    },
+    "login/en/square_corners_black_pressed": {
+      "asset": "assets/buttons/login/en/square_corners_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Sharp/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Sharp/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Sharp/Pressed@3x-2.png"
+      }
+    },
+    "login/en/square_corners_black_disabled": {
+      "asset": "assets/buttons/login/en/square_corners_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Login with/Sharp/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Login with/Sharp/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Login with/Sharp/Disabled@3x-2.png"
+      }
+    },
+    "login/ar/rounded_white_active": {
+      "asset": "assets/buttons/login/ar/rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Default/Active.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Default/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Default/Active@3x.png"
+      }
+    },
+    "login/ar/rounded_white_focused": {
+      "asset": "assets/buttons/login/ar/rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Default/Focus.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Default/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Default/Focus@3x.png"
+      }
+    },
+    "login/ar/rounded_white_pressed": {
+      "asset": "assets/buttons/login/ar/rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Default/Pressed.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Default/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Default/Pressed@3x.png"
+      }
+    },
+    "login/ar/rounded_white_disabled": {
+      "asset": "assets/buttons/login/ar/rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Default/Disabled.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Default/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Default/Disabled@3x.png"
+      }
+    },
+    "login/ar/rounded_white_outline_active": {
+      "asset": "assets/buttons/login/ar/rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Default/Active-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Default/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Default/Active@3x-1.png"
+      }
+    },
+    "login/ar/rounded_white_outline_focused": {
+      "asset": "assets/buttons/login/ar/rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Default/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Default/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Default/Focus@3x-1.png"
+      }
+    },
+    "login/ar/rounded_white_outline_pressed": {
+      "asset": "assets/buttons/login/ar/rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Default/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Default/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Default/Pressed@3x-1.png"
+      }
+    },
+    "login/ar/rounded_white_outline_disabled": {
+      "asset": "assets/buttons/sign_in/ar/rounded_black_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Default/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Default/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Default/Disabled@3x-1.png"
+      }
+    },
+    "login/ar/rounded_black_active": {
+      "asset": "assets/buttons/sign_in/ar/rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Default/Active-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Default/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Default/Active@3x-2.png"
+      }
+    },
+    "login/ar/rounded_black_focused": {
+      "asset": "assets/buttons/sign_in/ar/rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Default/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Default/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Default/Focus@3x-2.png"
+      }
+    },
+    "login/ar/rounded_black_pressed": {
+      "asset": "assets/buttons/sign_in/ar/rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Default/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Default/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Default/Pressed@3x-2.png"
+      }
+    },
+    "login/ar/rounded_black_disabled": {
+      "asset": "assets/buttons/sign_in/ar/rounded_black_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Default/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Default/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Default/Disabled@3x-2.png"
+      }
+    },
+    "login/ar/fully_rounded_white_active": {
+      "asset": "assets/buttons/login/ar/fully_rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Pill/Active.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Pill/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Pill/Active@3x.png"
+      }
+    },
+    "login/ar/fully_rounded_white_focused": {
+      "asset": "assets/buttons/login/ar/fully_rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Pill/Focus.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Pill/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Pill/Focus@3x.png"
+      }
+    },
+    "login/ar/fully_rounded_white_pressed": {
+      "asset": "assets/buttons/login/ar/fully_rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Pill/Pressed.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Pill/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Pill/Pressed@3x.png"
+      }
+    },
+    "login/ar/fully_rounded_white_disabled": {
+      "asset": "assets/buttons/login/ar/fully_rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Pill/Disabled.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Pill/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Pill/Disabled@3x.png"
+      }
+    },
+    "login/ar/fully_rounded_white_outline_active": {
+      "asset": "assets/buttons/login/ar/fully_rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Pill/Active-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Pill/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Pill/Active@3x-1.png"
+      }
+    },
+    "login/ar/fully_rounded_white_outline_focused": {
+      "asset": "assets/buttons/login/ar/fully_rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Pill/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Pill/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Pill/Focus@3x-1.png"
+      }
+    },
+    "login/ar/fully_rounded_white_outline_pressed": {
+      "asset": "assets/buttons/login/ar/fully_rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Pill/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Pill/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Pill/Pressed@3x-1.png"
+      }
+    },
+    "login/ar/fully_rounded_white_outline_disabled": {
+      "asset": "assets/buttons/sign_in/ar/fully_rounded_black_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Pill/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Pill/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Pill/Disabled@3x-1.png"
+      }
+    },
+    "login/ar/fully_rounded_black_active": {
+      "asset": "assets/buttons/sign_in/ar/fully_rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Pill/Active-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Pill/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Pill/Active@3x-2.png"
+      }
+    },
+    "login/ar/fully_rounded_black_focused": {
+      "asset": "assets/buttons/sign_in/ar/fully_rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Pill/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Pill/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Pill/Focus@3x-2.png"
+      }
+    },
+    "login/ar/fully_rounded_black_pressed": {
+      "asset": "assets/buttons/sign_in/ar/fully_rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Pill/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Pill/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Pill/Pressed@3x-2.png"
+      }
+    },
+    "login/ar/fully_rounded_black_disabled": {
+      "asset": "assets/buttons/sign_in/ar/fully_rounded_black_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Pill/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Pill/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Pill/Disabled@3x-2.png"
+      }
+    },
+    "login/ar/square_corners_white_active": {
+      "asset": "assets/buttons/login/ar/square_corners_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Sharp/Active.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Sharp/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Sharp/Active@3x.png"
+      }
+    },
+    "login/ar/square_corners_white_focused": {
+      "asset": "assets/buttons/login/ar/square_corners_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Sharp/Focus.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Sharp/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Sharp/Focus@3x.png"
+      }
+    },
+    "login/ar/square_corners_white_pressed": {
+      "asset": "assets/buttons/login/ar/square_corners_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Sharp/Pressed.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Sharp/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Sharp/Pressed@3x.png"
+      }
+    },
+    "login/ar/square_corners_white_disabled": {
+      "asset": "assets/buttons/login/ar/square_corners_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Sharp/Disabled.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Sharp/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Sharp/Disabled@3x.png"
+      }
+    },
+    "login/ar/square_corners_white_outline_active": {
+      "asset": "assets/buttons/login/ar/square_corners_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Sharp/Active-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Sharp/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Sharp/Active@3x-1.png"
+      }
+    },
+    "login/ar/square_corners_white_outline_focused": {
+      "asset": "assets/buttons/login/ar/square_corners_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Sharp/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Sharp/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Sharp/Focus@3x-1.png"
+      }
+    },
+    "login/ar/square_corners_white_outline_pressed": {
+      "asset": "assets/buttons/login/ar/square_corners_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Sharp/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Sharp/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Sharp/Pressed@3x-1.png"
+      }
+    },
+    "login/ar/square_corners_white_outline_disabled": {
+      "asset": "assets/buttons/sign_in/ar/square_corners_black_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Sharp/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Sharp/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Sharp/Disabled@3x-1.png"
+      }
+    },
+    "login/ar/square_corners_black_active": {
+      "asset": "assets/buttons/sign_in/ar/square_corners_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Sharp/Active-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Sharp/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Sharp/Active@3x-2.png"
+      }
+    },
+    "login/ar/square_corners_black_focused": {
+      "asset": "assets/buttons/sign_in/ar/square_corners_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Sharp/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Sharp/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Sharp/Focus@3x-2.png"
+      }
+    },
+    "login/ar/square_corners_black_pressed": {
+      "asset": "assets/buttons/sign_in/ar/square_corners_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Sharp/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Sharp/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Sharp/Pressed@3x-2.png"
+      }
+    },
+    "login/ar/square_corners_black_disabled": {
+      "asset": "assets/buttons/sign_in/ar/square_corners_black_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Login with/Sharp/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Login with/Sharp/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Login with/Sharp/Disabled@3x-2.png"
+      }
+    },
+    "register_account/en/rounded_white_active": {
+      "asset": "assets/buttons/register_account/en/rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Default/Active.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Default/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Default/Active@3x.png"
+      }
+    },
+    "register_account/en/rounded_white_focused": {
+      "asset": "assets/buttons/register_account/en/rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Default/Focus.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Default/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Default/Focus@3x.png"
+      }
+    },
+    "register_account/en/rounded_white_pressed": {
+      "asset": "assets/buttons/register_account/en/rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Default/Pressed.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Default/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Default/Pressed@3x.png"
+      }
+    },
+    "register_account/en/rounded_white_disabled": {
+      "asset": "assets/buttons/register_account/en/rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Default/Disabled.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Default/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Default/Disabled@3x.png"
+      }
+    },
+    "register_account/en/rounded_white_outline_active": {
+      "asset": "assets/buttons/register_account/en/rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Default/Active-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Default/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Default/Active@3x-1.png"
+      }
+    },
+    "register_account/en/rounded_white_outline_focused": {
+      "asset": "assets/buttons/register_account/en/rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Default/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Default/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Default/Focus@3x-1.png"
+      }
+    },
+    "register_account/en/rounded_white_outline_pressed": {
+      "asset": "assets/buttons/register_account/en/rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Default/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Default/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Default/Pressed@3x-1.png"
+      }
+    },
+    "register_account/en/rounded_white_outline_disabled": {
+      "asset": "assets/buttons/register_account/en/rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Default/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Default/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Default/Disabled@3x-1.png"
+      }
+    },
+    "register_account/en/rounded_black_active": {
+      "asset": "assets/buttons/register_account/en/rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Default/Active-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Default/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Default/Active@3x-2.png"
+      }
+    },
+    "register_account/en/rounded_black_focused": {
+      "asset": "assets/buttons/register_account/en/rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Default/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Default/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Default/Focus@3x-2.png"
+      }
+    },
+    "register_account/en/rounded_black_pressed": {
+      "asset": "assets/buttons/register_account/en/rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Default/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Default/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Default/Pressed@3x-2.png"
+      }
+    },
+    "register_account/en/rounded_black_disabled": {
+      "asset": "assets/buttons/register_account/en/rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Default/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Default/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Default/Disabled@3x-2.png"
+      }
+    },
+    "register_account/en/fully_rounded_white_active": {
+      "asset": "assets/buttons/register_account/en/fully_rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Active.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Active@3x.png"
+      }
+    },
+    "register_account/en/fully_rounded_white_focused": {
+      "asset": "assets/buttons/register_account/en/fully_rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Focus.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Focus@3x.png"
+      }
+    },
+    "register_account/en/fully_rounded_white_pressed": {
+      "asset": "assets/buttons/register_account/en/fully_rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Pressed.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Pressed@3x.png"
+      }
+    },
+    "register_account/en/fully_rounded_white_disabled": {
+      "asset": "assets/buttons/register_account/en/fully_rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Disabled.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Disabled@3x.png"
+      }
+    },
+    "register_account/en/fully_rounded_white_outline_active": {
+      "asset": "assets/buttons/register_account/en/fully_rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Active-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Active@3x-1.png"
+      }
+    },
+    "register_account/en/fully_rounded_white_outline_focused": {
+      "asset": "assets/buttons/register_account/en/fully_rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Focus@3x-1.png"
+      }
+    },
+    "register_account/en/fully_rounded_white_outline_pressed": {
+      "asset": "assets/buttons/register_account/en/fully_rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Pressed@3x-1.png"
+      }
+    },
+    "register_account/en/fully_rounded_white_outline_disabled": {
+      "asset": "assets/buttons/register_account/en/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Disabled@3x-1.png"
+      }
+    },
+    "register_account/en/fully_rounded_black_active": {
+      "asset": "assets/buttons/register_account/en/fully_rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Active-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Active@3x-2.png"
+      }
+    },
+    "register_account/en/fully_rounded_black_focused": {
+      "asset": "assets/buttons/register_account/en/fully_rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Focus@3x-2.png"
+      }
+    },
+    "register_account/en/fully_rounded_black_pressed": {
+      "asset": "assets/buttons/register_account/en/fully_rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Pressed@3x-2.png"
+      }
+    },
+    "register_account/en/fully_rounded_black_disabled": {
+      "asset": "assets/buttons/register_account/en/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Pill/Disabled@3x-2.png"
+      }
+    },
+    "register_account/en/square_corners_white_active": {
+      "asset": "assets/buttons/register_account/en/square_corners_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Active.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Active@3x.png"
+      }
+    },
+    "register_account/en/square_corners_white_focused": {
+      "asset": "assets/buttons/register_account/en/square_corners_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Focus.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Focus@3x.png"
+      }
+    },
+    "register_account/en/square_corners_white_pressed": {
+      "asset": "assets/buttons/register_account/en/square_corners_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Pressed.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Pressed@3x.png"
+      }
+    },
+    "register_account/en/square_corners_white_disabled": {
+      "asset": "assets/buttons/register_account/en/square_corners_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Disabled.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Disabled@3x.png"
+      }
+    },
+    "register_account/en/square_corners_white_outline_active": {
+      "asset": "assets/buttons/register_account/en/square_corners_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Active-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Active@3x-1.png"
+      }
+    },
+    "register_account/en/square_corners_white_outline_focused": {
+      "asset": "assets/buttons/register_account/en/square_corners_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Focus@3x-1.png"
+      }
+    },
+    "register_account/en/square_corners_white_outline_pressed": {
+      "asset": "assets/buttons/register_account/en/square_corners_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Pressed@3x-1.png"
+      }
+    },
+    "register_account/en/square_corners_white_outline_disabled": {
+      "asset": "assets/buttons/register_account/en/square_corners_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Disabled@3x-1.png"
+      }
+    },
+    "register_account/en/square_corners_black_active": {
+      "asset": "assets/buttons/register_account/en/square_corners_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Active-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Active@3x-2.png"
+      }
+    },
+    "register_account/en/square_corners_black_focused": {
+      "asset": "assets/buttons/register_account/en/square_corners_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Focus@3x-2.png"
+      }
+    },
+    "register_account/en/square_corners_black_pressed": {
+      "asset": "assets/buttons/register_account/en/square_corners_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Pressed@3x-2.png"
+      }
+    },
+    "register_account/en/square_corners_black_disabled": {
+      "asset": "assets/buttons/register_account/en/square_corners_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Register Account with/Sharp/Disabled@3x-2.png"
+      }
+    },
+    "register_account/ar/rounded_white_active": {
+      "asset": "assets/buttons/register_account/ar/rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Default/Active.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Default/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Default/Active@3x.png"
+      }
+    },
+    "register_account/ar/rounded_white_focused": {
+      "asset": "assets/buttons/register_account/ar/rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Default/Focus.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Default/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Default/Focus@3x.png"
+      }
+    },
+    "register_account/ar/rounded_white_pressed": {
+      "asset": "assets/buttons/register_account/ar/rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Default/Pressed.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Default/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Default/Pressed@3x.png"
+      }
+    },
+    "register_account/ar/rounded_white_disabled": {
+      "asset": "assets/buttons/register_account/ar/rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Default/Disabled.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Default/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Default/Disabled@3x.png"
+      }
+    },
+    "register_account/ar/rounded_white_outline_active": {
+      "asset": "assets/buttons/register_account/ar/rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Default/Active-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Default/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Default/Active@3x-1.png"
+      }
+    },
+    "register_account/ar/rounded_white_outline_focused": {
+      "asset": "assets/buttons/register_account/ar/rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Default/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Default/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Default/Focus@3x-1.png"
+      }
+    },
+    "register_account/ar/rounded_white_outline_pressed": {
+      "asset": "assets/buttons/register_account/ar/rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Default/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Default/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Default/Pressed@3x-1.png"
+      }
+    },
+    "register_account/ar/rounded_white_outline_disabled": {
+      "asset": "assets/buttons/register_account/ar/rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Default/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Default/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Default/Disabled@3x-1.png"
+      }
+    },
+    "register_account/ar/rounded_black_active": {
+      "asset": "assets/buttons/register_account/ar/rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Default/Active-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Default/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Default/Active@3x-2.png"
+      }
+    },
+    "register_account/ar/rounded_black_focused": {
+      "asset": "assets/buttons/register_account/ar/rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Default/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Default/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Default/Focus@3x-2.png"
+      }
+    },
+    "register_account/ar/rounded_black_pressed": {
+      "asset": "assets/buttons/register_account/ar/rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Default/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Default/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Default/Pressed@3x-2.png"
+      }
+    },
+    "register_account/ar/rounded_black_disabled": {
+      "asset": "assets/buttons/register_account/ar/rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Default/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Default/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Default/Disabled@3x-2.png"
+      }
+    },
+    "register_account/ar/fully_rounded_white_active": {
+      "asset": "assets/buttons/register_account/ar/fully_rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Active.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Active@3x.png"
+      }
+    },
+    "register_account/ar/fully_rounded_white_focused": {
+      "asset": "assets/buttons/register_account/ar/fully_rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Focus.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Focus@3x.png"
+      }
+    },
+    "register_account/ar/fully_rounded_white_pressed": {
+      "asset": "assets/buttons/register_account/ar/fully_rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Pressed.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Pressed@3x.png"
+      }
+    },
+    "register_account/ar/fully_rounded_white_disabled": {
+      "asset": "assets/buttons/register_account/ar/fully_rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Disabled.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Disabled@3x.png"
+      }
+    },
+    "register_account/ar/fully_rounded_white_outline_active": {
+      "asset": "assets/buttons/register_account/ar/fully_rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Active-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Active@3x-1.png"
+      }
+    },
+    "register_account/ar/fully_rounded_white_outline_focused": {
+      "asset": "assets/buttons/register_account/ar/fully_rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Focus@3x-1.png"
+      }
+    },
+    "register_account/ar/fully_rounded_white_outline_pressed": {
+      "asset": "assets/buttons/register_account/ar/fully_rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Pressed@3x-1.png"
+      }
+    },
+    "register_account/ar/fully_rounded_white_outline_disabled": {
+      "asset": "assets/buttons/register_account/ar/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Disabled@3x-1.png"
+      }
+    },
+    "register_account/ar/fully_rounded_black_active": {
+      "asset": "assets/buttons/register_account/ar/fully_rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Active-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Active@3x-2.png"
+      }
+    },
+    "register_account/ar/fully_rounded_black_focused": {
+      "asset": "assets/buttons/register_account/ar/fully_rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Focus@3x-2.png"
+      }
+    },
+    "register_account/ar/fully_rounded_black_pressed": {
+      "asset": "assets/buttons/register_account/ar/fully_rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Pressed@3x-2.png"
+      }
+    },
+    "register_account/ar/fully_rounded_black_disabled": {
+      "asset": "assets/buttons/register_account/ar/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Disabled@3x-2.png"
+      }
+    },
+    "register_account/ar/square_corners_white_active": {
+      "asset": "assets/buttons/register_account/ar/square_corners_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Active.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Active@3x.png"
+      }
+    },
+    "register_account/ar/square_corners_white_focused": {
+      "asset": "assets/buttons/register_account/ar/square_corners_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Focus.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Focus@3x.png"
+      }
+    },
+    "register_account/ar/square_corners_white_pressed": {
+      "asset": "assets/buttons/register_account/ar/square_corners_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Pressed.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Pressed@3x.png"
+      }
+    },
+    "register_account/ar/square_corners_white_disabled": {
+      "asset": "assets/buttons/register_account/ar/square_corners_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Disabled.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Disabled@3x.png"
+      }
+    },
+    "register_account/ar/square_corners_white_outline_active": {
+      "asset": "assets/buttons/register_account/ar/square_corners_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Active-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Active@3x-1.png"
+      }
+    },
+    "register_account/ar/square_corners_white_outline_focused": {
+      "asset": "assets/buttons/register_account/ar/square_corners_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Focus@3x-1.png"
+      }
+    },
+    "register_account/ar/square_corners_white_outline_pressed": {
+      "asset": "assets/buttons/register_account/ar/square_corners_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Pressed@3x-1.png"
+      }
+    },
+    "register_account/ar/square_corners_white_outline_disabled": {
+      "asset": "assets/buttons/register_account/ar/square_corners_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Disabled@3x-1.png"
+      }
+    },
+    "register_account/ar/square_corners_black_active": {
+      "asset": "assets/buttons/register_account/ar/square_corners_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Active-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Active@3x-2.png"
+      }
+    },
+    "register_account/ar/square_corners_black_focused": {
+      "asset": "assets/buttons/register_account/ar/square_corners_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Focus@3x-2.png"
+      }
+    },
+    "register_account/ar/square_corners_black_pressed": {
+      "asset": "assets/buttons/register_account/ar/square_corners_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Pressed@3x-2.png"
+      }
+    },
+    "register_account/ar/square_corners_black_disabled": {
+      "asset": "assets/buttons/register_account/ar/square_corners_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Disabled@3x-2.png"
+      }
+    },
+    "sign_up/en/rounded_white_active": {
+      "asset": "assets/buttons/sign_up/en/rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Default/Active.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Default/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Default/Active@3x.png"
+      }
+    },
+    "sign_up/en/rounded_white_focused": {
+      "asset": "assets/buttons/sign_up/en/rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Default/Focus.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Default/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Default/Focus@3x.png"
+      }
+    },
+    "sign_up/en/rounded_white_pressed": {
+      "asset": "assets/buttons/sign_up/en/rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Default/Pressed.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Default/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Default/Pressed@3x.png"
+      }
+    },
+    "sign_up/en/rounded_white_disabled": {
+      "asset": "assets/buttons/sign_up/en/rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Default/Disabled.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Default/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Default/Disabled@3x.png"
+      }
+    },
+    "sign_up/en/rounded_white_outline_active": {
+      "asset": "assets/buttons/sign_up/en/rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Default/Active-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Default/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Default/Active@3x-1.png"
+      }
+    },
+    "sign_up/en/rounded_white_outline_focused": {
+      "asset": "assets/buttons/sign_up/en/rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Default/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Default/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Default/Focus@3x-1.png"
+      }
+    },
+    "sign_up/en/rounded_white_outline_pressed": {
+      "asset": "assets/buttons/sign_up/en/rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Default/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Default/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Default/Pressed@3x-1.png"
+      }
+    },
+    "sign_up/en/rounded_white_outline_disabled": {
+      "asset": "assets/buttons/sign_up/en/rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Default/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Default/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Default/Disabled@3x-1.png"
+      }
+    },
+    "sign_up/en/rounded_black_active": {
+      "asset": "assets/buttons/sign_up/en/rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Default/Active-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Default/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Default/Active@3x-2.png"
+      }
+    },
+    "sign_up/en/rounded_black_focused": {
+      "asset": "assets/buttons/sign_up/en/rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Default/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Default/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Default/Focus@3x-2.png"
+      }
+    },
+    "sign_up/en/rounded_black_pressed": {
+      "asset": "assets/buttons/sign_up/en/rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Default/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Default/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Default/Pressed@3x-2.png"
+      }
+    },
+    "sign_up/en/rounded_black_disabled": {
+      "asset": "assets/buttons/sign_up/en/rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Default/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Default/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Default/Disabled@3x-2.png"
+      }
+    },
+    "sign_up/en/fully_rounded_white_active": {
+      "asset": "assets/buttons/sign_up/en/fully_rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Active.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Active@3x.png"
+      }
+    },
+    "sign_up/en/fully_rounded_white_focused": {
+      "asset": "assets/buttons/sign_up/en/fully_rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Focus.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Focus@3x.png"
+      }
+    },
+    "sign_up/en/fully_rounded_white_pressed": {
+      "asset": "assets/buttons/sign_up/en/fully_rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Pressed.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Pressed@3x.png"
+      }
+    },
+    "sign_up/en/fully_rounded_white_disabled": {
+      "asset": "assets/buttons/sign_up/en/fully_rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Disabled.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Disabled@3x.png"
+      }
+    },
+    "sign_up/en/fully_rounded_white_outline_active": {
+      "asset": "assets/buttons/sign_up/en/fully_rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Active-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Active@3x-1.png"
+      }
+    },
+    "sign_up/en/fully_rounded_white_outline_focused": {
+      "asset": "assets/buttons/sign_up/en/fully_rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Focus@3x-1.png"
+      }
+    },
+    "sign_up/en/fully_rounded_white_outline_pressed": {
+      "asset": "assets/buttons/sign_up/en/fully_rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Pressed@3x-1.png"
+      }
+    },
+    "sign_up/en/fully_rounded_white_outline_disabled": {
+      "asset": "assets/buttons/sign_up/en/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Disabled@3x-1.png"
+      }
+    },
+    "sign_up/en/fully_rounded_black_active": {
+      "asset": "assets/buttons/sign_up/en/fully_rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Active-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Active@3x-2.png"
+      }
+    },
+    "sign_up/en/fully_rounded_black_focused": {
+      "asset": "assets/buttons/sign_up/en/fully_rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Focus@3x-2.png"
+      }
+    },
+    "sign_up/en/fully_rounded_black_pressed": {
+      "asset": "assets/buttons/sign_up/en/fully_rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Pressed@3x-2.png"
+      }
+    },
+    "sign_up/en/fully_rounded_black_disabled": {
+      "asset": "assets/buttons/sign_up/en/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Pill/Disabled@3x-2.png"
+      }
+    },
+    "sign_up/en/square_corners_white_active": {
+      "asset": "assets/buttons/sign_up/en/square_corners_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Active.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Active@3x.png"
+      }
+    },
+    "sign_up/en/square_corners_white_focused": {
+      "asset": "assets/buttons/sign_up/en/square_corners_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Focus.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Focus@3x.png"
+      }
+    },
+    "sign_up/en/square_corners_white_pressed": {
+      "asset": "assets/buttons/sign_up/en/square_corners_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Pressed.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Pressed@3x.png"
+      }
+    },
+    "sign_up/en/square_corners_white_disabled": {
+      "asset": "assets/buttons/sign_up/en/square_corners_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Disabled.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Disabled@3x.png"
+      }
+    },
+    "sign_up/en/square_corners_white_outline_active": {
+      "asset": "assets/buttons/sign_up/en/square_corners_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Active-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Active@3x-1.png"
+      }
+    },
+    "sign_up/en/square_corners_white_outline_focused": {
+      "asset": "assets/buttons/sign_up/en/square_corners_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Focus@3x-1.png"
+      }
+    },
+    "sign_up/en/square_corners_white_outline_pressed": {
+      "asset": "assets/buttons/sign_up/en/square_corners_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Pressed@3x-1.png"
+      }
+    },
+    "sign_up/en/square_corners_white_outline_disabled": {
+      "asset": "assets/buttons/sign_up/en/square_corners_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Disabled@3x-1.png"
+      }
+    },
+    "sign_up/en/square_corners_black_active": {
+      "asset": "assets/buttons/sign_up/en/square_corners_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Active-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Active@3x-2.png"
+      }
+    },
+    "sign_up/en/square_corners_black_focused": {
+      "asset": "assets/buttons/sign_up/en/square_corners_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Focus@3x-2.png"
+      }
+    },
+    "sign_up/en/square_corners_black_pressed": {
+      "asset": "assets/buttons/sign_up/en/square_corners_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Pressed@3x-2.png"
+      }
+    },
+    "sign_up/en/square_corners_black_disabled": {
+      "asset": "assets/buttons/sign_up/en/square_corners_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/EN/Sign up with/Sharp/Disabled@3x-2.png"
+      }
+    },
+    "sign_up/ar/rounded_white_active": {
+      "asset": "assets/buttons/sign_up/ar/rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Default/Active.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Default/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Default/Active@3x.png"
+      }
+    },
+    "sign_up/ar/rounded_white_focused": {
+      "asset": "assets/buttons/sign_up/ar/rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Default/Focus.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Default/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Default/Focus@3x.png"
+      }
+    },
+    "sign_up/ar/rounded_white_pressed": {
+      "asset": "assets/buttons/sign_up/ar/rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Default/Pressed.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Default/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Default/Pressed@3x.png"
+      }
+    },
+    "sign_up/ar/rounded_white_disabled": {
+      "asset": "assets/buttons/sign_up/ar/rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Default/Disabled.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Default/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Default/Disabled@3x.png"
+      }
+    },
+    "sign_up/ar/rounded_white_outline_active": {
+      "asset": "assets/buttons/sign_up/ar/rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Default/Active-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Default/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Default/Active@3x-1.png"
+      }
+    },
+    "sign_up/ar/rounded_white_outline_focused": {
+      "asset": "assets/buttons/sign_up/ar/rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Default/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Default/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Default/Focus@3x-1.png"
+      }
+    },
+    "sign_up/ar/rounded_white_outline_pressed": {
+      "asset": "assets/buttons/sign_up/ar/rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Default/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Default/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Default/Pressed@3x-1.png"
+      }
+    },
+    "sign_up/ar/rounded_white_outline_disabled": {
+      "asset": "assets/buttons/sign_up/ar/rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Default/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Default/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Default/Disabled@3x-1.png"
+      }
+    },
+    "sign_up/ar/rounded_black_active": {
+      "asset": "assets/buttons/register_account/ar/rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Default/Active-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Default/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Default/Active@3x-2.png"
+      }
+    },
+    "sign_up/ar/rounded_black_focused": {
+      "asset": "assets/buttons/register_account/ar/rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Default/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Default/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Default/Focus@3x-2.png"
+      }
+    },
+    "sign_up/ar/rounded_black_pressed": {
+      "asset": "assets/buttons/register_account/ar/rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Default/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Default/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Default/Pressed@3x-2.png"
+      }
+    },
+    "sign_up/ar/rounded_black_disabled": {
+      "asset": "assets/buttons/register_account/ar/rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Default/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Default/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Default/Disabled@3x-2.png"
+      }
+    },
+    "sign_up/ar/fully_rounded_white_active": {
+      "asset": "assets/buttons/sign_up/ar/fully_rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Active.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Active@3x.png"
+      }
+    },
+    "sign_up/ar/fully_rounded_white_focused": {
+      "asset": "assets/buttons/sign_up/ar/fully_rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Focus.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Focus@3x.png"
+      }
+    },
+    "sign_up/ar/fully_rounded_white_pressed": {
+      "asset": "assets/buttons/sign_up/ar/fully_rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Pressed.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Pressed@3x.png"
+      }
+    },
+    "sign_up/ar/fully_rounded_white_disabled": {
+      "asset": "assets/buttons/sign_up/ar/fully_rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Disabled.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Disabled@3x.png"
+      }
+    },
+    "sign_up/ar/fully_rounded_white_outline_active": {
+      "asset": "assets/buttons/sign_up/ar/fully_rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Active-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Active@3x-1.png"
+      }
+    },
+    "sign_up/ar/fully_rounded_white_outline_focused": {
+      "asset": "assets/buttons/sign_up/ar/fully_rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Focus@3x-1.png"
+      }
+    },
+    "sign_up/ar/fully_rounded_white_outline_pressed": {
+      "asset": "assets/buttons/sign_up/ar/fully_rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Pressed@3x-1.png"
+      }
+    },
+    "sign_up/ar/fully_rounded_white_outline_disabled": {
+      "asset": "assets/buttons/sign_up/ar/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Pill/Disabled@3x-1.png"
+      }
+    },
+    "sign_up/ar/fully_rounded_black_active": {
+      "asset": "assets/buttons/register_account/ar/fully_rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Active-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Active@3x-2.png"
+      }
+    },
+    "sign_up/ar/fully_rounded_black_focused": {
+      "asset": "assets/buttons/register_account/ar/fully_rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Focus@3x-2.png"
+      }
+    },
+    "sign_up/ar/fully_rounded_black_pressed": {
+      "asset": "assets/buttons/register_account/ar/fully_rounded_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Pressed@3x-2.png"
+      }
+    },
+    "sign_up/ar/fully_rounded_black_disabled": {
+      "asset": "assets/buttons/register_account/ar/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Pill/Disabled@3x-2.png"
+      }
+    },
+    "sign_up/ar/square_corners_white_active": {
+      "asset": "assets/buttons/sign_up/ar/square_corners_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Active.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Active@3x.png"
+      }
+    },
+    "sign_up/ar/square_corners_white_focused": {
+      "asset": "assets/buttons/sign_up/ar/square_corners_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Focus.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Focus@3x.png"
+      }
+    },
+    "sign_up/ar/square_corners_white_pressed": {
+      "asset": "assets/buttons/sign_up/ar/square_corners_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Pressed.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Pressed@3x.png"
+      }
+    },
+    "sign_up/ar/square_corners_white_disabled": {
+      "asset": "assets/buttons/sign_up/ar/square_corners_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Disabled.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Disabled@3x.png"
+      }
+    },
+    "sign_up/ar/square_corners_white_outline_active": {
+      "asset": "assets/buttons/sign_up/ar/square_corners_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Active-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Active@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Active@3x-1.png"
+      }
+    },
+    "sign_up/ar/square_corners_white_outline_focused": {
+      "asset": "assets/buttons/sign_up/ar/square_corners_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Focus-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Focus@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Focus@3x-1.png"
+      }
+    },
+    "sign_up/ar/square_corners_white_outline_pressed": {
+      "asset": "assets/buttons/sign_up/ar/square_corners_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Pressed-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Pressed@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Pressed@3x-1.png"
+      }
+    },
+    "sign_up/ar/square_corners_white_outline_disabled": {
+      "asset": "assets/buttons/sign_up/ar/square_corners_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Disabled-1.png",
+        "2x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Disabled@2x-1.png",
+        "3x": "UAE PASS Buttons/png/AR/Sign up with/Sharp/Disabled@3x-1.png"
+      }
+    },
+    "sign_up/ar/square_corners_black_active": {
+      "asset": "assets/buttons/register_account/ar/square_corners_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Active-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Active@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Active@3x-2.png"
+      }
+    },
+    "sign_up/ar/square_corners_black_focused": {
+      "asset": "assets/buttons/register_account/ar/square_corners_black_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Focus-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Focus@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Focus@3x-2.png"
+      }
+    },
+    "sign_up/ar/square_corners_black_pressed": {
+      "asset": "assets/buttons/register_account/ar/square_corners_black_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Pressed-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Pressed@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Pressed@3x-2.png"
+      }
+    },
+    "sign_up/ar/square_corners_black_disabled": {
+      "asset": "assets/buttons/register_account/ar/square_corners_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Disabled-2.png",
+        "2x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Disabled@2x-2.png",
+        "3x": "UAE PASS Buttons/png/AR/Register Account with/Sharp/Disabled@3x-2.png"
+      }
+    },
+    "authorize/en/rounded_white_active": {
+      "asset": "assets/buttons/authorize/en/rounded_white_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Light Buttons/Default/Active.png"
+      }
+    },
+    "authorize/en/rounded_white_focused": {
+      "asset": "assets/buttons/authorize/en/rounded_white_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Light Buttons/Default/Focus.png"
+      }
+    },
+    "authorize/en/rounded_white_pressed": {
+      "asset": "assets/buttons/authorize/en/rounded_white_pressed.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Light Buttons/Default/Pressed.png"
+      }
+    },
+    "authorize/en/rounded_white_disabled": {
+      "asset": "assets/buttons/authorize/en/rounded_white_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Light Buttons/Default/Disabled.png"
+      }
+    },
+    "authorize/en/rounded_white_outline_active": {
+      "asset": "assets/buttons/authorize/en/rounded_white_outline_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Outline Buttons/Default/Active.png"
+      }
+    },
+    "authorize/en/rounded_white_outline_focused": {
+      "asset": "assets/buttons/authorize/en/rounded_white_outline_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Outline Buttons/Default/Focus.png"
+      }
+    },
+    "authorize/en/rounded_white_outline_pressed": {
+      "asset": "assets/buttons/authorize/en/rounded_white_outline_pressed.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Outline Buttons/Default/Pressed.png"
+      }
+    },
+    "authorize/en/rounded_white_outline_disabled": {
+      "asset": "assets/buttons/authorize/en/rounded_white_outline_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Outline Buttons/Default/Disabled.png"
+      }
+    },
+    "authorize/en/rounded_black_active": {
+      "asset": "assets/buttons/authorize/en/rounded_black_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Filled Buttons/Default/Active.png"
+      }
+    },
+    "authorize/en/rounded_black_focused": {
+      "asset": "assets/buttons/authorize/en/rounded_black_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Filled Buttons/Default/Focus.png"
+      }
+    },
+    "authorize/en/rounded_black_pressed": {
+      "asset": "assets/buttons/authorize/en/rounded_black_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Filled Buttons/Default/Pressed.png"
+      }
+    },
+    "authorize/en/rounded_black_disabled": {
+      "asset": "assets/buttons/authorize/en/rounded_white_outline_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Filled Buttons/Default/Disabled.png"
+      }
+    },
+    "authorize/en/fully_rounded_white_active": {
+      "asset": "assets/buttons/authorize/en/fully_rounded_white_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Light Buttons/Pill/Active.png"
+      }
+    },
+    "authorize/en/fully_rounded_white_focused": {
+      "asset": "assets/buttons/authorize/en/fully_rounded_white_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Light Buttons/Pill/Focus.png"
+      }
+    },
+    "authorize/en/fully_rounded_white_pressed": {
+      "asset": "assets/buttons/authorize/en/fully_rounded_white_pressed.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Light Buttons/Pill/Pressed.png"
+      }
+    },
+    "authorize/en/fully_rounded_white_disabled": {
+      "asset": "assets/buttons/authorize/en/fully_rounded_white_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Light Buttons/Pill/Disabled.png"
+      }
+    },
+    "authorize/en/fully_rounded_white_outline_active": {
+      "asset": "assets/buttons/authorize/en/fully_rounded_white_outline_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Outline Buttons/Pill/Active.png"
+      }
+    },
+    "authorize/en/fully_rounded_white_outline_focused": {
+      "asset": "assets/buttons/authorize/en/fully_rounded_white_outline_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Outline Buttons/Pill/Focus.png"
+      }
+    },
+    "authorize/en/fully_rounded_white_outline_pressed": {
+      "asset": "assets/buttons/authorize/en/fully_rounded_white_outline_pressed.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Outline Buttons/Pill/Pressed.png"
+      }
+    },
+    "authorize/en/fully_rounded_white_outline_disabled": {
+      "asset": "assets/buttons/authorize/en/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Outline Buttons/Pill/Disabled.png"
+      }
+    },
+    "authorize/en/fully_rounded_black_active": {
+      "asset": "assets/buttons/authorize/en/fully_rounded_black_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Filled Buttons/Pill/Active.png"
+      }
+    },
+    "authorize/en/fully_rounded_black_focused": {
+      "asset": "assets/buttons/authorize/en/fully_rounded_black_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Filled Buttons/Pill/Focus.png"
+      }
+    },
+    "authorize/en/fully_rounded_black_pressed": {
+      "asset": "assets/buttons/authorize/en/fully_rounded_black_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Filled Buttons/Pill/Pressed.png"
+      }
+    },
+    "authorize/en/fully_rounded_black_disabled": {
+      "asset": "assets/buttons/authorize/en/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Filled Buttons/Pill/Disabled.png"
+      }
+    },
+    "authorize/en/square_corners_white_active": {
+      "asset": "assets/buttons/authorize/en/square_corners_white_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Light Buttons/Sharp/Active.png"
+      }
+    },
+    "authorize/en/square_corners_white_focused": {
+      "asset": "assets/buttons/authorize/en/square_corners_white_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Light Buttons/Sharp/Focus.png"
+      }
+    },
+    "authorize/en/square_corners_white_pressed": {
+      "asset": "assets/buttons/authorize/en/square_corners_white_pressed.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Light Buttons/Sharp/Pressed.png"
+      }
+    },
+    "authorize/en/square_corners_white_disabled": {
+      "asset": "assets/buttons/authorize/en/square_corners_white_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Light Buttons/Sharp/Disabled.png"
+      }
+    },
+    "authorize/en/square_corners_white_outline_active": {
+      "asset": "assets/buttons/authorize/en/square_corners_white_outline_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Outline Buttons/Sharp/Active.png"
+      }
+    },
+    "authorize/en/square_corners_white_outline_focused": {
+      "asset": "assets/buttons/authorize/en/square_corners_white_outline_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Outline Buttons/Sharp/Focus.png"
+      }
+    },
+    "authorize/en/square_corners_white_outline_pressed": {
+      "asset": "assets/buttons/authorize/en/square_corners_white_outline_pressed.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Outline Buttons/Sharp/Pressed.png"
+      }
+    },
+    "authorize/en/square_corners_white_outline_disabled": {
+      "asset": "assets/buttons/authorize/en/square_corners_white_outline_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Outline Buttons/Sharp/Disabled.png"
+      }
+    },
+    "authorize/en/square_corners_black_active": {
+      "asset": "assets/buttons/authorize/en/square_corners_black_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Filled Buttons/Sharp/Active.png"
+      }
+    },
+    "authorize/en/square_corners_black_focused": {
+      "asset": "assets/buttons/authorize/en/square_corners_black_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Filled Buttons/Sharp/Focus.png"
+      }
+    },
+    "authorize/en/square_corners_black_pressed": {
+      "asset": "assets/buttons/authorize/en/square_corners_black_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Filled Buttons/Sharp/Pressed.png"
+      }
+    },
+    "authorize/en/square_corners_black_disabled": {
+      "asset": "assets/buttons/authorize/en/square_corners_white_outline_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/EN/Authorize Using UAE PASS/Filled Buttons/Sharp/Disabled.png"
+      }
+    },
+    "authorize/ar/rounded_white_active": {
+      "asset": "assets/buttons/authorize/ar/rounded_white_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Light Buttons/Default/Active.png"
+      }
+    },
+    "authorize/ar/rounded_white_focused": {
+      "asset": "assets/buttons/authorize/ar/rounded_white_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Light Buttons/Default/Focus.png"
+      }
+    },
+    "authorize/ar/rounded_white_pressed": {
+      "asset": "assets/buttons/authorize/ar/rounded_white_pressed.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Light Buttons/Default/Pressed.png"
+      }
+    },
+    "authorize/ar/rounded_white_disabled": {
+      "asset": "assets/buttons/authorize/ar/rounded_white_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Light Buttons/Default/Disabled.png"
+      }
+    },
+    "authorize/ar/rounded_white_outline_active": {
+      "asset": "assets/buttons/authorize/ar/rounded_white_outline_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Outline Buttons/Default/Active.png"
+      }
+    },
+    "authorize/ar/rounded_white_outline_focused": {
+      "asset": "assets/buttons/authorize/ar/rounded_white_outline_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Outline Buttons/Default/Focus.png"
+      }
+    },
+    "authorize/ar/rounded_white_outline_pressed": {
+      "asset": "assets/buttons/authorize/ar/rounded_white_outline_pressed.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Outline Buttons/Default/Pressed.png"
+      }
+    },
+    "authorize/ar/rounded_white_outline_disabled": {
+      "asset": "assets/buttons/authorize/ar/rounded_white_outline_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Outline Buttons/Default/Disabled.png"
+      }
+    },
+    "authorize/ar/rounded_black_active": {
+      "asset": "assets/buttons/authorize/ar/rounded_black_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Filled Buttons/Default/Active.png"
+      }
+    },
+    "authorize/ar/rounded_black_focused": {
+      "asset": "assets/buttons/authorize/ar/rounded_black_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Filled Buttons/Default/Focus.png"
+      }
+    },
+    "authorize/ar/rounded_black_pressed": {
+      "asset": "assets/buttons/authorize/ar/rounded_black_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Filled Buttons/Default/Pressed.png"
+      }
+    },
+    "authorize/ar/rounded_black_disabled": {
+      "asset": "assets/buttons/authorize/ar/rounded_white_outline_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Filled Buttons/Default/Disabled.png"
+      }
+    },
+    "authorize/ar/fully_rounded_white_active": {
+      "asset": "assets/buttons/authorize/ar/fully_rounded_white_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Light Buttons/Pill/Active.png"
+      }
+    },
+    "authorize/ar/fully_rounded_white_focused": {
+      "asset": "assets/buttons/authorize/ar/fully_rounded_white_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Light Buttons/Pill/Focus.png"
+      }
+    },
+    "authorize/ar/fully_rounded_white_pressed": {
+      "asset": "assets/buttons/authorize/ar/fully_rounded_white_pressed.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Light Buttons/Pill/Pressed.png"
+      }
+    },
+    "authorize/ar/fully_rounded_white_disabled": {
+      "asset": "assets/buttons/authorize/ar/fully_rounded_white_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Light Buttons/Pill/Disabled.png"
+      }
+    },
+    "authorize/ar/fully_rounded_white_outline_active": {
+      "asset": "assets/buttons/authorize/ar/fully_rounded_white_outline_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Outline Buttons/Pill/Active.png"
+      }
+    },
+    "authorize/ar/fully_rounded_white_outline_focused": {
+      "asset": "assets/buttons/authorize/ar/fully_rounded_white_outline_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Outline Buttons/Pill/Focus.png"
+      }
+    },
+    "authorize/ar/fully_rounded_white_outline_pressed": {
+      "asset": "assets/buttons/authorize/ar/fully_rounded_white_outline_pressed.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Outline Buttons/Pill/Pressed.png"
+      }
+    },
+    "authorize/ar/fully_rounded_white_outline_disabled": {
+      "asset": "assets/buttons/authorize/ar/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Outline Buttons/Pill/Disabled.png"
+      }
+    },
+    "authorize/ar/fully_rounded_black_active": {
+      "asset": "assets/buttons/authorize/ar/fully_rounded_black_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Filled Buttons/Pill/Active.png"
+      }
+    },
+    "authorize/ar/fully_rounded_black_focused": {
+      "asset": "assets/buttons/authorize/ar/fully_rounded_black_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Filled Buttons/Pill/Focus.png"
+      }
+    },
+    "authorize/ar/fully_rounded_black_pressed": {
+      "asset": "assets/buttons/authorize/ar/fully_rounded_black_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Filled Buttons/Pill/Pressed.png"
+      }
+    },
+    "authorize/ar/fully_rounded_black_disabled": {
+      "asset": "assets/buttons/authorize/ar/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Filled Buttons/Pill/Disabled.png"
+      }
+    },
+    "authorize/ar/square_corners_white_active": {
+      "asset": "assets/buttons/authorize/ar/square_corners_white_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Light Buttons/Sharp/Active.png"
+      }
+    },
+    "authorize/ar/square_corners_white_focused": {
+      "asset": "assets/buttons/authorize/ar/square_corners_white_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Light Buttons/Sharp/Focus.png"
+      }
+    },
+    "authorize/ar/square_corners_white_pressed": {
+      "asset": "assets/buttons/authorize/ar/square_corners_white_pressed.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Light Buttons/Sharp/Pressed.png"
+      }
+    },
+    "authorize/ar/square_corners_white_disabled": {
+      "asset": "assets/buttons/authorize/ar/square_corners_white_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Light Buttons/Sharp/Disabled.png"
+      }
+    },
+    "authorize/ar/square_corners_white_outline_active": {
+      "asset": "assets/buttons/authorize/ar/square_corners_white_outline_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Outline Buttons/Sharp/Active.png"
+      }
+    },
+    "authorize/ar/square_corners_white_outline_focused": {
+      "asset": "assets/buttons/authorize/ar/square_corners_white_outline_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Outline Buttons/Sharp/Focus.png"
+      }
+    },
+    "authorize/ar/square_corners_white_outline_pressed": {
+      "asset": "assets/buttons/authorize/ar/square_corners_white_outline_pressed.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Outline Buttons/Sharp/Pressed.png"
+      }
+    },
+    "authorize/ar/square_corners_white_outline_disabled": {
+      "asset": "assets/buttons/authorize/ar/square_corners_white_outline_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Outline Buttons/Sharp/Disabled.png"
+      }
+    },
+    "authorize/ar/square_corners_black_active": {
+      "asset": "assets/buttons/authorize/ar/square_corners_black_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Filled Buttons/Sharp/Active.png"
+      }
+    },
+    "authorize/ar/square_corners_black_focused": {
+      "asset": "assets/buttons/authorize/ar/square_corners_black_focused.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Filled Buttons/Sharp/Focus.png"
+      }
+    },
+    "authorize/ar/square_corners_black_pressed": {
+      "asset": "assets/buttons/authorize/ar/square_corners_black_active.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Filled Buttons/Sharp/Pressed.png"
+      }
+    },
+    "authorize/ar/square_corners_black_disabled": {
+      "asset": "assets/buttons/authorize/ar/square_corners_white_outline_disabled.png",
+      "sources": {
+        "4x": "UAE PASS Buttons/png/AR/Authorize Using UAE PASS/Filled Buttons/Sharp/Disabled.png"
+      }
+    },
+    "icon/rounded_white_active": {
+      "asset": "assets/buttons/icon/rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Light/Default/Active.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Light/Default/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Light/Default/Active@3x.png"
+      }
+    },
+    "icon/rounded_white_focused": {
+      "asset": "assets/buttons/icon/rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Light/Default/Focus.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Light/Default/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Light/Default/Focus@3x.png"
+      }
+    },
+    "icon/rounded_white_pressed": {
+      "asset": "assets/buttons/icon/rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Light/Default/Pressed.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Light/Default/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Light/Default/Pressed@3x.png"
+      }
+    },
+    "icon/rounded_white_disabled": {
+      "asset": "assets/buttons/icon/rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Light/Default/Disabled.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Light/Default/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Light/Default/Disabled@3x.png"
+      }
+    },
+    "icon/rounded_white_outline_active": {
+      "asset": "assets/buttons/icon/rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Outline/Default/Active.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Outline/Default/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Outline/Default/Active@3x.png"
+      }
+    },
+    "icon/rounded_white_outline_focused": {
+      "asset": "assets/buttons/icon/rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Outline/Default/Focus.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Outline/Default/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Outline/Default/Focus@3x.png"
+      }
+    },
+    "icon/rounded_white_outline_pressed": {
+      "asset": "assets/buttons/icon/rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Outline/Default/Pressed.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Outline/Default/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Outline/Default/Pressed@3x.png"
+      }
+    },
+    "icon/rounded_white_outline_disabled": {
+      "asset": "assets/buttons/icon/rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Outline/Default/Disabled.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Outline/Default/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Outline/Default/Disabled@3x.png"
+      }
+    },
+    "icon/rounded_black_active": {
+      "asset": "assets/buttons/icon/rounded_black_active.png",
+      "sources": {
+        "1x": "UAE_PASS_Buttons_PNGs-2/PNGs/Logo_only/Dark/UAEPASS_Logo_Only_Btn_Default_Balck_Active.png",
+        "2x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_Default_Balck_Active.svg",
+        "3x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_Default_Balck_Active.svg"
+      }
+    },
+    "icon/rounded_black_focused": {
+      "asset": "assets/buttons/icon/rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE_PASS_Buttons_PNGs-2/PNGs/Logo_only/Dark/UAEPASS_Logo_Only_Btn_Default_Balck_Focus.png",
+        "2x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_Default_Balck_Focus.svg",
+        "3x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_Default_Balck_Focus.svg"
+      }
+    },
+    "icon/rounded_black_pressed": {
+      "asset": "assets/buttons/icon/rounded_black_pressed.png",
+      "sources": {
+        "1x": "UAE_PASS_Buttons_PNGs-2/PNGs/Logo_only/Dark/UAEPASS_Logo_Only_Btn_Default_Black_Pressed.png",
+        "2x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_Default_Black_Pressed.svg",
+        "3x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_Default_Black_Pressed.svg"
+      }
+    },
+    "icon/rounded_black_disabled": {
+      "asset": "assets/buttons/icon/rounded_black_disabled.png",
+      "sources": {
+        "1x": "UAE_PASS_Buttons_PNGs-2/PNGs/Logo_only/Dark/UAEPASS_Logo_Only_Btn_Default_Black_Disabled.png",
+        "2x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_Default_Black_Disabled.svg",
+        "3x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_Default_Black_Disabled.svg"
+      }
+    },
+    "icon/fully_rounded_white_active": {
+      "asset": "assets/buttons/icon/fully_rounded_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Light/Pill/Active.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Light/Pill/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Light/Pill/Active@3x.png"
+      }
+    },
+    "icon/fully_rounded_white_focused": {
+      "asset": "assets/buttons/icon/fully_rounded_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Light/Pill/Focus.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Light/Pill/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Light/Pill/Focus@3x.png"
+      }
+    },
+    "icon/fully_rounded_white_pressed": {
+      "asset": "assets/buttons/icon/fully_rounded_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Light/Pill/Pressed.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Light/Pill/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Light/Pill/Pressed@3x.png"
+      }
+    },
+    "icon/fully_rounded_white_disabled": {
+      "asset": "assets/buttons/icon/fully_rounded_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Light/Pill/Disabled.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Light/Pill/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Light/Pill/Disabled@3x.png"
+      }
+    },
+    "icon/fully_rounded_white_outline_active": {
+      "asset": "assets/buttons/icon/fully_rounded_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Outline/Pill/Active.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Outline/Pill/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Outline/Pill/Active@3x.png"
+      }
+    },
+    "icon/fully_rounded_white_outline_focused": {
+      "asset": "assets/buttons/icon/fully_rounded_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Outline/Pill/Focus.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Outline/Pill/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Outline/Pill/Focus@3x.png"
+      }
+    },
+    "icon/fully_rounded_white_outline_pressed": {
+      "asset": "assets/buttons/icon/fully_rounded_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Outline/Pill/Pressed.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Outline/Pill/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Outline/Pill/Pressed@3x.png"
+      }
+    },
+    "icon/fully_rounded_white_outline_disabled": {
+      "asset": "assets/buttons/icon/fully_rounded_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Outline/Pill/Disabled.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Outline/Pill/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Outline/Pill/Disabled@3x.png"
+      }
+    },
+    "icon/fully_rounded_black_active": {
+      "asset": "assets/buttons/icon/fully_rounded_black_active.png",
+      "sources": {
+        "1x": "UAE_PASS_Buttons_PNGs-2/PNGs/Logo_only/Dark/UAEPASS_Logo_Only_Btn_Round_Black_Active.png",
+        "2x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_Round_Black_Active.svg",
+        "3x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_Round_Black_Active.svg"
+      }
+    },
+    "icon/fully_rounded_black_focused": {
+      "asset": "assets/buttons/icon/fully_rounded_black_focused.png",
+      "sources": {
+        "1x": "UAE_PASS_Buttons_PNGs-2/PNGs/Logo_only/Dark/UAEPASS_Logo_Only_Btn_Round_Black_Focus.png",
+        "2x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_Round_Black_Focus.svg",
+        "3x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_Round_Black_Focus.svg"
+      }
+    },
+    "icon/fully_rounded_black_pressed": {
+      "asset": "assets/buttons/icon/fully_rounded_black_pressed.png",
+      "sources": {
+        "1x": "UAE_PASS_Buttons_PNGs-2/PNGs/Logo_only/Dark/UAEPASS_Logo_Only_Btn_Round_Black_Pressed.png",
+        "2x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_Round_Black_Pressed.svg",
+        "3x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_Round_Black_Pressed.svg"
+      }
+    },
+    "icon/fully_rounded_black_disabled": {
+      "asset": "assets/buttons/icon/fully_rounded_black_disabled.png",
+      "sources": {
+        "1x": "UAE_PASS_Buttons_PNGs-2/PNGs/Logo_only/Dark/UAEPASS_Logo_Only_Btn_Round_Black_Disabled.png",
+        "2x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_Round_Black_Disabled.svg",
+        "3x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_Round_Black_Disabled.svg"
+      }
+    },
+    "icon/square_corners_white_active": {
+      "asset": "assets/buttons/icon/square_corners_white_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Light/Sharp/Active.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Light/Sharp/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Light/Sharp/Active@3x.png"
+      }
+    },
+    "icon/square_corners_white_focused": {
+      "asset": "assets/buttons/icon/square_corners_white_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Light/Sharp/Focus.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Light/Sharp/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Light/Sharp/Focus@3x.png"
+      }
+    },
+    "icon/square_corners_white_pressed": {
+      "asset": "assets/buttons/icon/square_corners_white_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Light/Sharp/Pressed.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Light/Sharp/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Light/Sharp/Pressed@3x.png"
+      }
+    },
+    "icon/square_corners_white_disabled": {
+      "asset": "assets/buttons/icon/square_corners_white_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Light/Sharp/Disabled.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Light/Sharp/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Light/Sharp/Disabled@3x.png"
+      }
+    },
+    "icon/square_corners_white_outline_active": {
+      "asset": "assets/buttons/icon/square_corners_white_outline_active.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Outline/Sharp/Active.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Outline/Sharp/Active@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Outline/Sharp/Active@3x.png"
+      }
+    },
+    "icon/square_corners_white_outline_focused": {
+      "asset": "assets/buttons/icon/square_corners_white_outline_focused.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Outline/Sharp/Focus.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Outline/Sharp/Focus@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Outline/Sharp/Focus@3x.png"
+      }
+    },
+    "icon/square_corners_white_outline_pressed": {
+      "asset": "assets/buttons/icon/square_corners_white_outline_pressed.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Outline/Sharp/Pressed.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Outline/Sharp/Pressed@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Outline/Sharp/Pressed@3x.png"
+      }
+    },
+    "icon/square_corners_white_outline_disabled": {
+      "asset": "assets/buttons/icon/square_corners_white_outline_disabled.png",
+      "sources": {
+        "1x": "UAE PASS Buttons/png/Icon Button/Outline/Sharp/Disabled.png",
+        "2x": "UAE PASS Buttons/png/Icon Button/Outline/Sharp/Disabled@2x.png",
+        "3x": "UAE PASS Buttons/png/Icon Button/Outline/Sharp/Disabled@3x.png"
+      }
+    },
+    "icon/square_corners_black_active": {
+      "asset": "assets/buttons/icon/square_corners_black_active.png",
+      "sources": {
+        "1x": "UAE_PASS_Buttons_PNGs-2/PNGs/Logo_only/Dark/UAEPASS_Logo_Only_Btn_SharpCorners_Black_Active.png",
+        "2x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_SharpCorners_Black_Active.svg",
+        "3x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_SharpCorners_Black_Active.svg"
+      }
+    },
+    "icon/square_corners_black_focused": {
+      "asset": "assets/buttons/icon/square_corners_black_focused.png",
+      "sources": {
+        "1x": "UAE_PASS_Buttons_PNGs-2/PNGs/Logo_only/Dark/UAEPASS_Logo_Only_Btn_SharpCorners_Black_Focus.png",
+        "2x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_SharpCorners_Black_Focus.svg",
+        "3x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_SharpCorners_Black_Focus.svg"
+      }
+    },
+    "icon/square_corners_black_pressed": {
+      "asset": "assets/buttons/icon/square_corners_black_pressed.png",
+      "sources": {
+        "1x": "UAE_PASS_Buttons_PNGs-2/PNGs/Logo_only/Dark/UAEPASS_Logo_Only_Btn_SharpCorners_Black_Pressed.png",
+        "2x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_SharpCorners_Black_Pressed.svg",
+        "3x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_SharpCorners_Black_Pressed.svg"
+      }
+    },
+    "icon/square_corners_black_disabled": {
+      "asset": "assets/buttons/icon/square_corners_black_disabled.png",
+      "sources": {
+        "1x": "UAE_PASS_Buttons_PNGs-2/PNGs/Logo_only/Dark/UAEPASS_Logo_Only_Btn_SharpCorners_Black_Disabled.png",
+        "2x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_SharpCorners_Black_Disabled.svg",
+        "3x": "SVGs/Logo_Buttons/UAEPASS_Logo_Only_Btn_SharpCorners_Black_Disabled.svg"
+      }
+    }
+  }
+}
