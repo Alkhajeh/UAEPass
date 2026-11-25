@@ -3,3 +3,4 @@
 /*.tgz
 .env
 .env.*
+!/example/.env.example

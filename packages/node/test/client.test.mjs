@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createUaePassClient, UaePassError } from '../dist/index.js';
+import {
+  createUaePassClient, UaePassError, UaePassGender, UaePassProfileType, UaePassUserType,
+} from '@alkhajeh/uaepass-server';
 
 const config = {
   environment: 'staging',
@@ -16,17 +18,9 @@ const token = {
 };
 const code = 'code+opaque/fixture';
 
-function mockFetch(t, implementation) {
-  const original = Object.getOwnPropertyDescriptor(globalThis, 'fetch');
-  const mock = t.mock.fn(implementation);
-  Object.defineProperty(globalThis, 'fetch', { configurable: true, writable: true, value: mock });
-  t.after(() => Object.defineProperty(globalThis, 'fetch', original));
-  return mock;
-}
-
 test('exchanges a code and fetches the profile using the documented wire format', async (t) => {
   const profile = { uuid: 'resident-id', sub: 'provider/sub', userType: 'SOP3' };
-  const fetch = mockFetch(t, async (url, init) => {
+  const fetch = t.mock.method(globalThis, 'fetch', async (url, init) => {
     assert.equal(init.redirect, 'manual');
     assert.equal(url.origin, 'https://stg-id.uaepass.ae');
     if (init.method === 'POST') {
@@ -54,33 +48,87 @@ test('exchanges a code and fetches the profile using the documented wire format'
 });
 
 test('returns an opaque token, expiry in seconds and granted scopes', async (t) => {
-  mockFetch(t, async (url) => {
+  const accessToken = 'fixture+/_~.-=';
+  t.mock.method(globalThis, 'fetch', async (url) => {
     assert.equal(url.origin, 'https://id.uaepass.ae');
-    return Response.json({ ...token, id_token: 'unused-id-token' });
+    return Response.json({ ...token, access_token: accessToken, id_token: 'unused-id-token' });
   });
   const client = createUaePassClient({ ...config, environment: 'production' });
   assert.deepEqual(await client.exchangeAuthorizationCode(code), {
-    accessToken: token.access_token,
+    accessToken,
     expiresInSeconds: 3600,
     scopes: ['profile', 'extra'],
   });
 });
 
-test('supports visitor and subject-only profiles with scope-dependent attributes', async (t) => {
+test('rejects malformed bearer tokens at the exchange and User Info boundaries', async (t) => {
+  const malformed = 'fixture\u0100token';
+  const fetch = t.mock.method(globalThis, 'fetch', async () =>
+    Response.json({ ...token, access_token: malformed }));
+  const client = createUaePassClient(config);
+
+  await assert.rejects(client.getUserInfoFromCode(code), {
+    code: 'invalid_response',
+    operation: 'token',
+    status: 200,
+  });
+  await assert.rejects(client.getUserInfo(malformed), TypeError);
+  assert.equal(fetch.mock.callCount(), 1);
+});
+
+test('exports known profile constants with provider values', () => {
+  assert.deepEqual(UaePassUserType, { SOP1: 'SOP1', SOP2: 'SOP2', SOP3: 'SOP3' });
+  assert.deepEqual(UaePassProfileType, { CitizenOrResident: '1', Visitor: '2' });
+  assert.deepEqual(UaePassGender, { Male: 'Male', Female: 'Female' });
+});
+
+test('preserves unrecognized user type, profile type, and gender strings', async (t) => {
+  const profile = { uuid: 'fixture-id', userType: 'SOP4', profileType: '3', gender: 'Unspecified' };
+  t.mock.method(globalThis, 'fetch', async () => Response.json(profile));
+  assert.deepEqual(await createUaePassClient(config).getUserInfo(token.access_token), profile);
+});
+
+test('preserves optional claims from basic, resident, visitor and subject-only profiles', async (t) => {
+  const basic = { uuid: 'basic-id', userType: 'SOP1', firstnameEN: 'Fixture' };
+  const resident = {
+    uuid: 'resident-id',
+    sub: 'provider/resident',
+    userType: 'SOP3',
+    firstnameEN: 'Fixture',
+    firstnameAR: 'اسم',
+    lastnameEN: 'Resident',
+    lastnameAR: 'لقب',
+    titleEN: 'Dr.',
+    titleAR: 'د.',
+    nationalityEN: 'ARE',
+    nationalityAR: 'الإمارات',
+    gender: 'Female',
+    idType: 'ID',
+    spuuid: 'smartpass-id',
+    acr: 'high-assurance',
+    amr: ['example-method'],
+    customClaim: { approved: true },
+  };
   const visitor = {
     uuid: 'visitor-id', sub: 'visitor-sub', userType: 'SOP3',
-    profileType: '2', unifiedID: 'approved-id', email: null, amr: ['example'],
+    profileType: '2', unifiedID: 'visitor-unified-id', email: null,
   };
-  const subjectOnly = { sub: 'opaque-id', fullnameEN: 'Fixture User' };
-  const profiles = [visitor, subjectOnly];
-  mockFetch(t, async (url) => {
+  const subjectOnly = {
+    sub: 'opaque-id', fullnameEN: 'Fixture User',
+    unifiedId: 'other-unified-id', amr: null,
+  };
+  const profiles = [basic, resident, visitor, subjectOnly];
+  t.mock.method(globalThis, 'fetch', async (url) => {
     assert.equal(url.origin, 'https://id.uaepass.ae');
     return Response.json(profiles.shift());
   });
   const client = createUaePassClient({ ...config, environment: 'production' });
   const { email: _email, ...expectedVisitor } = visitor;
+  const { amr: _amr, ...expectedSubjectOnly } = subjectOnly;
+  assert.deepEqual(await client.getUserInfo(token.access_token), basic);
+  assert.deepEqual(await client.getUserInfo(token.access_token), resident);
   assert.deepEqual(await client.getUserInfo(token.access_token), expectedVisitor);
-  assert.deepEqual(await client.getUserInfo(token.access_token), subjectOnly);
+  assert.deepEqual(await client.getUserInfo(token.access_token), expectedSubjectOnly);
 });
 
 test('omits blank identity claims and requires a nonblank identifier', async (t) => {
@@ -89,7 +137,7 @@ test('omits blank identity claims and requires a nonblank identifier', async (t)
     { uuid: 'opaque-uuid', sub: '' },
     { uuid: '', sub: '  ' },
   ];
-  mockFetch(t, async () => Response.json(profiles.shift()));
+  t.mock.method(globalThis, 'fetch', async () => Response.json(profiles.shift()));
   const client = createUaePassClient(config);
 
   assert.deepEqual(await client.getUserInfo(token.access_token), { sub: 'opaque/subject' });
@@ -113,7 +161,7 @@ test('reports safe provider failures and attempts the token exchange once', asyn
     [200, { ...token, expires_in: '3600' }, 'invalid_response'],
   ];
   let response;
-  const fetch = mockFetch(t, async () => response);
+  const fetch = t.mock.method(globalThis, 'fetch', async () => response);
   for (const [status, body, expectedCode] of cases) {
     response = typeof body === 'string'
       ? new Response(body, { status })
@@ -138,7 +186,7 @@ test('reports safe provider failures and attempts the token exchange once', asyn
 test('reports timeout without retrying or exposing transport errors', async (t) => {
   const signal = AbortSignal.abort(new DOMException('fixture timeout', 'TimeoutError'));
   t.mock.method(AbortSignal, 'timeout', () => signal);
-  const fetch = mockFetch(t, async () => {
+  const fetch = t.mock.method(globalThis, 'fetch', async () => {
     throw new Error(`transport details can contain ${code}`);
   });
   await assert.rejects(createUaePassClient(config).exchangeAuthorizationCode(code), {
@@ -150,11 +198,20 @@ test('reports timeout without retrying or exposing transport errors', async (t) 
 });
 
 test('rejects malformed profile data and invalid configuration', async (t) => {
-  mockFetch(t, async () => Response.json({ email: 'fixture@example.test' }));
-  await assert.rejects(createUaePassClient(config).getUserInfo(token.access_token), {
-    code: 'invalid_response',
-    operation: 'userinfo',
-  });
+  const profiles = [
+    { email: 'fixture@example.test' },
+    { sub: 'opaque-id', firstnameEN: 42 },
+    { sub: 'opaque-id', amr: 'example-method' },
+    { sub: 'opaque-id', amr: ['example-method', 42] },
+  ];
+  t.mock.method(globalThis, 'fetch', async () => Response.json(profiles.shift()));
+  const client = createUaePassClient(config);
+  for (let i = profiles.length; i > 0; i--) {
+    await assert.rejects(client.getUserInfo(token.access_token), {
+      code: 'invalid_response',
+      operation: 'userinfo',
+    });
+  }
   assert.throws(() => createUaePassClient({ ...config, environment: 'custom' }), TypeError);
   assert.throws(() => createUaePassClient({ ...config, redirectUri: 'http://example.test' }), TypeError);
 });

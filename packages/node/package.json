@@ -1,7 +1,6 @@
 {
   "name": "@alkhajeh/uaepass-server",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.0.1",
   "description": "Server-side UAE PASS authorization code exchange and user information client.",
   "license": "MIT",
   "repository": {
@@ -24,7 +23,7 @@
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test",
     "example": "node example/server.mjs",
-    "prepack": "npm run build"
+    "prepack": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && npm run build"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

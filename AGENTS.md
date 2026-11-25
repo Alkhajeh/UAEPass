@@ -38,4 +38,4 @@ When the Flutter-to-Node contract changes, run both sets of checks and use the o
 - Document host integration in the relevant SDK README and demo setup in the example README. Use the GitHub repository root for package repository URLs. Set npm's `repository.directory` to `packages/node`.
 - When checking release contents, run `flutter pub publish --dry-run` from `packages/flutter` or `npm pack --dry-run` from `packages/node`, as applicable.
 - Flutter release tags use `flutter-v<version>` on the merged release commit. Match the tag version to the Flutter pubspec and changelog, and follow the package release checklist. Pushing the tag starts the pub.dev workflow. [Flutter release checks](packages/flutter/README.md#release-checks) · [Publish workflow](.github/workflows/publish-flutter.yml)
-- The Node package is private for local evaluation. Use a locally packed tarball for install checks.
+- Use a locally packed tarball for Node install checks.
