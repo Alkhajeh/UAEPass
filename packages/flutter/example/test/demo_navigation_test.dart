@@ -1,10 +1,59 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:uaepass/uaepass.dart';
 import 'package:uaepass_example/main.dart';
+import 'package:uaepass_example/sign_in/sandbox_sign_in.dart';
 
 void main() {
+  testWidgets('the opt-in demo waits for the backend and reports its outcome', (
+    tester,
+  ) async {
+    final exchange = Completer<void>();
+    final calls = <String>[];
+    var succeeds = true;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SandboxSignIn(
+          exchangeCode: (code) async {
+            calls.add(code);
+            if (!succeeds) throw StateError('backend error containing $code');
+            await exchange.future;
+          },
+        ),
+      ),
+    );
+    final button = find.byType(UaePassSignInButton);
+    const code = 'secret-example-code';
+    final grant = UaePassSuccess(
+      UaePassAuthorizationGrant(
+        code: code,
+        redirectUri: Uri.parse('https://localhost:8000'),
+      ),
+    );
+    tester.widget<UaePassSignInButton>(button).onResult(grant);
+    await tester.pump();
+    expect(find.text('Verifying authorization'), findsOneWidget);
+    expect(tester.widget<UaePassSignInButton>(button).enabled, isFalse);
+    tester.widget<UaePassSignInButton>(button).onResult(grant);
+    expect(calls, [code]);
+
+    exchange.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('Backend exchange complete'), findsOneWidget);
+    expect(tester.widget<UaePassSignInButton>(button).enabled, isTrue);
+
+    succeeds = false;
+    tester.widget<UaePassSignInButton>(button).onResult(grant);
+    await tester.pumpAndSettle();
+    expect(find.text('Backend exchange complete'), findsNothing);
+    expect(find.textContaining(code), findsNothing);
+    expect(tester.widget<UaePassSignInButton>(button).enabled, isTrue);
+    expect(calls, [code, code]);
+  });
+
   testWidgets('navigates through the bilingual example offline', (
     tester,
   ) async {

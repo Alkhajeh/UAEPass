@@ -1,0 +1,33 @@
+{
+  "name": "@alkhajeh/uaepass-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Server-side UAE PASS authorization code exchange and user information client.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Alkhajeh/UAEPass.git",
+    "directory": "packages/node"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "node": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test",
+    "example": "node example/server.mjs",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.3"
+  }
+}
