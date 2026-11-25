@@ -50,9 +50,12 @@ class _BrandedButtonState extends State<BrandedButton> {
       language: locale.languageCode,
       label: widget.label,
       icon: widget.icon,
-      builder: (context, width, height) => SizedBox(
-        width: math.max(width, 48),
-        height: math.max(height, 48),
+      allowLogoFallback:
+          widget.label == UaePassButtonLabel.signIn ||
+          widget.label == UaePassButtonLabel.login,
+      builder: (context, size, icon) => SizedBox(
+        width: math.max(size.width, 48),
+        height: math.max(size.height, 48),
         child: TextButton(
           style: const ButtonStyle(
             padding: WidgetStatePropertyAll(EdgeInsets.zero),
@@ -91,12 +94,12 @@ class _BrandedButtonState extends State<BrandedButton> {
                 return UaePassArtworkImage(
                   language: locale.languageCode,
                   label: widget.label,
-                  icon: widget.icon,
+                  icon: icon,
                   shape: widget.shape,
                   style: style,
                   state: state,
-                  width: width,
-                  height: height,
+                  width: size.width,
+                  height: size.height,
                 );
               },
             ),

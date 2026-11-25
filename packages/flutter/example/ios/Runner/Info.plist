@@ -77,7 +77,7 @@
 			<string>uaepass</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>poc</string>
+				<string>com.example.uaepass.flutterdemo</string>
 			</array>
 		</dict>
 	</array>

@@ -155,15 +155,15 @@ class UaePassButtonArtwork extends StatelessWidget {
       language: language,
       label: label,
       icon: _icon,
-      builder: (context, width, height) => UaePassArtworkImage(
+      builder: (context, size, icon) => UaePassArtworkImage(
         language: language,
         label: label,
-        icon: _icon,
+        icon: icon,
         shape: shape,
         style: resolvedStyle,
         state: state,
-        width: width,
-        height: height,
+        width: size.width,
+        height: size.height,
       ),
     );
   }
@@ -176,43 +176,48 @@ class UaePassArtworkLayout extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.builder,
+    this.allowLogoFallback = false,
   });
 
   final String language;
   final UaePassButtonLabel label;
   final bool icon;
-  final Widget Function(BuildContext context, double width, double height)
-  builder;
+  final bool allowLogoFallback;
+  final Widget Function(BuildContext context, Size size, bool icon) builder;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      if (icon) {
-        final side = math.min(50.0, constraints.biggest.shortestSide);
-        return Center(
-          widthFactor: 1,
-          heightFactor: 1,
-          child: builder(context, side, side),
-        );
-      }
-
       final naturalWidth = language == 'ar'
           ? label._arabicWidth
           : label._englishWidth;
       final aspectRatio = naturalWidth / 50;
       // UAE PASS requires clear space of one tenth of the artwork height.
-      final width = math.min(
-        naturalWidth,
-        constraints.maxWidth * aspectRatio / (aspectRatio + 0.2),
+      final height = math.min(
+        50.0,
+        math.min(
+          constraints.maxWidth / (aspectRatio + 0.2),
+          constraints.maxHeight / 1.2,
+        ),
       );
-      final height = width / aspectRatio;
+      final minimumTextHeight = math.max(30.0, 140 / aspectRatio);
+      final showIcon =
+          icon || (allowLogoFallback && height < minimumTextHeight);
+      if (showIcon) {
+        final side = math.min(50.0, constraints.biggest.shortestSide);
+        return Center(
+          widthFactor: 1,
+          heightFactor: 1,
+          child: builder(context, Size.square(side), true),
+        );
+      }
 
       return Center(
         widthFactor: 1,
         heightFactor: 1,
         child: Padding(
           padding: EdgeInsets.all(height / 10),
-          child: builder(context, width, height),
+          child: builder(context, Size(height * aspectRatio, height), false),
         ),
       );
     },

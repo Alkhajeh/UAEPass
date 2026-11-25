@@ -19,7 +19,7 @@ flutter pub add uaepass
 ### 2. Register the callback
 
 - `redirectUri` is the HTTPS URL registered with UAE PASS for the authorization result.
-- `callbackScheme` is a unique lowercase scheme that opens your Flutter app again after the UAE PASS app handoff. Use the same scheme in Dart and in your platform settings. Share it with UAE PASS as required by your integration.
+- `callbackScheme` is an app-specific lowercase scheme that opens your Flutter app again after the UAE PASS app handoff. Choose a unique reverse-domain name based on your app ID. Register the same value in Dart and your platform settings, and share it with UAE PASS as required by your integration.
 
 #### Android
 
@@ -99,12 +99,21 @@ Future<void> handleAuthorizationResult(
 }
 ```
 
-Implement `completeSignInOnBackend` and `showSignInFailure` in your app. Send the one-time code to your backend. When exchanging it with UAE PASS, your backend uses its configured HTTPS redirect URI, which must exactly match `UaePassConfiguration.redirectUri`. Keep your UAE PASS client secret on the backend. Your app owns loading, navigation, and session creation after it receives the result.
+### 4. Complete sign-in on your backend
+
+Implement `completeSignInOnBackend` by sending the one-time code over HTTPS to an endpoint on your own backend, for example `POST /auth/uaepass` with a JSON body of `{"code":"<authorization code>"}`.
+
+1. Exchange the code promptly at UAE PASS `/idshub/token`. Use the client secret stored on your server and the configured HTTPS redirect URI that exactly matches `UaePassConfiguration.redirectUri`.
+2. Fetch the UAE PASS profile at `/idshub/userinfo` from the backend. Apply your approved account eligibility rules and use the stored UAE PASS `uuid` to look up a linked account. Apply your approved first-time account flow when there is no match.
+3. Return an app session on success, or a result the app can present or route. Use `UaePassSignInMessages.forResult` to display supported eligibility and sign-in errors in the app's locale. The app owns loading and navigation during this step.
+
+When the user signs out, invalidate the app session on your backend and clear the local session. Verify that the next UAE PASS sign-in challenges the user again on both mobile paths as part of your assessment. [UAE PASS mobile API](https://docs.uaepass.ae/feature-guides/authentication/mobile-application/guide/api) · [Authentication checklist](https://docs.uaepass.ae/getting-onboarded-with-uae-pass/onboarding-process-for-uae-pass-service-providers/development-phase#assessment-check-list)
 
 ## Optional configuration
 
 - **Arabic.** Add `Locale('ar')` alongside `Locale('en')` in `supportedLocales`. Set `localizationsDelegates` to `GlobalMaterialLocalizations.delegates` or merge those delegates into your existing list. The SDK follows your app locale for the button and the UAE PASS authorization page, with English as the fallback. [Example app setup](example/lib/main.dart)
 - **Appearance.** Use `content` to choose `signIn`, `login`, `registerAccount`, `signUp`, `authorize`, or `logoOnly`. Set `shape` and `style` to suit your layout. By default, light themes use white with outline and dark themes use solid white. The gallery previews all available combinations. [UAE PASS button guidelines](https://docs.uaepass.ae/guidelines/design-guidelines/button-guidelines)
+- **Button space.** Give the text button its own row where possible. Allow at least 190 logical pixels of width and 60 of height for the default sign-in artwork in both languages, or 220 of width for all wording variants. The artwork keeps its aspect ratio and clear space. When the bounds are too small for text at 140 × 30, the `signIn` and `login` variants use official logo-only artwork with the same accessible label. [UAE PASS button size and margin](https://docs.uaepass.ae/guidelines/design-guidelines/button-guidelines/button-size-and-margin)
 - **Programmatic authorization.** `client.authorize(context)` returns the same typed result as the button. `client.login<T>()` also calls your app-supplied exchange callback and returns the session result. One attempt can be active per Flutter engine.
 - **Scopes and messages.** Pass `scopes` in `UaePassConfiguration` if your approved scopes differ from the default general-profile scope. Use `UaePassSignInMessages.forResult` for localized cancellation and failure messages.
 

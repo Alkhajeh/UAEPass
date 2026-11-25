@@ -179,6 +179,57 @@ void main() {
     },
   );
 
+  testWidgets('keeps sign-in artwork legible in both locales', (tester) async {
+    var actions = 0;
+
+    for (final (language, ratio, label) in const [
+      ('en', 264 / 50, 'Sign in with UAE PASS'),
+      ('ar', 304 / 50, 'تسجيل الدخول بالهوية الرقمية'),
+    ]) {
+      Future<void> show({required double width, double height = 60}) =>
+          tester.pumpWidget(
+            MaterialApp(
+              home: Center(
+                child: SizedBox(
+                  width: width,
+                  height: height,
+                  child: BrandedButton(
+                    label: UaePassButtonLabel.signIn,
+                    locale: Locale(language),
+                    onPressed: () => actions++,
+                  ),
+                ),
+              ),
+            ),
+          );
+
+      final image = find.byType(Image);
+      final button = find.bySemanticsLabel(label);
+      final minimumWidthWithMargin = 30 * ratio + 6;
+
+      await show(width: minimumWidthWithMargin + 1);
+      expect(button, findsOneWidget);
+      final size = tester.getSize(image);
+      expect(size.width, greaterThanOrEqualTo(140));
+      expect(size.height, greaterThanOrEqualTo(30));
+      expect(size.width / size.height, closeTo(ratio, .001));
+
+      await show(width: minimumWidthWithMargin - 1);
+      expect(tester.getSize(image), const Size.square(50));
+      expect(
+        (tester.widget<Image>(image).image as AssetImage).assetName,
+        'assets/buttons/icon/rounded_white_outline_active.png',
+      );
+      await tester.tap(button);
+
+      await show(width: 220, height: 35);
+      expect(tester.getSize(image), const Size.square(35));
+      expect(button, findsOneWidget);
+      expect(tester.takeException(), isNull);
+    }
+    expect(actions, 2);
+  });
+
   testWidgets('uses the localized action for a square logo-only button', (
     tester,
   ) async {

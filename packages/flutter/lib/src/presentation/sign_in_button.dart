@@ -11,6 +11,9 @@ import 'branded_button.dart';
 /// All artwork choices start the same authorization flow. The button is
 /// disabled during authorization. The host owns the backend exchange and
 /// signed-in session.
+///
+/// For the sign-in and login wordings, a compact layout uses official logo-only
+/// artwork when there is insufficient space for the minimum text artwork size.
 class UaePassSignInButton extends StatefulWidget {
   const UaePassSignInButton({
     super.key,

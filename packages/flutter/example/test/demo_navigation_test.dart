@@ -1,13 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:uaepass/uaepass.dart';
 import 'package:uaepass_example/main.dart';
-import 'package:uaepass_example/sign_in/sandbox_sign_in.dart';
 
 void main() {
   testWidgets('navigates through the bilingual example offline', (
@@ -144,58 +139,36 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets(
-    'the demo owns loading and session creation after authorization',
-    (tester) async {
-      final tokenResponse = Completer<http.Response>();
-      final exchangeRequests = <http.Request>[];
-      final grant = UaePassAuthorizationGrant(
-        code: 'example-code',
-        redirectUri: Uri.parse('https://localhost:8000'),
-      );
+  testWidgets('the demo reports authorization without exposing the code', (
+    tester,
+  ) async {
+    final grant = UaePassAuthorizationGrant(
+      code: 'example-code',
+      redirectUri: Uri.parse('https://localhost:8000'),
+    );
 
-      await tester.pumpWidget(const MaterialApp(home: SandboxSignIn()));
-      final button = find.byType(UaePassSignInButton);
-      http.runWithClient(
-        () => tester
-            .widget<UaePassSignInButton>(button)
-            .onResult(UaePassSuccess(grant)),
-        () => MockClient((request) async {
-          exchangeRequests.add(request);
-          if (request.url.path == '/idshub/token') {
-            return tokenResponse.future;
-          }
-          return http.Response(
-            '{"sub":"example","fullnameEN":"Example User"}',
-            200,
-          );
-        }),
-      );
-
-      await tester.pump();
-      final tokenRequest = exchangeRequests.single;
-      expect(tokenRequest.url.path, '/idshub/token');
-      expect(
-        tokenRequest.url.queryParameters,
-        containsPair('code', grant.code),
-      );
-      expect(
-        tokenRequest.url.queryParameters,
-        containsPair('redirect_uri', grant.redirectUri.toString()),
-      );
-      expect(button, findsNothing);
-      expect(find.bySemanticsLabel('Setting up your session'), findsOneWidget);
-
-      tokenResponse.complete(
-        http.Response('{"access_token":"example-token"}', 200),
-      );
+    await tester.pumpWidget(const UaePassDemo());
+    final button = find.byType(UaePassSignInButton);
+    for (final (trySignIn, completion) in const [
+      ('Try sign-in', 'Authorization complete'),
+      ('جرّب تسجيل الدخول', 'اكتمل التفويض'),
+    ]) {
+      await tester.tap(find.text(trySignIn));
       await tester.pumpAndSettle();
-      expect(exchangeRequests, hasLength(2));
-      final userRequest = exchangeRequests.last;
-      expect(userRequest.url.path, '/idshub/userinfo');
-      expect(userRequest.headers['authorization'], 'Bearer example-token');
-      expect(find.text('Signed in'), findsOneWidget);
-      expect(find.text('Example User'), findsOneWidget);
-    },
-  );
+      tester
+          .widget<UaePassSignInButton>(button)
+          .onResult(UaePassSuccess(grant));
+      await tester.pumpAndSettle();
+      expect(find.text(completion), findsOneWidget);
+      expect(find.textContaining(grant.code), findsNothing);
+      expect(tester.widget<UaePassSignInButton>(button).enabled, isTrue);
+
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      if (trySignIn == 'Try sign-in') {
+        await tester.tap(find.text('العربية'));
+        await tester.pumpAndSettle();
+      }
+    }
+  });
 }

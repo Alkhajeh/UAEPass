@@ -1,8 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:uaepass/uaepass.dart';
 
-import 'sandbox_exchange.dart';
-
 String demoServiceName(Locale locale) =>
     locale.languageCode == 'ar' ? 'التطبيق التجريبي' : 'the demo app';
 
@@ -17,62 +15,20 @@ class _SandboxSignInState extends State<SandboxSignIn> {
   static final _client = UaePassClient(
     UaePassConfiguration(
       environment: UaePassEnvironment.staging,
-      clientId: sandboxClientId,
-      callbackScheme: 'poc',
+      clientId: 'sandbox_stage',
+      callbackScheme: 'com.example.uaepass.flutterdemo',
       redirectUri: Uri.parse('https://localhost:8000'),
     ),
   );
 
-  UaePassResult<Object?>? _result;
-  bool _exchanging = false;
-
-  Future<void> _handleAuthorization(
-    UaePassResult<UaePassAuthorizationGrant> result,
-  ) async {
-    if (_exchanging) return;
-    if (result is! UaePassSuccess<UaePassAuthorizationGrant>) {
-      setState(() => _result = result);
-      return;
-    }
-
-    setState(() {
-      _exchanging = true;
-      _result = null;
-    });
-
-    UaePassResult<SandboxSession> session;
-    try {
-      session = await exchangeSandboxCode(result.value);
-    } catch (_) {
-      session = const UaePassFailure(UaePassFailureReason.exchangeFailed);
-    }
-    if (!mounted || ModalRoute.of(context)?.isActive != true) return;
-
-    if (session case UaePassSuccess(:final value)) {
-      Navigator.of(context).pushReplacement<void, void>(
-        MaterialPageRoute(builder: (_) => _SignedInPage(session: value)),
-      );
-      return;
-    }
-    setState(() {
-      _exchanging = false;
-      _result = session;
-    });
-  }
+  String? _message;
 
   @override
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context);
     final ar = locale.languageCode == 'ar';
     final serviceName = demoServiceName(locale);
-    final result = _result;
-    final message = result == null
-        ? null
-        : UaePassSignInMessages.forResult(
-            result,
-            locale: locale,
-            serviceProviderName: serviceName,
-          );
+    final message = _message;
     return Scaffold(
       appBar: AppBar(title: Text(ar ? 'تسجيل الدخول' : 'Sign in')),
       body: SafeArea(
@@ -96,17 +52,24 @@ class _SandboxSignInState extends State<SandboxSignIn> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 16),
-                        if (_exchanging)
-                          CircularProgressIndicator(
-                            semanticsLabel: ar
-                                ? 'جارٍ إعداد جلستك'
-                                : 'Setting up your session',
-                          )
-                        else
-                          UaePassSignInButton(
+                        Center(
+                          child: UaePassSignInButton(
                             client: _client,
-                            onResult: _handleAuthorization,
+                            onResult: (result) => setState(() {
+                              _message = switch (result) {
+                                UaePassSuccess() =>
+                                  ar
+                                      ? 'اكتمل التفويض'
+                                      : 'Authorization complete',
+                                _ => UaePassSignInMessages.forResult(
+                                  result,
+                                  locale: locale,
+                                  serviceProviderName: serviceName,
+                                ),
+                              };
+                            }),
                           ),
+                        ),
                         if (message != null) ...[
                           const SizedBox(height: 16),
                           Semantics(
@@ -121,39 +84,6 @@ class _SandboxSignInState extends State<SandboxSignIn> {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SignedInPage extends StatelessWidget {
-  const _SignedInPage({required this.session});
-
-  final SandboxSession session;
-
-  @override
-  Widget build(BuildContext context) {
-    final ar = Localizations.localeOf(context).languageCode == 'ar';
-    final name = ar
-        ? session.arabicName ?? session.englishName
-        : session.englishName ?? session.arabicName;
-    final title = ar ? 'تم تسجيل الدخول' : 'Signed in';
-
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            const Icon(Icons.check_circle_outline, size: 48),
-            const SizedBox(height: 12),
-            Text(
-              name ?? title,
-              style: Theme.of(context).textTheme.headlineSmall,
-              textAlign: TextAlign.center,
-            ),
-          ],
         ),
       ),
     );

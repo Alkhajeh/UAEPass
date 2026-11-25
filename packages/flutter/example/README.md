@@ -7,10 +7,10 @@ flutter pub get
 flutter run
 ```
 
-- **Try sign-in** shows a provider-owned page using the SDK's sign-in button and the UAE PASS public staging sandbox. A live sign-in requires a [UAE PASS staging account](https://docs.uaepass.ae/quick-start-guide-uae-pass-staging-environment/create-uaepass-user). With the staging app installed, the SDK opens it. Otherwise the SDK uses the embedded web flow, where approval can happen on a second device.
+- **Try sign-in** starts authorization with the UAE PASS public staging sandbox. Install the official [UAE PASS staging app](https://docs.uaepass.ae/resources/staging-apps) and create a [staging account](https://docs.uaepass.ae/quick-start-guide-uae-pass-staging-environment/create-uaepass-user). With the staging app installed on the same device, the SDK opens it. You can also use the embedded web flow and approve from a second device with the staging app.
 - **Explore buttons** works offline. Preview the selected artwork on a light or dark background and expand **Interaction states** to see focused, pressed, and disabled artwork. Copy a `UaePassSignInButton` snippet for any of the available artwork choices.
 - **Preview sign-in outcomes** shows the cancellation, technical failure, and eligibility messages offline.
 
-Switch between English and Arabic from the landing screen. The demo receives the grant from the sign-in button, shows its own loading indicator, and exchanges the code using the [public staging credentials](https://docs.uaepass.ae/quick-start-guide-uae-pass-staging-environment/testing-credentials-for-poc). Real integrations perform the exchange on their own backend.
+Switch between English and Arabic from the landing screen. After a valid callback, the demo displays **Authorization complete** and discards the one-time code. The example registers `com.example.uaepass.flutterdemo` as its callback scheme in Dart, the Android manifest, and the iOS plist.
 
-See the [package integration guide](../README.md) for host app setup and the backend exchange. For UAE PASS assessment, exercise both authorization paths in English and Arabic on staging devices and record successful and cancelled flows with a staging account intended for assessment.
+See the [package integration guide](../README.md#4-complete-sign-in-on-your-backend) for exchanging the code and establishing an app session. For UAE PASS assessment, exercise both authorization paths in English and Arabic on staging devices and record successful and cancelled flows with a staging account intended for assessment.
