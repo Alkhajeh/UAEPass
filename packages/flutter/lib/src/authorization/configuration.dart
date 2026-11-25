@@ -23,36 +23,7 @@ final class UaePassConfiguration {
         'Use a custom URI scheme.',
       );
     }
-    if (redirectUri.scheme != 'https' ||
-        redirectUri.host.isEmpty ||
-        redirectUri.userInfo.isNotEmpty ||
-        redirectUri.hasFragment ||
-        redirectUri.queryParameters.keys.any(
-          const {'code', 'state', 'error'}.contains,
-        )) {
-      throw ArgumentError.value(
-        redirectUri,
-        'redirectUri',
-        'Use your registered HTTPS redirect URI.',
-      );
-    }
-    if (clientId.trim().isEmpty) {
-      throw ArgumentError.value(
-        clientId,
-        'clientId',
-        'A client ID is required.',
-      );
-    }
-    if (this.scopes.isEmpty ||
-        this.scopes.any(
-          (scope) => scope.isEmpty || RegExp(r'\s').hasMatch(scope),
-        )) {
-      throw ArgumentError.value(
-        this.scopes,
-        'scopes',
-        'Provide individual UAE PASS scopes.',
-      );
-    }
+    _validateOAuthSettings(clientId, redirectUri, this.scopes);
   }
 
   static const profileScope = 'urn:uae:digitalid:profile:general';
@@ -66,4 +37,69 @@ final class UaePassConfiguration {
   /// The HTTPS OAuth redirect registered with UAE PASS.
   final Uri redirectUri;
   final List<String> scopes;
+}
+
+/// The registered client and callback for browser-based authorization.
+final class UaePassWebConfiguration {
+  UaePassWebConfiguration({
+    required this.environment,
+    required this.clientId,
+    required this.redirectUri,
+    Iterable<String> scopes = const [UaePassConfiguration.profileScope],
+  }) : scopes = List.unmodifiable(scopes) {
+    _validateOAuthSettings(
+      clientId,
+      redirectUri,
+      this.scopes,
+      allowHttpLocalhost: environment == UaePassEnvironment.staging,
+    );
+  }
+
+  final UaePassEnvironment environment;
+  final String clientId;
+
+  /// The registered callback served by the Flutter app's origin.
+  ///
+  /// HTTPS is required except for HTTP on `localhost` in staging.
+  final Uri redirectUri;
+  final List<String> scopes;
+}
+
+void _validateOAuthSettings(
+  String clientId,
+  Uri redirectUri,
+  List<String> scopes, {
+  bool allowHttpLocalhost = false,
+}) {
+  final validScheme =
+      redirectUri.scheme == 'https' ||
+      (allowHttpLocalhost &&
+          redirectUri.scheme == 'http' &&
+          redirectUri.host == 'localhost');
+  if (!validScheme ||
+      redirectUri.host.isEmpty ||
+      redirectUri.userInfo.isNotEmpty ||
+      redirectUri.hasFragment ||
+      redirectUri.queryParameters.keys.any(
+        const {'code', 'state', 'error'}.contains,
+      )) {
+    throw ArgumentError.value(
+      redirectUri,
+      'redirectUri',
+      allowHttpLocalhost
+          ? 'Use your registered HTTPS redirect URI or a staging HTTP localhost URI.'
+          : 'Use your registered HTTPS redirect URI.',
+    );
+  }
+  if (clientId.trim().isEmpty) {
+    throw ArgumentError.value(clientId, 'clientId', 'A client ID is required.');
+  }
+  if (scopes.isEmpty ||
+      scopes.any((scope) => scope.isEmpty || RegExp(r'\s').hasMatch(scope))) {
+    throw ArgumentError.value(
+      scopes,
+      'scopes',
+      'Provide individual UAE PASS scopes.',
+    );
+  }
 }

@@ -2,7 +2,7 @@
 
 ## Packages
 
-- `packages/flutter` is the Android and iOS plugin. Keep `package:uaepass/uaepass.dart` as the public entry point. [Flutter integration guide](packages/flutter/README.md)
+- `packages/flutter` is the Android, iOS, and Web plugin. Keep `package:uaepass/uaepass.dart` as the public entry point. [Flutter integration guide](packages/flutter/README.md)
 - `packages/flutter/example` is the runnable Flutter demo. It uses the local plugin and can opt in to the local Node staging backend. [Flutter demo guide](packages/flutter/example/README.md)
 - `packages/node` is the server-only TypeScript SDK. Use Node.js 22+ and npm from this directory, with its own lockfile. The staging backend example lives in `packages/node/example`. [Node SDK guide](packages/node/README.md)
 
@@ -24,7 +24,7 @@ npm ci
 npm test
 ```
 
-When the Flutter-to-Node contract changes, run both sets of checks and use the opt-in demo to verify the exchange end to end. [Local backend setup](packages/flutter/example/README.md#verify-the-local-backend)
+When the optional demo's exchange interface changes, run both sets of checks and verify the exchange end to end. [Staging demo setup](README.md#optional-end-to-end-staging-demo)
 
 ## Integration boundaries
 

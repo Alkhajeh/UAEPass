@@ -61,6 +61,24 @@ test('returns an opaque token, expiry in seconds and granted scopes', async (t) 
   });
 });
 
+test('exchanges HTTP localhost redirects only in staging', async (t) => {
+  const redirectUri = 'http://localhost:8000';
+  const fetch = t.mock.method(globalThis, 'fetch', async (url) => {
+    assert.equal(url.origin, 'https://stg-id.uaepass.ae');
+    assert.equal(url.pathname, '/idshub/token');
+    assert.equal(url.searchParams.get('redirect_uri'), redirectUri);
+    return Response.json(token);
+  });
+  const client = createUaePassClient({ ...config, redirectUri });
+  await client.exchangeAuthorizationCode(code);
+  assert.equal(fetch.mock.callCount(), 1);
+
+  assert.throws(() => createUaePassClient({ ...config, environment: 'production', redirectUri }), TypeError);
+  for (const invalid of ['http://service.example', 'http://localhost.example', 'http://127.0.0.1:8000']) {
+    assert.throws(() => createUaePassClient({ ...config, redirectUri: invalid }), TypeError);
+  }
+});
+
 test('rejects malformed bearer tokens at the exchange and User Info boundaries', async (t) => {
   const malformed = 'fixture\u0100token';
   const fetch = t.mock.method(globalThis, 'fetch', async () =>

@@ -1,3 +1,7 @@
+## 0.1.2
+
+- Add same-tab UAE PASS Web sign-in with a registered callback, one-time state, and the existing backend exchange hook. Add the official web sign-in button and a browser staging demo that supports HTTP on localhost.
+
 ## 0.1.1
 
 - Add the instance-based `UaePassClient`. Use `authorize()` for a typed grant and `login()` for an app-owned session returned by your backend exchange.

@@ -8,6 +8,58 @@ import 'package:uaepass_example/main.dart';
 import 'package:uaepass_example/sign_in/sandbox_sign_in.dart';
 
 void main() {
+  testWidgets('reopening web sign-in starts with a fresh result', (
+    tester,
+  ) async {
+    final webSandbox = WebSandbox(
+      UaePassWebClient(
+        UaePassWebConfiguration(
+          environment: UaePassEnvironment.staging,
+          clientId: 'sandbox_stage',
+          redirectUri: Uri.parse('http://localhost:8000'),
+        ),
+      ),
+      Future.value(const UaePassSuccess<void>(null)),
+    );
+    await tester.pumpWidget(UaePassDemo(webSandbox: webSandbox));
+    await tester.pumpAndSettle();
+    expect(find.text('Authorization complete'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Try sign-in'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(UaePassWebSignInButton), findsOneWidget);
+    expect(find.text('Authorization complete'), findsNothing);
+    expect(find.text('Sign out of UAE PASS'), findsNothing);
+  });
+
+  testWidgets('web sign-in explains which callback URLs it accepts', (
+    tester,
+  ) async {
+    for (final redirectUrl in ['', 'http://staging.example.com/']) {
+      await tester.pumpWidget(
+        UaePassDemo(
+          key: ValueKey(redirectUrl),
+          webSandbox: WebSandbox.restore(redirectUrl: redirectUrl),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Try sign-in'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Set UAEPASS_WEB_REDIRECT_URI to an HTTPS callback or http://localhost:8000 for staging.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(UaePassSignInButton), findsNothing);
+      expect(find.byType(UaePassWebSignInButton), findsNothing);
+    }
+  });
+
   testWidgets('the opt-in demo waits for the backend and reports its outcome', (
     tester,
   ) async {
@@ -71,6 +123,19 @@ void main() {
     await tester.tap(find.text('Try sign-in'));
     await tester.pumpAndSettle();
     expect(signInButton, findsOneWidget);
+    expect(
+      tester
+          .widget<UaePassSignInButton>(signInButton)
+          .client
+          .configuration
+          .redirectUri,
+      Uri.parse(
+        const String.fromEnvironment(
+          'UAEPASS_MOBILE_REDIRECT_URI',
+          defaultValue: 'https://localhost:8000',
+        ),
+      ),
+    );
     expect(find.bySemanticsLabel('Sign in with UAE PASS'), findsOneWidget);
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();

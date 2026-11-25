@@ -1,6 +1,6 @@
 {
   "name": "@alkhajeh/uaepass-server",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Server-side UAE PASS authorization code exchange and user information client.",
   "license": "MIT",
   "repository": {

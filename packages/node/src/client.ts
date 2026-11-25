@@ -131,12 +131,17 @@ export function createUaePassClient(config: UaePassConfig): UaePassClient {
   const redirect = typeof redirectUri === 'string' && URL.canParse(redirectUri)
     ? new URL(redirectUri)
     : null;
+  const httpsRedirect = redirect?.protocol === 'https:' && redirectUri.startsWith('https://');
+  const stagingLocalhost = environment === 'staging' &&
+    redirect?.protocol === 'http:' && redirect.hostname === 'localhost' &&
+    redirectUri.startsWith('http://');
   if (
-    !redirect || !redirectUri.startsWith('https://') ||
-    redirect.protocol !== 'https:' || redirect.username || redirect.password ||
+    !redirect || (!httpsRedirect && !stagingLocalhost) || redirect.username || redirect.password ||
     redirectUri.includes('#') || /\s/.test(redirectUri)
   ) {
-    throw new TypeError('Provide the registered HTTPS redirect URI.');
+    throw new TypeError(environment === 'staging'
+      ? 'Provide the registered HTTPS redirect URI or a staging HTTP localhost URI.'
+      : 'Provide the registered HTTPS redirect URI.');
   }
 
   const origin = origins[environment];

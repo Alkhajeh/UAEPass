@@ -59,7 +59,9 @@ class DemoHome extends StatelessWidget {
                           : 'Uses a UAE PASS staging account',
                     ),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () => open(const SandboxSignIn()),
+                    onTap: () =>
+                        Navigator.of(context)
+                            .pushNamed(SandboxSignIn.routeName),
                   ),
                 ),
                 Card(
