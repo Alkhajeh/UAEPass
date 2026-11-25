@@ -72,11 +72,19 @@ function rejectionCode(
   data: unknown,
 ): UaePassErrorCode {
   if (operation !== 'token') return 'rejected';
-  if (status === 401 || (isRecord(data) && data.error === 'invalid_client')) {
+  const details = isRecord(data) ? data : undefined;
+  const error = typeof details?.error === 'string' ? details.error.toLowerCase() : undefined;
+  const description = details?.error_description;
+  if (
+    status === 401 ||
+    error === 'invalid_client' ||
+    error === 'invalid_basic_header_authentication' ||
+    description === 'invalidHttpBasicAuthenticationToken'
+  ) {
     return 'invalid_client';
   }
-  if (isRecord(data) && data.error === 'invalid_grant') {
-    return data.error_description === 'redirectUriMismatch'
+  if (error === 'invalid_grant') {
+    return description === 'redirectUriMismatch'
       ? 'redirect_mismatch'
       : 'invalid_grant';
   }
@@ -182,9 +190,12 @@ export function createUaePassClient(config: UaePassConfig): UaePassClient {
     }
     const profile = { ...data };
     for (const key of profileFields) {
-      if (profile[key] === null) {
+      const value = profile[key];
+      const blankIdentifier =
+        (key === 'uuid' || key === 'sub') && typeof value === 'string' && value.trim() === '';
+      if (value === null || blankIdentifier) {
         delete profile[key];
-      } else if (profile[key] !== undefined && typeof profile[key] !== 'string') {
+      } else if (value !== undefined && typeof value !== 'string') {
         throw new UaePassError('invalid_response', 'userinfo', status);
       }
     }

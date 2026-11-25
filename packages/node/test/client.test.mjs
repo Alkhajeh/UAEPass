@@ -83,10 +83,29 @@ test('supports visitor and subject-only profiles with scope-dependent attributes
   assert.deepEqual(await client.getUserInfo(token.access_token), subjectOnly);
 });
 
+test('omits blank identity claims and requires a nonblank identifier', async (t) => {
+  const profiles = [
+    { uuid: '  ', sub: 'opaque/subject' },
+    { uuid: 'opaque-uuid', sub: '' },
+    { uuid: '', sub: '  ' },
+  ];
+  mockFetch(t, async () => Response.json(profiles.shift()));
+  const client = createUaePassClient(config);
+
+  assert.deepEqual(await client.getUserInfo(token.access_token), { sub: 'opaque/subject' });
+  assert.deepEqual(await client.getUserInfo(token.access_token), { uuid: 'opaque-uuid' });
+  await assert.rejects(client.getUserInfo(token.access_token), {
+    code: 'invalid_response',
+    operation: 'userinfo',
+  });
+});
+
 test('reports safe provider failures and attempts the token exchange once', async (t) => {
   const cases = [
     [400, { error: 'invalid_grant', error_description: 'expiredCode' }, 'invalid_grant'],
     [400, { error: 'invalid_grant', error_description: 'redirectUriMismatch' }, 'redirect_mismatch'],
+    [400, { error: 'Invalid_basic_header_authentication' }, 'invalid_client'],
+    [400, { error_description: 'invalidHttpBasicAuthenticationToken' }, 'invalid_client'],
     [401, { error: 'invalid_client', debug: config.clientSecret }, 'invalid_client'],
     [503, 'Not JSON', 'unavailable'],
     [302, '', 'invalid_response'],
