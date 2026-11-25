@@ -6,16 +6,15 @@ import '../branding/button_artwork.dart';
 import '../localization/locale.dart';
 import 'branded_button.dart';
 
-/// Starts UAE PASS sign-in and completes the app's backend exchange.
+/// Starts UAE PASS authorization and hands the result back to the app.
 ///
-/// All artwork choices start the same UAE PASS authentication flow. The button
-/// is disabled while sign-in is in progress. The host handles the result and
-/// owns the signed-in session.
-class UaePassSignInButton<T> extends StatefulWidget {
+/// All artwork choices start the same authorization flow. The button is
+/// disabled during authorization. The host owns the backend exchange and
+/// signed-in session.
+class UaePassSignInButton extends StatefulWidget {
   const UaePassSignInButton({
     super.key,
     required this.client,
-    required this.exchangeCode,
     required this.onResult,
     this.content = UaePassSignInButtonContent.signIn,
     this.enabled = true,
@@ -25,10 +24,9 @@ class UaePassSignInButton<T> extends StatefulWidget {
   });
 
   final UaePassClient client;
-  final UaePassCodeExchange<T> exchangeCode;
 
-  /// Receives the outcome of each completed attempt while the button is mounted.
-  final ValueChanged<UaePassResult<T>> onResult;
+  /// Receives a grant, cancellation, or failure while the button is mounted.
+  final ValueChanged<UaePassResult<UaePassAuthorizationGrant>> onResult;
 
   final UaePassSignInButtonContent content;
 
@@ -39,25 +37,21 @@ class UaePassSignInButton<T> extends StatefulWidget {
   final UaePassButtonStyle? style;
 
   @override
-  State<UaePassSignInButton<T>> createState() => _UaePassSignInButtonState<T>();
+  State<UaePassSignInButton> createState() => _UaePassSignInButtonState();
 }
 
-class _UaePassSignInButtonState<T> extends State<UaePassSignInButton<T>> {
-  bool _signingIn = false;
+class _UaePassSignInButtonState extends State<UaePassSignInButton> {
+  bool _authorizing = false;
 
-  Future<void> _signIn(Locale locale) async {
-    if (_signingIn || !widget.enabled) return;
-    setState(() => _signingIn = true);
+  Future<void> _authorize(Locale locale) async {
+    if (_authorizing || !widget.enabled) return;
+    setState(() => _authorizing = true);
 
-    final UaePassResult<T> result;
+    final UaePassResult<UaePassAuthorizationGrant> result;
     try {
-      result = await widget.client.login(
-        context,
-        exchangeCode: widget.exchangeCode,
-        locale: locale,
-      );
+      result = await widget.client.authorize(context, locale: locale);
     } finally {
-      if (mounted) setState(() => _signingIn = false);
+      if (mounted) setState(() => _authorizing = false);
     }
     if (mounted) widget.onResult(result);
   }
@@ -71,15 +65,17 @@ class _UaePassSignInButtonState<T> extends State<UaePassSignInButton<T>> {
         : 'Signing in';
 
     return Semantics(
-      liveRegion: _signingIn,
-      value: _signingIn ? progress : null,
+      liveRegion: _authorizing,
+      value: _authorizing ? progress : null,
       child: BrandedButton(
         label: label ?? UaePassButtonLabel.signIn,
         icon: label == null,
         locale: locale,
         shape: widget.shape,
         style: widget.style,
-        onPressed: widget.enabled && !_signingIn ? () => _signIn(locale) : null,
+        onPressed: widget.enabled && !_authorizing
+            ? () => _authorize(locale)
+            : null,
       ),
     );
   }

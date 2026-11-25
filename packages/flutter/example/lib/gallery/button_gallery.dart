@@ -24,10 +24,9 @@ class _ButtonGalleryState extends State<ButtonGallery> {
   var _background = Brightness.light;
 
   String _snippet(Locale locale) => [
-    'UaePassSignInButton<Session>(',
+    'UaePassSignInButton(',
     '  client: client,',
-    '  exchangeCode: exchangeGrantOnBackend,',
-    '  onResult: handleSignInResult,',
+    '  onResult: handleAuthorizationResult,',
     '  content: UaePassSignInButtonContent.${_content.name},',
     "  locale: const Locale('${locale.languageCode}'),",
     '  shape: UaePassButtonShape.${_shape.name},',

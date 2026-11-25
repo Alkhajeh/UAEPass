@@ -127,11 +127,11 @@ void main() {
       );
       expect(
         staging.authorizationResult(response('state'), 'state'),
-        isA<UaePassCancelled>(),
+        isA<UaePassCancelled<UaePassAuthorizationGrant>>(),
       );
       expect(
         staging.authorizationResult(response('different'), 'state'),
-        isA<UaePassFailure>(),
+        isA<UaePassFailure<UaePassAuthorizationGrant>>(),
       );
     }
   });
@@ -150,7 +150,7 @@ void main() {
     ]) {
       expect(
         staging.authorizationResult(redirectUri.replace(query: query), 'state'),
-        isA<UaePassFailure>().having(
+        isA<UaePassFailure<UaePassAuthorizationGrant>>().having(
           (failure) => failure.reason,
           'reason',
           UaePassFailureReason.authorizationFailed,

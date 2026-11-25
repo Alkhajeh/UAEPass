@@ -1,45 +1,27 @@
 # UAE PASS for Flutter
 
-Add UAE PASS sign-in to your app with the official English or Arabic button. The SDK opens the UAE PASS app when available and uses a WebView otherwise. Your app owns the sign-in page and session.
+Add official English and Arabic UAE PASS buttons to your Flutter app. The SDK hands off to the UAE PASS app when installed and offers web sign-in when it is absent. It returns the authorization result to your app.
 
-Requires Flutter 3.50.1 or later and Dart 3.14 or later. Supports Android API 24 or later and iOS 15 or later.
+## Requirements
 
-## Install and add the sign-in button
+- Flutter 3.50.1+ and Dart 3.14+
+- Android API 24+ or iOS 15+
+- A UAE PASS client ID and a registered HTTPS redirect URI for your environment. [UAE PASS mobile integration guide](https://docs.uaepass.ae/feature-guides/authentication/mobile-application)
+
+## Quick start
+
+### 1. Install
 
 ```sh
 flutter pub add uaepass
 ```
 
-Create one client for your integration and add the button to your sign-in page.
+### 2. Register the callback
 
-```dart
-import 'package:uaepass/uaepass.dart';
+- `redirectUri` is the HTTPS URL registered with UAE PASS for the authorization result.
+- `callbackScheme` is a unique lowercase scheme that opens your Flutter app again after the UAE PASS app handoff. Use the same scheme in Dart and in your platform settings. Share it with UAE PASS as required by your integration.
 
-final client = UaePassClient(
-  UaePassConfiguration(
-    environment: UaePassEnvironment.staging,
-    clientId: 'your-client-id',
-    callbackScheme: 'com.example.yourapp',
-    redirectUri: Uri.parse('https://service.example/uaepass/callback'),
-  ),
-);
-
-final signInButton = UaePassSignInButton<ServiceSession>(
-  client: client,
-  exchangeCode: exchangeGrantOnBackend,
-  onResult: handleSignInResult,
-);
-```
-
-Provide `ServiceSession` and both callbacks in your app. `exchangeGrantOnBackend` sends the one-time grant to your backend, which exchanges it with UAE PASS and establishes your app's session. Return `UaePassSuccess(session)` or a typed `UaePassFailure` from the callback. `handleSignInResult` receives the outcome, including cancellation. The button disables itself during sign-in and the exchange. Keep any UAE PASS client secret on your backend.
-
-Use `MaterialApp` from `package:material_ui/material_ui.dart` to provide the theme and localizations used by the button and authorization route. For English and Arabic, configure `supportedLocales` and `GlobalMaterialLocalizations.delegates`. The [example app](example/) shows both locales. [Flutter Material UI setup](https://docs.flutter.dev/release/breaking-changes/material-ui-and-cupertino-ui)
-
-## Configure your host app
-
-Obtain a UAE PASS client ID, registered HTTPS redirect URI, and approved scopes for your environment. The default scope requests the user's general profile. Pass `scopes` if your integration has a different approved set. Set `redirectUri` to the registered HTTPS URI that returns the authorization result. Set `callbackScheme` to a unique lowercase custom scheme registered in your app for the return from the UAE PASS app. Share it with UAE PASS as required by your integration. Use the same scheme in Dart and the platform configuration. [UAE PASS mobile integration guide](https://docs.uaepass.ae/feature-guides/authentication/mobile-application)
-
-### Android
+#### Android
 
 Merge these entries into the activity that hosts Flutter in your app's `AndroidManifest.xml`. Keep the activity exported for external callbacks. Configure it to deliver the callback to the existing activity via `onNewIntent` so the SDK can resume the same WebView. The example uses `android:launchMode="singleTask"`.
 
@@ -57,7 +39,7 @@ Merge these entries into the activity that hosts Flutter in your app's `AndroidM
 
 The plugin declares internet access and both UAE PASS packages in its Android manifest.
 
-### iOS
+#### iOS
 
 Merge these keys and array entries into your app's `Info.plist`. The URL type registers your app's callback. The query schemes allow the SDK to check for the production and staging UAE PASS apps. The plugin supports Swift Package Manager and CocoaPods.
 
@@ -82,44 +64,73 @@ Merge these keys and array entries into your app's `Info.plist`. The URL type re
 
 The deep-link opt-out on each platform disables Flutter's default deep-link routing across the host app. If you also use app links or universal links elsewhere, make sure your app's link handler continues to route those URLs. The SDK handles the registered UAE PASS callback. [Flutter deep-link setup](https://docs.flutter.dev/ui/navigation/deep-linking#migrating-from-plugin-based-deep-linking)
 
-## Start UAE PASS sign-in from Dart
+### 3. Add the button and handle the result
 
-The client methods start the same UAE PASS authentication as the widget. Call `authorize(context)` for a typed result containing a one-time code and redirect URI. Call `login<T>()` to also invoke your backend exchange callback and return the completed session.
+Create one client for your integration and place `UaePassSignInButton` on your sign-in page. The button disables itself during UAE PASS authorization. Its `onResult` callback receives a typed grant, cancellation, or authorization failure.
 
 ```dart
-final result = await client.login<ServiceSession>(
-  context,
-  exchangeCode: exchangeGrantOnBackend,
+import 'package:uaepass/uaepass.dart';
+
+final client = UaePassClient(
+  UaePassConfiguration(
+    environment: UaePassEnvironment.staging,
+    clientId: 'your-client-id',
+    callbackScheme: 'com.example.yourapp',
+    redirectUri: Uri.parse('https://service.example/uaepass/callback'),
+  ),
 );
 
-switch (result) {
-  case UaePassSuccess(:final value):
-    openSession(value);
-  case UaePassCancelled():
-    return;
-  case UaePassFailure(:final reason):
-    showSignInFailure(reason);
+final signInButton = UaePassSignInButton(
+  client: client,
+  onResult: handleAuthorizationResult,
+);
+
+Future<void> handleAuthorizationResult(
+  UaePassResult<UaePassAuthorizationGrant> result,
+) async {
+  switch (result) {
+    case UaePassSuccess(:final value):
+      await completeSignInOnBackend(value.code);
+    case UaePassCancelled():
+      return;
+    case UaePassFailure(:final reason):
+      showSignInFailure(reason);
+  }
 }
 ```
 
-Both methods accept an optional `Locale`. They use the app locale by default and fall back to English for locales other than Arabic. One attempt can be active per Flutter engine. Use `UaePassSignInMessages.forResult` to show localized outcome messages with your service provider's name.
+Implement `completeSignInOnBackend` and `showSignInFailure` in your app. Send the one-time code to your backend. When exchanging it with UAE PASS, your backend uses its configured HTTPS redirect URI, which must exactly match `UaePassConfiguration.redirectUri`. Keep your UAE PASS client secret on the backend. Your app owns loading, navigation, and session creation after it receives the result.
 
-## Choose the sign-in button artwork
+## Optional configuration
 
-Choose `signIn` (the default), `login`, `registerAccount`, `signUp`, `authorize`, or `logoOnly` for `content`. Each choice starts UAE PASS authentication and calls the supplied backend exchange callback. Choose the wording that matches the action on your screen. Use the registration artwork on your account creation page. The logo-only option has a localized sign-in label for screen readers. [UAE PASS button usage guidance](https://docs.uaepass.ae/guidelines/design-guidelines/button-guidelines/dos-and-donts/sign-in-and-sign-up)
-
-```dart
-UaePassSignInButton<ServiceSession>(
-  client: client,
-  exchangeCode: exchangeGrantOnBackend,
-  onResult: handleSignInResult,
-  content: UaePassSignInButtonContent.logoOnly,
-  shape: UaePassButtonShape.fullyRounded,
-)
-```
-
-Omit `style` to use white with outline in a light theme or solid white in a dark theme. Set it explicitly when the local background differs from the theme. Set `enabled: false` to disable sign-in. Text artwork scales to the available width and takes up to 366 logical pixels at natural size, including clear space. Logo-only artwork fits a 50-logical-pixel square. [UAE PASS button guidelines](https://docs.uaepass.ae/guidelines/design-guidelines/button-guidelines)
+- **Arabic.** Add `Locale('ar')` alongside `Locale('en')` in `supportedLocales`. Set `localizationsDelegates` to `GlobalMaterialLocalizations.delegates` or merge those delegates into your existing list. The SDK follows your app locale for the button and the UAE PASS authorization page, with English as the fallback. [Example app setup](example/lib/main.dart)
+- **Appearance.** Use `content` to choose `signIn`, `login`, `registerAccount`, `signUp`, `authorize`, or `logoOnly`. Set `shape` and `style` to suit your layout. By default, light themes use white with outline and dark themes use solid white. The gallery previews all available combinations. [UAE PASS button guidelines](https://docs.uaepass.ae/guidelines/design-guidelines/button-guidelines)
+- **Programmatic authorization.** `client.authorize(context)` returns the same typed result as the button. `client.login<T>()` also calls your app-supplied exchange callback and returns the session result. One attempt can be active per Flutter engine.
+- **Scopes and messages.** Pass `scopes` in `UaePassConfiguration` if your approved scopes differ from the default general-profile scope. Use `UaePassSignInMessages.forResult` for localized cancellation and failure messages.
 
 ## Example app
 
-Run the [example app](example/) to try staging sign-in, preview localized outcomes offline, or explore the official button variations and copy a Flutter snippet.
+Run the example app to try staging sign-in, preview localized outcomes offline, or explore the official button variations and copy a Flutter snippet. [Example app instructions](example/README.md)
+
+## Development
+
+Use the Flutter version pinned in CI. Run these checks from both `packages/flutter` and `packages/flutter/example`.
+
+```sh
+flutter pub get
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze --no-pub
+flutter test --no-pub
+```
+
+Both projects use `flutter_lints` and the same strict type checks. The example inherits the package's analyzer settings.
+
+### Release checks
+
+From `packages/flutter`, preview what will be published to pub.dev.
+
+```sh
+flutter pub publish --dry-run
+```
+
+Before publishing, verify app handoff and web fallback with UAE PASS staging on Android and iOS. Confirm that the official button artwork may be redistributed with the package.

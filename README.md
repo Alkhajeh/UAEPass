@@ -1,30 +1,13 @@
 # UAE PASS SDKs
 
-The `uaepass` Flutter plugin integrates UAE PASS sign-in on Android and iOS.
+SDKs for integrating UAE PASS sign-in into applications.
 
-- [Flutter package](packages/flutter/) has installation and integration instructions.
-- [Flutter example](packages/flutter/example/) demonstrates staging sign-in and the button styles.
+## SDKs
 
-## Develop the Flutter package
+| SDK | Supported platforms | Get started |
+| --- | --- | --- |
+| Flutter | Android, iOS | [Integration guide](packages/flutter/README.md) · [Example app](packages/flutter/example/README.md) |
 
-Run Flutter commands from the package directory.
+## Development
 
-```sh
-cd packages/flutter
-flutter pub get
-flutter analyze
-flutter test
-flutter pub publish --dry-run
-```
-
-Run the example from its own directory with an Android or iOS device selected.
-
-```sh
-cd packages/flutter/example
-flutter pub get
-flutter analyze
-flutter test
-flutter run
-```
-
-Before publishing, verify app handoff and web fallback with UAE PASS staging on Android and iOS. Confirm that the official button artwork may be redistributed with the package.
+See the [Flutter development instructions](packages/flutter/README.md#development) for local tests and release checks.

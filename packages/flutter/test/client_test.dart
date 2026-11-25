@@ -171,7 +171,7 @@ void main() {
     expect(view.requests, [request, failure]);
 
     await redirect(tester, error: 'cancelledOnApp');
-    expect(await attempt, isA<UaePassCancelled>());
+    expect(await attempt, isA<UaePassCancelled<UaePassAuthorizationGrant>>());
     expect(nativeCalls.last, ('setCallbackScheme', null));
   });
 
@@ -249,7 +249,7 @@ void main() {
       NavigationDecision.prevent,
     );
     expect(nativeCalls.any((call) => call.$1 == 'launchApp'), isFalse);
-    expect(await attempt, isA<UaePassCancelled>());
+    expect(await attempt, isA<UaePassCancelled<UaePassAuthorizationGrant>>());
     expect(nativeCalls.last, ('setCallbackScheme', null));
     await tester.pumpAndSettle();
   });
@@ -269,7 +269,7 @@ void main() {
     final delivery = deliverCallback(callback);
     Navigator.of(hostContext).pop();
     await delivery;
-    expect(await attempt, isA<UaePassCancelled>());
+    expect(await attempt, isA<UaePassCancelled<UaePassAuthorizationGrant>>());
     expect(view.requests, hasLength(1));
     expect(nativeCalls.last, ('setCallbackScheme', null));
     await tester.pumpAndSettle();
@@ -395,7 +395,7 @@ void main() {
     await tester.pump();
     expect(
       competingResult,
-      isA<UaePassFailure>().having(
+      isA<UaePassFailure<UaePassAuthorizationGrant>>().having(
         (failure) => failure.reason,
         'reason',
         UaePassFailureReason.alreadyInProgress,
@@ -422,7 +422,7 @@ void main() {
     await redirect(tester, code: 'new-code');
     expect(
       await rejected,
-      isA<UaePassFailure>().having(
+      isA<UaePassFailure<String>>().having(
         (failure) => failure.reason,
         'reason',
         UaePassFailureReason.uaeNationalsOnly,
@@ -437,7 +437,7 @@ void main() {
     await redirect(tester, code: 'latest-code');
     expect(
       await failed,
-      isA<UaePassFailure>().having(
+      isA<UaePassFailure<String>>().having(
         (failure) => failure.reason,
         'reason',
         UaePassFailureReason.exchangeFailed,
@@ -453,134 +453,115 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
-    expect(await attempt, isA<UaePassCancelled>());
+    expect(await attempt, isA<UaePassCancelled<UaePassAuthorizationGrant>>());
     expect(nativeCalls.last, ('setCallbackScheme', null));
   });
 
-  testWidgets(
-    'sign-in, login, and logo artwork use the same authorization and exchange',
-    (tester) async {
-      var exchangeCount = 0;
-      final exchange = Completer<UaePassResult<String>>();
-      final results = <UaePassResult<String>>[];
+  testWidgets('sign-in, login, and logo artwork return authorization results', (
+    tester,
+  ) async {
+    final appWork = Completer<void>();
+    final results = <UaePassResult<UaePassAuthorizationGrant>>[];
 
-      Future<void> show({
-        required bool enabled,
-        UaePassSignInButtonContent content = UaePassSignInButtonContent.signIn,
-        Locale locale = const Locale('ar'),
-      }) => tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Center(
-              child: UaePassSignInButton<String>(
-                client: client,
-                enabled: enabled,
-                content: content,
-                locale: locale,
-                exchangeCode: (_) {
-                  exchangeCount++;
-                  return exchangeCount == 1
-                      ? Future.value(
-                          const UaePassFailure(
-                            UaePassFailureReason.registeredUsersOnly,
-                          ),
-                        )
-                      : exchange.future;
-                },
-                onResult: results.add,
-              ),
+    Future<void> show({
+      required bool enabled,
+      UaePassSignInButtonContent content = UaePassSignInButtonContent.signIn,
+      Locale locale = const Locale('ar'),
+    }) => tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: UaePassSignInButton(
+              client: client,
+              enabled: enabled,
+              content: content,
+              locale: locale,
+              onResult: (result) async {
+                results.add(result);
+                if (result is UaePassSuccess) await appWork.future;
+              },
             ),
           ),
         ),
-      );
+      ),
+    );
 
-      final button = find.byType(TextButton, skipOffstage: false);
-      bool isEnabled() => tester.widget<TextButton>(button).onPressed != null;
+    final button = find.byType(TextButton, skipOffstage: false);
+    bool isEnabled() => tester.widget<TextButton>(button).onPressed != null;
 
-      await show(enabled: false);
-      expect(isEnabled(), isFalse);
-      expect(webViews.controllers, isEmpty);
+    await show(enabled: false);
+    expect(isEnabled(), isFalse);
+    expect(webViews.controllers, isEmpty);
 
-      await show(enabled: true);
-      expect(isEnabled(), isTrue);
-      expect(
-        find.bySemanticsLabel('تسجيل الدخول بالهوية الرقمية'),
-        findsOneWidget,
-      );
+    await show(enabled: true);
+    expect(isEnabled(), isTrue);
+    expect(
+      find.bySemanticsLabel('تسجيل الدخول بالهوية الرقمية'),
+      findsOneWidget,
+    );
 
-      final startSignIn = tester.widget<TextButton>(button).onPressed!;
-      startSignIn();
-      startSignIn();
-      await tester.pumpAndSettle();
-      expect(isEnabled(), isFalse);
-      expect(
-        webViews
-            .controllers
-            .single
-            .requests
-            .first
-            .queryParameters['ui_locales'],
-        'ar',
-      );
-      await tester.tap(find.byType(CloseButton));
-      await tester.pumpAndSettle();
-      expect(results.single, isA<UaePassCancelled<String>>());
-      expect(exchangeCount, 0);
-      expect(isEnabled(), isTrue);
+    final startSignIn = tester.widget<TextButton>(button).onPressed!;
+    startSignIn();
+    startSignIn();
+    await tester.pumpAndSettle();
+    expect(isEnabled(), isFalse);
+    expect(
+      webViews.controllers.single.requests.first.queryParameters['ui_locales'],
+      'ar',
+    );
+    await tester.tap(find.byType(CloseButton));
+    await tester.pumpAndSettle();
+    expect(results.single, isA<UaePassCancelled<UaePassAuthorizationGrant>>());
+    expect(isEnabled(), isTrue);
 
-      await show(
-        enabled: true,
-        content: UaePassSignInButtonContent.login,
-        locale: const Locale('en'),
-      );
-      expect(find.bySemanticsLabel('Login with UAE PASS'), findsOneWidget);
-      await tester.tap(button);
-      await tester.pumpAndSettle();
-      await redirect(tester, code: 'first');
-      expect(results, hasLength(2));
-      expect(
-        results.last,
-        isA<UaePassFailure<String>>().having(
-          (failure) => failure.reason,
-          'reason',
-          UaePassFailureReason.registeredUsersOnly,
-        ),
-      );
-      expect(isEnabled(), isTrue);
+    await show(
+      enabled: true,
+      content: UaePassSignInButtonContent.login,
+      locale: const Locale('en'),
+    );
+    expect(find.bySemanticsLabel('Login with UAE PASS'), findsOneWidget);
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+    await redirect(tester, error: 'server_error');
+    expect(results, hasLength(2));
+    expect(
+      results.last,
+      isA<UaePassFailure<UaePassAuthorizationGrant>>().having(
+        (failure) => failure.reason,
+        'reason',
+        UaePassFailureReason.authorizationFailed,
+      ),
+    );
+    expect(isEnabled(), isTrue);
 
-      await show(enabled: true, content: UaePassSignInButtonContent.logoOnly);
-      expect(
-        find.bySemanticsLabel('تسجيل الدخول بالهوية الرقمية'),
-        findsOneWidget,
-      );
-      final icon = tester.widget<Image>(find.byType(Image)).image as AssetImage;
-      expect(icon.assetName, endsWith('icon/rounded_white_outline_active.png'));
-      await tester.tap(button);
-      await tester.pumpAndSettle();
-      await redirect(tester, code: 'second');
-      expect(exchangeCount, 2);
-      expect(results, hasLength(2));
-      expect(isEnabled(), isFalse);
-      await tester.tap(button);
-      await tester.pump();
-      expect(webViews.controllers, hasLength(3));
-      expect(exchangeCount, 2);
-
-      exchange.complete(const UaePassSuccess('app session'));
-      await tester.pumpAndSettle();
-      expect(results, hasLength(3));
-      expect(
-        results.last,
-        isA<UaePassSuccess<String>>().having(
-          (success) => success.value,
-          'value',
-          'app session',
-        ),
-      );
-      expect(isEnabled(), isTrue);
-      expect(tester.takeException(), isNull);
-    },
-  );
+    await show(enabled: true, content: UaePassSignInButtonContent.logoOnly);
+    expect(
+      find.bySemanticsLabel('تسجيل الدخول بالهوية الرقمية'),
+      findsOneWidget,
+    );
+    final icon = tester.widget<Image>(find.byType(Image)).image as AssetImage;
+    expect(icon.assetName, endsWith('icon/rounded_white_outline_active.png'));
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+    await redirect(tester, code: 'button-grant');
+    expect(results, hasLength(3));
+    expect(
+      results.last,
+      isA<UaePassSuccess<UaePassAuthorizationGrant>>()
+          .having((success) => success.value.code, 'code', 'button-grant')
+          .having(
+            (success) => success.value.redirectUri,
+            'redirect URI',
+            client.configuration.redirectUri,
+          ),
+    );
+    expect(appWork.isCompleted, isFalse);
+    expect(isEnabled(), isTrue);
+    expect(nativeCalls.last, ('setCallbackScheme', null));
+    appWork.complete();
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('registration and authorization artwork also start UAE PASS', (
     tester,
@@ -598,15 +579,14 @@ void main() {
         'authorize',
       ),
     ]) {
-      final results = <UaePassResult<String>>[];
+      final results = <UaePassResult<UaePassAuthorizationGrant>>[];
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: Center(
-              child: UaePassSignInButton<String>(
+              child: UaePassSignInButton(
                 client: client,
                 content: content,
-                exchangeCode: (grant) async => UaePassSuccess(grant.code),
                 onResult: results.add,
               ),
             ),
@@ -633,9 +613,9 @@ void main() {
       await redirect(tester, code: code);
       expect(
         results.single,
-        isA<UaePassSuccess<String>>().having(
-          (result) => result.value,
-          'value',
+        isA<UaePassSuccess<UaePassAuthorizationGrant>>().having(
+          (result) => result.value.code,
+          'code',
           code,
         ),
       );

@@ -23,16 +23,41 @@ class _SandboxSignInState extends State<SandboxSignIn> {
     ),
   );
 
-  UaePassResult<SandboxSession>? _result;
+  UaePassResult<Object?>? _result;
+  bool _exchanging = false;
 
-  void _handleResult(UaePassResult<SandboxSession> result) {
-    if (result case UaePassSuccess(:final value)) {
+  Future<void> _handleAuthorization(
+    UaePassResult<UaePassAuthorizationGrant> result,
+  ) async {
+    if (_exchanging) return;
+    if (result is! UaePassSuccess<UaePassAuthorizationGrant>) {
+      setState(() => _result = result);
+      return;
+    }
+
+    setState(() {
+      _exchanging = true;
+      _result = null;
+    });
+
+    UaePassResult<SandboxSession> session;
+    try {
+      session = await exchangeSandboxCode(result.value);
+    } catch (_) {
+      session = const UaePassFailure(UaePassFailureReason.exchangeFailed);
+    }
+    if (!mounted || ModalRoute.of(context)?.isActive != true) return;
+
+    if (session case UaePassSuccess(:final value)) {
       Navigator.of(context).pushReplacement<void, void>(
         MaterialPageRoute(builder: (_) => _SignedInPage(session: value)),
       );
       return;
     }
-    setState(() => _result = result);
+    setState(() {
+      _exchanging = false;
+      _result = session;
+    });
   }
 
   @override
@@ -71,11 +96,17 @@ class _SandboxSignInState extends State<SandboxSignIn> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 16),
-                        UaePassSignInButton<SandboxSession>(
-                          client: _client,
-                          exchangeCode: exchangeSandboxCode,
-                          onResult: _handleResult,
-                        ),
+                        if (_exchanging)
+                          CircularProgressIndicator(
+                            semanticsLabel: ar
+                                ? 'جارٍ إعداد جلستك'
+                                : 'Setting up your session',
+                          )
+                        else
+                          UaePassSignInButton(
+                            client: _client,
+                            onResult: _handleAuthorization,
+                          ),
                         if (message != null) ...[
                           const SizedBox(height: 16),
                           Semantics(
