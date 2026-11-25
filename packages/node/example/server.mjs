@@ -12,7 +12,7 @@ import {
   UaePassError,
   UaePassSigningValidationError,
 } from '@alkhajeh/uaepass-server';
-import { matchesSignerIdn, normalizeSignerIdn } from './signing/signer-idn.mjs';
+import { matchesSignerIdn, normalizeSignerIdn } from './signer-idn.mjs';
 
 const stagingOrigin = 'https://stg-id.uaepass.ae';
 const loopbackHost = '127.0.0.1';
@@ -212,7 +212,7 @@ export async function createExampleServer({
   if (base.protocol !== 'http:' || base.hostname !== 'localhost' || !base.port || base.origin !== origin) {
     throw new TypeError('Use an HTTP localhost origin with an explicit port for the staging demo.');
   }
-  const pdf = await readFile(new URL('./signing/staging-test.pdf', import.meta.url));
+  const pdf = await readFile(new URL('./staging-test.pdf', import.meta.url));
   const directory = await mkdtemp(join(tmpdir(), 'uaepass-demo-signing-'));
   const sessions = new Map();
   const back = '<p><a href="' + root + '">Return to signing</a></p>';

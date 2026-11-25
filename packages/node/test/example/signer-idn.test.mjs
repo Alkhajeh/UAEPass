@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
 import { test } from 'node:test';
-import { matchesSignerIdn, normalizeSignerIdn } from '../../example/signing/signer-idn.mjs';
+import { matchesSignerIdn, normalizeSignerIdn } from '../../example/signer-idn.mjs';
 
 const expectedIdn = '784-0000-0000000-0';
 const signerIdn = '784000000000000';
