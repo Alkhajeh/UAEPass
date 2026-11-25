@@ -73,13 +73,16 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> deliverCallback(Uri uri) async {
+  Future<void> deliverPlatformCall(String method, String value) async {
     await messenger.handlePlatformMessage(
       channel.name,
-      channel.codec.encodeMethodCall(MethodCall('onCallback', uri.toString())),
+      channel.codec.encodeMethodCall(MethodCall(method, value)),
       (_) {},
     );
   }
+
+  Future<void> deliverCallback(Uri uri) =>
+      deliverPlatformCall('onCallback', uri.toString());
 
   final appHandoff = Uri(
     scheme: 'uaepass',
@@ -242,6 +245,61 @@ void main() {
       expect(await retry, isA<UaePassSuccess<UaePassAuthorizationGrant>>());
     },
   );
+
+  testWidgets('returns a typed failure for HTTP errors on the loading page', (
+    tester,
+  ) async {
+    await openHost(tester);
+    final attempt = client.authorize(hostContext);
+    await tester.pumpAndSettle();
+    final view = webViews.controllers.single;
+    final uri = view.requests.single;
+
+    view.navigation.emitHttpError(uri.replace(path: '/missing-image.png'), 404);
+    await tester.pumpAndSettle();
+    expect(find.byType(CloseButton), findsOneWidget);
+
+    view.navigation.emitHttpError(uri, 503);
+    await tester.pumpAndSettle();
+    expect(find.byType(CloseButton), findsNothing);
+    expect(
+      await attempt,
+      isA<UaePassFailure<UaePassAuthorizationGrant>>().having(
+        (failure) => failure.reason,
+        'reason',
+        UaePassFailureReason.authorizationFailed,
+      ),
+    );
+    expect(nativeCalls.last, ('setCallbackScheme', null));
+  });
+
+  testWidgets('ignores a native HTTP failure from a different attempt', (
+    tester,
+  ) async {
+    await openHost(tester);
+    final attempt = client.authorize(hostContext);
+    await tester.pumpAndSettle();
+    final request = webViews.controllers.single.requests.single;
+
+    await deliverPlatformCall('onMainFrameHttpError', 'old-attempt');
+    await tester.pumpAndSettle();
+    expect(find.byType(CloseButton), findsOneWidget);
+
+    await deliverPlatformCall(
+      'onMainFrameHttpError',
+      request.queryParameters['state']!,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(CloseButton), findsNothing);
+    expect(
+      await attempt,
+      isA<UaePassFailure<UaePassAuthorizationGrant>>().having(
+        (failure) => failure.reason,
+        'reason',
+        UaePassFailureReason.authorizationFailed,
+      ),
+    );
+  });
 
   testWidgets('holds the engine guard until login exchange completes', (
     tester,
@@ -578,6 +636,7 @@ final class _TestNavigationDelegate extends PlatformNavigationDelegate {
   _TestNavigationDelegate(super.params) : super.implementation();
 
   late NavigationRequestCallback _handler;
+  late HttpResponseErrorCallback _httpError;
 
   FutureOr<NavigationDecision> navigate(Uri uri) =>
       _handler(NavigationRequest(url: uri.toString(), isMainFrame: true));
@@ -591,6 +650,21 @@ final class _TestNavigationDelegate extends PlatformNavigationDelegate {
 
   @override
   Future<void> setOnPageStarted(PageEventCallback onPageStarted) async {}
+
+  @override
+  Future<void> setOnPageFinished(PageEventCallback onPageFinished) async {}
+
+  @override
+  Future<void> setOnHttpError(HttpResponseErrorCallback onHttpError) async {
+    _httpError = onHttpError;
+  }
+
+  void emitHttpError(Uri uri, int statusCode) => _httpError(
+    HttpResponseError(
+      request: WebResourceRequest(uri: uri),
+      response: WebResourceResponse(uri: null, statusCode: statusCode),
+    ),
+  );
 
   @override
   Future<void> setOnWebResourceError(

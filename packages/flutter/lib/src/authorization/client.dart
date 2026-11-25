@@ -68,7 +68,7 @@ final class UaePassClient {
     Locale? locale,
   ) async {
     if (!context.mounted) return const UaePassCancelled();
-    final callbacks = StreamController<String>();
+    final events = StreamController<UaePassPlatformEvent>();
     final language = resolveUaePassLocale(context, locale).languageCode;
 
     try {
@@ -81,7 +81,7 @@ final class UaePassClient {
         language: language,
       );
 
-      _platform.setCallbackHandler(callbacks.add);
+      _platform.setEventHandler(events.add);
       await _platform.setCallbackScheme(configuration.callbackScheme);
       final installed = await _platform.isAppInstalled(
         configuration.environment,
@@ -97,7 +97,7 @@ final class UaePassClient {
             state: state,
             appInstalled: installed,
           ),
-          callbacks: callbacks.stream,
+          events: events.stream,
           platform: _platform,
         ),
       );
@@ -109,8 +109,8 @@ final class UaePassClient {
     } on Exception {
       return const UaePassFailure(UaePassFailureReason.authorizationFailed);
     } finally {
-      _platform.setCallbackHandler(null);
-      unawaited(callbacks.close());
+      _platform.setEventHandler(null);
+      unawaited(events.close());
       try {
         await _platform.setCallbackScheme(null);
       } on PlatformException {

@@ -8,6 +8,7 @@ Pod::Spec.new do |s|
   s.source           = { :path => '.' }
   s.source_files     = 'uaepass/Sources/uaepass/**/*.swift'
   s.dependency 'Flutter'
+  s.dependency 'webview_flutter_wkwebview'
   s.platform = :ios, '15.0'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
   s.swift_version = '5.0'

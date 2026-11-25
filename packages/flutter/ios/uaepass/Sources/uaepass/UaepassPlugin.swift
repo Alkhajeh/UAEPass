@@ -1,18 +1,22 @@
 import Flutter
 import UIKit
+import webview_flutter_wkwebview
 
 public final class UaepassPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycleDelegate {
   private let channel: FlutterMethodChannel
+  private let registrar: FlutterPluginRegistrar
   private var callbackScheme: String?
+  private var httpErrorObserver: MainFrameHttpErrorObserver?
 
-  private init(channel: FlutterMethodChannel) {
+  private init(channel: FlutterMethodChannel, registrar: FlutterPluginRegistrar) {
     self.channel = channel
+    self.registrar = registrar
   }
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(
       name: "ae.uaepass/flutter_auth/callbacks", binaryMessenger: registrar.messenger())
-    let plugin = UaepassPlugin(channel: channel)
+    let plugin = UaepassPlugin(channel: channel, registrar: registrar)
     registrar.addMethodCallDelegate(plugin, channel: channel)
     registrar.addApplicationDelegate(plugin)
     registrar.addSceneDelegate(plugin)
@@ -23,12 +27,30 @@ public final class UaepassPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycle
     case "setCallbackScheme":
       if call.arguments == nil || call.arguments is NSNull {
         callbackScheme = nil
+        httpErrorObserver?.detach()
+        httpErrorObserver = nil
       } else if let scheme = call.arguments as? String, !scheme.isEmpty {
         callbackScheme = scheme
       } else {
         result(FlutterError(
           code: "invalid_scheme", message: "Expected a nonempty callback scheme or null.", details: nil))
         return
+      }
+      result(nil)
+    case "observeMainFrameHttpErrors":
+      guard let arguments = call.arguments as? [String: Any],
+        let identifier = arguments["identifier"] as? Int64,
+        let state = arguments["state"] as? String,
+        let webView = FWFWebViewFlutterWKWebViewExternalAPI.webView(
+          forIdentifier: identifier, withPluginRegistrar: registrar)
+      else {
+        result(FlutterError(
+          code: "missing_web_view", message: "Could not find the authorization WebView.", details: nil))
+        return
+      }
+      httpErrorObserver?.detach()
+      httpErrorObserver = MainFrameHttpErrorObserver(webView: webView) { [channel] in
+        channel.invokeMethod("onMainFrameHttpError", arguments: state)
       }
       result(nil)
     case "isAppInstalled":

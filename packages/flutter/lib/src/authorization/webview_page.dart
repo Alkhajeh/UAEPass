@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import '../platform/native_bridge.dart';
 import 'flow.dart';
@@ -12,7 +13,7 @@ class UaePassAuthorizationPage extends StatefulWidget {
     required this.flow,
     required this.state,
     required this.initialUri,
-    required this.callbacks,
+    required this.events,
     required this.platform,
     super.key,
   });
@@ -20,7 +21,7 @@ class UaePassAuthorizationPage extends StatefulWidget {
   final UaePassAuthorizationFlow flow;
   final String state;
   final Uri initialUri;
-  final Stream<String> callbacks;
+  final Stream<UaePassPlatformEvent> events;
   final UaePassPlatform platform;
 
   @override
@@ -33,8 +34,9 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
     UaePassFailureReason.authorizationFailed,
   );
 
-  late final StreamSubscription<String> _callbackSubscription;
+  late final StreamSubscription<UaePassPlatformEvent> _subscription;
   WebViewController? _webView;
+  Uri? _loadingPage;
   UaePassAppHandoff? _pendingHandoff;
   bool _finished = false;
 
@@ -47,14 +49,14 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
   @override
   void initState() {
     super.initState();
-    _callbackSubscription = widget.callbacks.listen(_resumeAuthentication);
+    _subscription = widget.events.listen(_handlePlatformEvent);
     // A synchronous setup failure must finish after the route's first build.
     WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_start()));
   }
 
   @override
   void dispose() {
-    unawaited(_callbackSubscription.cancel());
+    unawaited(_subscription.cancel());
     super.dispose();
   }
 
@@ -62,11 +64,22 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
     if (_activeRoute == null) return;
     try {
       final webView = WebViewController();
+      final webKit = webView.platform is WebKitWebViewController;
       await webView.setJavaScriptMode(JavaScriptMode.unrestricted);
       await webView.setNavigationDelegate(
         NavigationDelegate(
           onNavigationRequest: _handleNavigation,
-          onPageStarted: (url) => _handleRedirect(Uri.tryParse(url)),
+          onPageStarted: (url) {
+            final uri = Uri.tryParse(url);
+            if (_handleRedirect(uri)) return;
+            _loadingPage = uri?.removeFragment();
+          },
+          onPageFinished: (url) {
+            if (Uri.tryParse(url)?.removeFragment() == _loadingPage) {
+              _loadingPage = null;
+            }
+          },
+          onHttpError: webKit ? null : _handleHttpError,
           onWebResourceError: (error) {
             final uri = Uri.tryParse(error.url ?? '');
             if (error.isForMainFrame == true &&
@@ -78,10 +91,46 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
         ),
       );
       if (_activeRoute == null) return;
+      if (webView.platform case final WebKitWebViewController controller) {
+        await widget.platform.observeMainFrameHttpErrors(
+          controller.webViewIdentifier,
+          widget.state,
+        );
+        if (_activeRoute == null) return;
+      }
       setState(() => _webView = webView);
-      await webView.loadRequest(widget.initialUri);
+      await _loadPage(webView, widget.initialUri);
     } catch (_) {
       _finish(_failed);
+    }
+  }
+
+  Future<void> _loadPage(WebViewController webView, Uri uri) {
+    _loadingPage = uri.removeFragment();
+    return webView.loadRequest(uri);
+  }
+
+  void _handleHttpError(HttpResponseError error) {
+    final status = error.response?.statusCode;
+    final uri = error.request?.uri ?? error.response?.uri;
+    // Android's Flutter delegate provides the request URL without a frame flag.
+    if (status != null &&
+        status >= 400 &&
+        status < 600 &&
+        uri != null &&
+        uri.removeFragment() == _loadingPage) {
+      _finish(_failed);
+    }
+  }
+
+  void _handlePlatformEvent(UaePassPlatformEvent event) {
+    switch (event) {
+      case UaePassAppCallback(:final uri):
+        unawaited(_resumeAuthentication(uri));
+      case UaePassMainFrameHttpError(:final state) when state == widget.state:
+        _finish(_failed);
+      case UaePassMainFrameHttpError():
+        break;
     }
   }
 
@@ -98,7 +147,10 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
         await _launchUaePass(uri);
         return NavigationDecision.prevent;
       }
-      if (widget.flow.isProviderPage(uri)) return NavigationDecision.navigate;
+      if (widget.flow.isProviderPage(uri)) {
+        _loadingPage = uri.removeFragment();
+        return NavigationDecision.navigate;
+      }
     }
 
     _finish(_failed);
@@ -161,7 +213,7 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
 
     _pendingHandoff = null;
     try {
-      await webView.loadRequest(destination);
+      await _loadPage(webView, destination);
     } on Exception {
       _finish(_failed);
     }
