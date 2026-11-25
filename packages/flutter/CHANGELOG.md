@@ -1,4 +1,4 @@
-## Unreleased
+## 0.1.1
 
 - Add the instance-based `UaePassClient`. Use `authorize()` for a typed grant and `login()` for an app-owned session returned by your backend exchange.
 - Route UAE PASS detection and app handoff through native Android and iOS bridges, with an embedded WebView for the flow.
