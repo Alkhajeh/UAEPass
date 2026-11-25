@@ -1,11 +1,15 @@
 import { Buffer } from 'node:buffer';
 
+import {
+  isBearerToken,
+  isBearerTokenResponse,
+  isNonemptyString,
+  isRecord,
+  origins,
+  parseCallbackUrl,
+  readProviderJson,
+} from '../internal/provider.js';
 import { parseUserInfo, type UaePassUserInfo } from './user-info.js';
-
-const origins = {
-  staging: 'https://stg-id.uaepass.ae',
-  production: 'https://id.uaepass.ae',
-} as const;
 
 export interface UaePassConfig {
   readonly environment: keyof typeof origins;
@@ -48,18 +52,6 @@ export class UaePassError extends Error {
     super(errorMessages[code]);
     this.name = 'UaePassError';
   }
-}
-
-function isNonemptyString(value: unknown): value is string {
-  return typeof value === 'string' && value.trim().length > 0;
-}
-
-function isBearerToken(value: unknown): value is string {
-  return typeof value === 'string' && /^[A-Za-z0-9._~+/-]+=*$/.test(value);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function rejectionCode(
@@ -109,7 +101,7 @@ async function request(
 
   let data: unknown;
   try {
-    data = await response.json();
+    data = await readProviderJson(response);
   } catch {
     if (signal.aborted) throw new UaePassError('timeout', operation, status);
     if (response.ok) throw new UaePassError('invalid_response', operation, status);
@@ -128,17 +120,7 @@ export function createUaePassClient(config: UaePassConfig): UaePassClient {
   if (!isNonemptyString(clientId) || clientId.includes(':') || !isNonemptyString(clientSecret)) {
     throw new TypeError('Provide valid UAE PASS client credentials.');
   }
-  const redirect = typeof redirectUri === 'string' && URL.canParse(redirectUri)
-    ? new URL(redirectUri)
-    : null;
-  const httpsRedirect = redirect?.protocol === 'https:' && redirectUri.startsWith('https://');
-  const stagingLocalhost = environment === 'staging' &&
-    redirect?.protocol === 'http:' && redirect.hostname === 'localhost' &&
-    redirectUri.startsWith('http://');
-  if (
-    !redirect || (!httpsRedirect && !stagingLocalhost) || redirect.username || redirect.password ||
-    redirectUri.includes('#') || /\s/.test(redirectUri)
-  ) {
+  if (!parseCallbackUrl(redirectUri, environment)) {
     throw new TypeError(environment === 'staging'
       ? 'Provide the registered HTTPS redirect URI or a staging HTTP localhost URI.'
       : 'Provide the registered HTTPS redirect URI.');
@@ -162,12 +144,7 @@ export function createUaePassClient(config: UaePassConfig): UaePassClient {
         'Content-Type': 'multipart/form-data; charset=UTF-8',
       },
     });
-    if (
-      !isRecord(data) || !isBearerToken(data.access_token) ||
-      typeof data.token_type !== 'string' || data.token_type.toLowerCase() !== 'bearer' ||
-      typeof data.expires_in !== 'number' || !Number.isSafeInteger(data.expires_in) ||
-      data.expires_in <= 0 || (data.scope !== undefined && typeof data.scope !== 'string')
-    ) {
+    if (!isBearerTokenResponse(data) || (data.scope !== undefined && typeof data.scope !== 'string')) {
       throw new UaePassError('invalid_response', 'token', status);
     }
     return {
