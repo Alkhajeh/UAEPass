@@ -2,6 +2,7 @@ name: Node checks
 
 on:
   pull_request:
+  workflow_call:
 
 permissions:
   contents: read

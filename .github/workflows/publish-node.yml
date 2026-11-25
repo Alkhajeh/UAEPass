@@ -1,0 +1,45 @@
+name: Publish Node package to npm
+
+on:
+  push:
+    tags:
+      - 'node-v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    uses: ./.github/workflows/node.yml
+
+  publish:
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: packages/node
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+          registry-url: https://registry.npmjs.org
+      - name: Verify release tag
+        run: |
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo 'The release tag must point to a commit on main.' >&2
+            exit 1
+          fi
+          version="$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "node-v$version" ]; then
+            printf 'Expected tag node-v%s, got %s\n' "$version" "$GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+      - run: npm ci
+      - run: npm publish --access public
