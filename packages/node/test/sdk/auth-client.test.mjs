@@ -262,6 +262,7 @@ test('rejects malformed profile data and invalid configuration', async (t) => {
     'http://example.test',
     'https:///example.test/callback',
     'https://example.test\\callback',
+    'https://example.test/callback\u0000',
   ]) {
     assert.throws(() => createUaePassClient({ ...config, redirectUri }), TypeError);
   }

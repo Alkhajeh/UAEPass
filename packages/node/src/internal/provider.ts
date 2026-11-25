@@ -32,7 +32,7 @@ export function isBearerTokenResponse(data: unknown): data is {
 }
 
 export function parseProviderUrl(value: unknown): URL | undefined {
-  if (typeof value !== 'string' || /[\s\\#]/.test(value) || !URL.canParse(value)) return undefined;
+  if (typeof value !== 'string' || /[\s\\#\u0000-\u001f\u007f]/.test(value) || !URL.canParse(value)) return undefined;
   const url = new URL(value);
   return url.username || url.password ? undefined : url;
 }
@@ -48,6 +48,11 @@ export function parseCallbackUrl(value: unknown, environment: keyof typeof origi
 
 export function isPdf(value: unknown): value is Uint8Array {
   return value instanceof Uint8Array && pdfHeader.every((byte, index) => value[index] === byte);
+}
+
+export function isXmlText(value: unknown): value is string {
+  return typeof value === 'string' && value.trim() !== '' &&
+    !/[^\t\n\r\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/u.test(value);
 }
 
 export async function readBoundedBytes(response: Response, limit: number): Promise<Uint8Array> {

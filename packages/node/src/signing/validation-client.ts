@@ -1,7 +1,7 @@
 import { Buffer } from 'node:buffer';
 import { DOMParser, type Element } from '@xmldom/xmldom';
 
-import { isPdf, maxSigningPdfBytes, origins, readBoundedBytes } from '../internal/provider.js';
+import { isPdf, isXmlText, maxSigningPdfBytes, origins, readBoundedBytes } from '../internal/provider.js';
 
 const gatewayPath = '/trustedx-gw/SoapGateway';
 const soap = 'http://schemas.xmlsoap.org/soap/envelope/';
@@ -14,7 +14,7 @@ const signerIdentityFormat = 'urn:oasis:names:tc:SAML:1.1:nameid-format:X509Subj
 const maxVerificationBytes = 128 * 1024;
 const xmlMediaTypes = new Set(['text/xml', 'application/xml', 'application/soap+xml']);
 const xmlEntities: Readonly<Record<string, string>> = {
-  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;',
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;', '\r': '&#13;',
 };
 
 export interface UaePassSigningValidationConfig {
@@ -74,12 +74,7 @@ export class UaePassSigningValidationError extends Error {
 }
 
 function escapeXml(value: string): string {
-  return value.replace(/[&<>"']/g, (character) => xmlEntities[character]);
-}
-
-function isXmlText(value: unknown): value is string {
-  return typeof value === 'string' && value.trim() !== '' &&
-    !/[^\t\n\r\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/u.test(value);
+  return value.replace(/[&<>"'\r]/g, (character) => xmlEntities[character]);
 }
 
 function elements(parent: Element): Element[] {

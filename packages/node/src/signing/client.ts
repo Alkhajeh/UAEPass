@@ -6,6 +6,7 @@ import {
   isNonemptyString,
   isPdf,
   isRecord,
+  isXmlText,
   maxSigningPdfBytes,
   origins,
   parseCallbackUrl,
@@ -199,7 +200,7 @@ function createProcessForm(input: UaePassCreateSigningProcessInput, finishCallba
   const { name, page, rectangle } = signatureField;
   const { x, y, width, height } = rectangle;
   if (
-    !isNonemptyString(name) || /[\u0000-\u001f\u007f]/.test(name) ||
+    !isXmlText(name) || /[\u0000-\u001f\u007f]/.test(name) ||
     (page !== 'last' && (!Number.isSafeInteger(page) || page <= 0)) ||
     ![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0
   ) {

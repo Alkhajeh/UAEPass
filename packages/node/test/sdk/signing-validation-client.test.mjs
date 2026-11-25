@@ -181,13 +181,14 @@ test('exports independent SOAP operations with fixed gateway URLs and typed resu
   const staging = createUaePassSigningValidationClient(config);
   const production = createUaePassSigningValidationClient({ ...config, environment: 'production' });
 
-  const label = ' Fixture & Sign ';
-  const fetch = mockGateway(t, updateResponse(), verificationResponse().replace(signatureFieldName, ' Fixture &amp; Sign '));
+  const label = ' Fixture & Sign\r ';
+  const fetch = mockGateway(t, updateResponse(),
+    verificationResponse().replace(signatureFieldName, ' Fixture &amp; Sign&#13; '));
   assert.deepEqual(await staging.applyLongTermValidation(pdf, label), finalPdf);
   assert.equal(fetch.mock.callCount(), 1);
   const [stageUrl, update] = fetch.mock.calls[0].arguments;
   assert.equal(stageUrl.href, stagingGatewayUrl);
-  assert.match(update.body, /<css:PdfFieldLabel> Fixture &amp; Sign <\/css:PdfFieldLabel>/);
+  assert.match(update.body, /<css:PdfFieldLabel> Fixture &amp; Sign&#13; <\/css:PdfFieldLabel>/);
   assert.deepEqual(await production.verifySignedPdf(finalPdf), {
     signatureFieldName: label, signerSubject: expectedSigner,
   });

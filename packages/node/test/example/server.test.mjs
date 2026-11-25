@@ -3,7 +3,11 @@ import { Buffer } from 'node:buffer';
 import { once } from 'node:events';
 import { request } from 'node:http';
 import { test } from 'node:test';
-import { UaePassError, UaePassSigningValidationError } from '@alkhajeh/uaepass-server';
+import {
+  createUaePassSigningValidationClient,
+  UaePassError,
+  UaePassSigningValidationError,
+} from '@alkhajeh/uaepass-server';
 import { createExampleServer } from '../../example/server.mjs';
 
 const origin = 'http://localhost:8787';
@@ -234,6 +238,39 @@ test('the signing demo distinguishes documented OAuth cancellations from other c
   assert.equal(authClient.getUserInfoFromCode.mock.callCount(), 0);
 });
 
+test('a superseded sign-in cannot set a session cookie after a newer sign-in', { timeout: 5000 }, async (t) => {
+  const exchangeStarted = Promise.withResolvers();
+  const slowProfile = Promise.withResolvers();
+  const getUserInfoFromCode = t.mock.fn(async (code) => {
+    if (code === 'fixture-old-code') {
+      exchangeStarted.resolve();
+      return slowProfile.promise;
+    }
+    return profile;
+  });
+  const { send } = await listen(t, { authClient: { getUserInfoFromCode } });
+  const first = await beginLogin(send);
+  const firstUrl = callbackUrl(first.state, 'fixture-old-code');
+  const oldCallback = send(firstUrl, { cookie: first.cookie });
+  try {
+    await exchangeStarted.promise;
+    assert.equal((await send(firstUrl, { cookie: first.cookie })).status, 403);
+
+    const second = await send('/signing/login', { method: 'POST', cookie: first.cookie });
+    const secondState = new URL(second.headers.location).searchParams.get('state');
+    const current = await send(callbackUrl(secondState, 'fixture-new-code'), { cookie: sessionCookie(second) });
+    assert.equal(current.status, 303);
+    assert.equal((await send('/signing/review.pdf', { cookie: sessionCookie(current) })).status, 200);
+  } finally {
+    slowProfile.resolve({ ...profile, uuid: 'fixture-obsolete-account' });
+  }
+  const obsolete = await oldCallback;
+  assert.equal(obsolete.status, 303);
+  assert.equal(obsolete.headers['set-cookie'], undefined);
+  assert.deepEqual(getUserInfoFromCode.mock.calls.map(({ arguments: args }) => args),
+    [['fixture-old-code'], ['fixture-new-code']]);
+});
+
 test('the signing demo confirms the provider result and publishes only the finalized PDF', { timeout: 5000 }, async (t) => {
   const otherProfile = { ...profile, uuid: 'fixture-other-uuid', idn: '784-1900-0000000-1' };
   const { send, signingClient, finalizeSignedPdf } = await listen(t, {
@@ -279,6 +316,66 @@ test('the signing demo confirms the provider result and publishes only the final
   assert.match(signed.headers['content-disposition'], /^attachment\b/);
   assert.deepEqual(signed.body, verifiedPdf);
   assert.notEqual((await download(send, other)).status, 200);
+});
+
+test('the demo uses the SDK finalizer to publish only a signer-matched LTV PDF', { timeout: 5000 }, async (t) => {
+  const result = '<dss:Result><dss:ResultMajor>urn:oasis:names:tc:dss:1.0:resultmajor:Success</dss:ResultMajor>';
+  function soapResponse(output) {
+    return new Response(
+      '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" ' +
+      'xmlns:dss="http://www.docs.oasis-open.org/dss/2004/06/oasis-dss-1.0-core-schema-wd-27.xsd" ' +
+      'xmlns:css="http://www.safelayer.com/TWS"><soap:Body><dss:VerifyResponse>' +
+      output + '</dss:VerifyResponse></soap:Body></soap:Envelope>',
+      { headers: { 'Content-Type': 'text/xml' } },
+    );
+  }
+
+  for (const [name, subject, expectedStatus] of [
+    ['matching signer', signerSubject, 200],
+    ['different signer', 'CN=Other Fixture,serialNumber=784190000000001,C=AE', 404],
+  ]) {
+    await t.test(name, async (subtest) => {
+      const gateway = subtest.mock.method(globalThis, 'fetch', async (url, { headers, body }) => {
+        assert.equal(url.href, 'https://stg-id.uaepass.ae/trustedx-gw/SoapGateway');
+        if (headers.SOAPAction === 'Update') {
+          assert.ok(body.includes(unverifiedPdf.toString('base64')));
+          return soapResponse(result + '</dss:Result><dss:OptionalOutputs>' +
+            '<dss:DocumentWithSignature><dss:XMLData><dss:Base64Data MimeType="application/pdf">' +
+            verifiedPdf.toString('base64') + '</dss:Base64Data></dss:XMLData></dss:DocumentWithSignature>' +
+            '</dss:OptionalOutputs>');
+        }
+        assert.equal(headers.SOAPAction, 'Verify');
+        assert.ok(body.includes(verifiedPdf.toString('base64')));
+        return soapResponse(result +
+          '<dss:ResultMinor>urn:oasis:names:tc:dss:1.0:resultminor:ValidSignature_OnAllDocuments</dss:ResultMinor>' +
+          '</dss:Result><dss:OptionalOutputs>' +
+          '<dss:SignerIdentity Format="urn:oasis:names:tc:SAML:1.1:nameid-format:X509SubjectName">' +
+          subject + '</dss:SignerIdentity>' +
+          '<css:VerifyingPolicy><css:Identifier>urn:uae:tws:verification:policy:digitalid</css:Identifier></css:VerifyingPolicy>' +
+          '<css:ValidationPolicy><css:Identifier>urn:uae:tws:validation:policy:digitalid</css:Identifier></css:ValidationPolicy>' +
+          '<css:PdfFieldLabel>Sign1</css:PdfFieldLabel><css:NumberPdfSignatures>1</css:NumberPdfSignatures></dss:OptionalOutputs>');
+      });
+      const validation = createUaePassSigningValidationClient({
+        environment: 'staging', clientId: 'fixture-client', clientSecret: 'fixture-secret',
+      });
+      const { send, signingClient } = await listen(subtest, { finalizeSignedPdf: validation.finalizeSignedPdf });
+      const { authenticatedCookie } = await signIn(send);
+      await start(send, authenticatedCookie);
+      await finish(send, authenticatedCookie);
+
+      const response = await download(send, authenticatedCookie);
+      assert.equal(response.status, expectedStatus);
+      assert.equal(gateway.mock.callCount(), 2);
+      if (expectedStatus === 200) {
+        assert.deepEqual(response.body, verifiedPdf);
+        assert.equal(signingClient.deleteProcess.mock.callCount(), 1);
+      } else {
+        assert.equal(signingClient.deleteProcess.mock.callCount(), 0);
+        const page = await send('/signing', { cookie: authenticatedCookie });
+        assert.match(page.body.toString(), /could not be matched to the signed-in account/);
+      }
+    });
+  }
 });
 
 test('the signing demo blocks an ineligible signer and honors a provider cancellation', { timeout: 5000 }, async (t) => {

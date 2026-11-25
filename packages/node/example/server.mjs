@@ -369,16 +369,23 @@ export async function createExampleServer({
         if (!matchingState(session?.state, singleQuery(url, 'state'))) {
           return page(response, 403, '<p>Sign-in could not be correlated.</p>' + back);
         }
-        sessions.delete(id);
         const code = singleQuery(url, 'code');
         if (!code || url.searchParams.has('error')) {
+          sessions.delete(id);
           const cancellation = !url.searchParams.has('code') && loginCancellationErrors.has(singleQuery(url, 'error'));
           return redirect(response, root + (cancellation ? '?notice=canceled' : '?notice=error'));
         }
+        // Consume the state while keeping this session identifiable during the exchange.
+        delete session.state;
         let profile;
         try {
           profile = await authClient.getUserInfoFromCode(code);
         } catch {
+          profile = undefined;
+        }
+        if (sessions.get(id) !== session) return redirect(response, root);
+        sessions.delete(id);
+        if (!profile || session.expiresAt <= Date.now()) {
           return redirect(response, root + '?notice=error');
         }
         const newId = nonce();

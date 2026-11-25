@@ -24,7 +24,7 @@ For production, obtain credentials and register your callback URLs through UAE P
 
 ## Sign in and fetch the user profile
 
-Start the UAE PASS authorization flow in your app. In the host callback, validate the OAuth state and exchange the returned code once using the exact redirect URI from the authorization request. [UAE PASS authorization guide](https://docs.uaepass.ae/feature-guides/authentication/web-application/1.-obtaining-the-oauth2-access-code)
+Start the UAE PASS authorization flow in your app. In the host callback, validate and consume the OAuth state once, then exchange the returned code using the exact redirect URI from the authorization request. Apply the result only if that sign-in attempt is still current. [UAE PASS authorization guide](https://docs.uaepass.ae/feature-guides/authentication/web-application/1.-obtaining-the-oauth2-access-code)
 
 ```ts
 import { createUaePassClient } from '@alkhajeh/uaepass-server';
@@ -83,7 +83,7 @@ This flow supports one signer and one PDF. It spans the request that starts sign
    }, accessToken);
    ```
 
-   Save the IDs and field name in a durable transaction with the owning account, expected signer, and document version. Redirect the browser to `approvalUrl` after saving the transaction.
+   Use a field name such as `Sign1` that can be represented in XML for LTV. The client rejects control characters and invalid XML characters before creating a process. Save the IDs and field name in a durable transaction with the owning account, expected signer, and document version. Redirect the browser to `approvalUrl` after saving the transaction.
 
 3. **Confirm approval on your server.** On return to `finishCallbackUrl`, load the transaction for the signed-in account and check that the callback’s `signer_process_id` matches the saved process ID. The browser return signals when to check. The server response determines whether to proceed.
 

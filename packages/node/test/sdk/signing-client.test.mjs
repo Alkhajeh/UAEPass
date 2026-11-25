@@ -123,6 +123,7 @@ test('requires matching hosted approval and document references for one PDF', as
     approvalUrl.replace('stg-id.', 'id.'),
     approvalUrl.replace('/ui?', '/other?'),
     approvalUrl.replace(processId, 'sp_other'),
+    approvalUrl + '\u0000',
     `${approvalUrl}&signerProcessId=${processId}`,
     `${approvalUrl}#fragment`,
   ]) {
@@ -175,6 +176,7 @@ test('validates signing configuration, request inputs, and binary responses', as
     'http://localhost.example/return',
     'https:///service.example/return',
     'https://service.example\\return',
+    'https://service.example/return\u0000',
     'https://user@service.example/return',
     'https://service.example/return#fragment',
     'https://service.example/return?signer_process_id=123',
@@ -195,6 +197,12 @@ test('validates signing configuration, request inputs, and binary responses', as
   await assert.rejects(signing.createProcess({ ...createInput, filename: '../file' }, accessToken), TypeError);
   const badField = { ...createInput.signatureField, page: 0 };
   await assert.rejects(signing.createProcess({ ...createInput, signatureField: badField }, accessToken), TypeError);
+  for (const name of ['Invalid\uFFFE', 'Invalid\uD800']) {
+    const signatureField = { ...createInput.signatureField, name };
+    await assert.rejects(signing.createProcess({ ...createInput, signatureField }, accessToken), {
+      name: 'TypeError', message: /signature field name/,
+    });
+  }
   assert.equal(fetch.mock.callCount(), 0);
 
   response = Response.json(tokenResponse, { status: 200 });
