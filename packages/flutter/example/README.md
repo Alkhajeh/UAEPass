@@ -14,3 +14,28 @@ flutter run
 Switch between English and Arabic from the landing screen. After a valid callback, the demo displays **Authorization complete** and discards the one-time code. The example registers `com.example.uaepass.flutterdemo` as its callback scheme in Dart, the Android manifest, and the iOS plist.
 
 See the [package integration guide](../README.md#4-complete-sign-in-on-your-backend) for exchanging the code and establishing an app session. For UAE PASS assessment, exercise both authorization paths in English and Arabic on staging devices and record successful and cancelled flows with a staging account intended for assessment.
+
+## Verify the local backend
+
+The optional debug flow uses the same public UAE PASS staging client and registered redirect URI as the default demo. The backend runs on your development machine at `127.0.0.1:8787`.
+
+1. From `packages/node`, install and build the SDK. On first setup, copy the [staging configuration template](../../node/example/.env.example).
+
+   ```sh
+   npm ci
+   npm run build
+   cp example/.env.example example/.env
+   ```
+
+2. Set `UAEPASS_CLIENT_SECRET` in `example/.env` to the public sandbox secret, then start the backend. [UAE PASS staging walkthrough](https://docs.uaepass.ae/quick-start-guide-uae-pass-staging-environment/conduct-a-poc-with-uae-pass-authentication)
+
+   ```sh
+   node --env-file=example/.env example/server.mjs
+   ```
+
+   If the three variables are already exported in your shell, run `npm run example`.
+
+3. For the Android emulator or an ADB-connected Android device, run `adb reverse tcp:8787 tcp:8787` to forward the app’s localhost port to your development machine. The iOS simulator reaches the backend directly.
+4. From the Flutter example directory, run `flutter run --dart-define=UAEPASS_LOCAL_BACKEND=true`. Select **Try sign-in** and approve the request with a UAE PASS staging account.
+
+**Backend exchange complete** indicates that the sample exchanged the code and fetched a valid UAE PASS profile. The sample returns a success flag to the demo. Keep production credentials in your own backend and use its HTTPS endpoint to establish an app session.

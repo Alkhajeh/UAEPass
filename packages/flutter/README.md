@@ -109,6 +109,8 @@ Implement `completeSignInOnBackend` by sending the one-time code over HTTPS to a
 
 When the user signs out, invalidate the app session on your backend and clear the local session. Verify that the next UAE PASS sign-in challenges the user again on both mobile paths as part of your assessment. [UAE PASS mobile API](https://docs.uaepass.ae/feature-guides/authentication/mobile-application/guide/api) · [Authentication checklist](https://docs.uaepass.ae/getting-onboarded-with-uae-pass/onboarding-process-for-uae-pass-service-providers/development-phase#assessment-check-list)
 
+The repository README links to the Node.js SDK and staging example for evaluating the backend exchange locally. [UAEPass repository](https://github.com/Alkhajeh/UAEPass)
+
 ## Optional configuration
 
 - **Arabic.** Add `Locale('ar')` alongside `Locale('en')` in `supportedLocales`. Set `localizationsDelegates` to `GlobalMaterialLocalizations.delegates` or merge those delegates into your existing list. The SDK follows your app locale for the button and the UAE PASS authorization page, with English as the fallback. [Example app setup](example/lib/main.dart)
