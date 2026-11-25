@@ -73,15 +73,14 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> deliverPlatformCall(String method, String value) async {
-    await messenger.handlePlatformMessage(
-      channel.name,
-      channel.codec.encodeMethodCall(MethodCall(method, value)),
-      (_) {},
-    );
-  }
+  Future<ByteData?> deliverPlatformCall(String method, String value) =>
+      messenger.handlePlatformMessage(
+        channel.name,
+        channel.codec.encodeMethodCall(MethodCall(method, value)),
+        null,
+      );
 
-  Future<void> deliverCallback(Uri uri) =>
+  Future<ByteData?> deliverCallback(Uri uri) =>
       deliverPlatformCall('onCallback', uri.toString());
 
   final appHandoff = Uri(
@@ -94,7 +93,7 @@ void main() {
   );
 
   testWidgets(
-    'authorizes directly using the web flow and releases the native handler',
+    'authorizes through the web flow and removes the Dart callback handler',
     (tester) async {
       await openHost(tester);
       final attempt = client.authorize(
@@ -112,6 +111,8 @@ void main() {
         ('setCallbackScheme', 'poc'),
         ('isAppInstalled', 'staging'),
       ]);
+      final callback = Uri.parse('poc://success');
+      expect(await deliverCallback(callback), isNotNull);
 
       await redirect(tester, code: 'one-time-code');
       final result = await attempt;
@@ -120,7 +121,7 @@ void main() {
       expect(grant.code, 'one-time-code');
       expect(grant.redirectUri, client.configuration.redirectUri);
       expect(nativeCalls.last, ('setCallbackScheme', null));
-      await deliverCallback(Uri.parse('poc://success'));
+      expect(await deliverCallback(callback), isNull);
     },
   );
 
@@ -173,6 +174,65 @@ void main() {
     expect(await attempt, isA<UaePassCancelled>());
     expect(nativeCalls.last, ('setCallbackScheme', null));
   });
+
+  testWidgets(
+    'resumes the same web view and exchanges one grant after a successful handoff',
+    (tester) async {
+      appInstalled = true;
+      await openHost(tester);
+      final exchangedGrants = <UaePassAuthorizationGrant>[];
+      final login = client.login<String>(
+        hostContext,
+        exchangeCode: (grant) async {
+          exchangedGrants.add(grant);
+          return const UaePassSuccess('app session');
+        },
+      );
+      await tester.pumpAndSettle();
+      final view = webViews.controllers.single;
+      final initialRequest = view.requests.single;
+
+      expect(
+        await view.navigation.navigate(appHandoff),
+        NavigationDecision.prevent,
+      );
+      final (method, arguments) = nativeCalls.last;
+      expect(method, 'launchApp');
+      final launchUri = Uri.parse(arguments! as String);
+      final callback = Uri.parse(launchUri.queryParameters['successURL']!);
+      expect(callback.scheme, 'poc');
+      expect(callback.host, 'success');
+      expect(
+        callback.queryParameters['state'],
+        initialRequest.queryParameters['state'],
+      );
+
+      await deliverCallback(callback);
+      await tester.pump();
+      await deliverCallback(callback);
+      await tester.pump();
+      expect(webViews.controllers.single, same(view));
+      expect(view.requests, [
+        initialRequest,
+        Uri.parse(appHandoff.queryParameters['successURL']!),
+      ]);
+      expect(exchangedGrants, isEmpty);
+
+      await redirect(tester, code: 'app-grant');
+      expect(
+        await login,
+        isA<UaePassSuccess<String>>().having(
+          (result) => result.value,
+          'value',
+          'app session',
+        ),
+      );
+      final grant = exchangedGrants.single;
+      expect(grant.code, 'app-grant');
+      expect(grant.redirectUri, client.configuration.redirectUri);
+      expect(nativeCalls.last, ('setCallbackScheme', null));
+    },
+  );
 
   testWidgets('does not launch UAE PASS after the authorization route pops', (
     tester,
