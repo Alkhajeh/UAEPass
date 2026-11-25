@@ -2,7 +2,7 @@ Pod::Spec.new do |s|
   s.name             = 'uaepass'
   s.version          = '0.0.1'
   s.summary          = 'UAE PASS authentication for Flutter on iOS.'
-  s.homepage         = 'https://github.com/Alkhajeh/Flutter-UAEPass'
+  s.homepage         = 'https://github.com/Alkhajeh/UAEPass'
   s.license          = { :file => '../LICENSE' }
   s.author           = 'Ali Alkhajeh'
   s.source           = { :path => '.' }
