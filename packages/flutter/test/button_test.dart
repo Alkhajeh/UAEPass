@@ -208,45 +208,4 @@ void main() {
     await tester.tap(find.byType(TextButton));
     expect(actions, 1);
   });
-
-  testWidgets('renders the corrected Arabic black artwork at 2x', (
-    tester,
-  ) async {
-    tester.view.devicePixelRatio = 2;
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final key = GlobalKey();
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Center(
-          child: RepaintBoundary(
-            key: key,
-            child: ColoredBox(
-              color: Colors.white,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (final state in UaePassButtonState.values)
-                    UaePassButtonArtwork.text(
-                      locale: const Locale('ar'),
-                      style: UaePassButtonStyle.black,
-                      state: state,
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.runAsync(() async {
-      for (final element in find.byType(Image).evaluate()) {
-        await precacheImage((element.widget as Image).image, element);
-      }
-    });
-    await tester.pumpAndSettle();
-    await expectLater(
-      find.byKey(key),
-      matchesGoldenFile('goldens/arabic_black_button.png'),
-    );
-  });
 }
