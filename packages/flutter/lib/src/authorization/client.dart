@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:math';
 
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
@@ -33,21 +31,10 @@ final class UaePassClient {
     BuildContext context, {
     required UaePassCodeExchange<T> exchangeCode,
     Locale? locale,
-  }) => _runAttempt(() async {
-    final result = await _authorize(context, locale);
-    switch (result) {
-      case UaePassSuccess(:final value):
-        try {
-          return await exchangeCode(value);
-        } catch (_) {
-          return const UaePassFailure(UaePassFailureReason.exchangeFailed);
-        }
-      case UaePassCancelled():
-        return const UaePassCancelled();
-      case UaePassFailure(:final reason):
-        return UaePassFailure(reason);
-    }
-  });
+  }) => _runAttempt(
+    () async =>
+        exchangeUaePassResult(await _authorize(context, locale), exchangeCode),
+  );
 
   Future<UaePassResult<T>> _runAttempt<T>(
     Future<UaePassResult<T>> Function() run,
@@ -72,10 +59,7 @@ final class UaePassClient {
     final language = resolveUaePassLocale(context, locale).languageCode;
 
     try {
-      final random = Random.secure();
-      final state = base64UrlEncode(
-        List.generate(32, (_) => random.nextInt(256)),
-      );
+      final state = generateUaePassState();
       final flow = UaePassAuthorizationFlow(
         configuration: configuration,
         language: language,

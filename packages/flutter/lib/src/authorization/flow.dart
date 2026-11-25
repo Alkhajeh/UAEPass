@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 
 import 'configuration.dart';
@@ -14,70 +17,27 @@ final class UaePassAuthorizationFlow {
   final UaePassConfiguration configuration;
   final String language;
 
-  static const _mobileAcr = 'urn:digitalid:authentication:flow:mobileondevice';
-  static const _webAcr = 'urn:safelayer:tws:policies:authentication:level:low';
-  static const _cancellationErrors = {
-    'invalid_request',
-    'login_required',
-    'access_denied',
-    'cancelledOnApp',
-  };
-
   bool get _isStaging =>
       configuration.environment == UaePassEnvironment.staging;
-  String get _apiHost => _isStaging ? 'stg-id.uaepass.ae' : 'id.uaepass.ae';
   String get _appScheme => _isStaging ? 'uaepassstg' : 'uaepass';
 
   Uri authorizationUri({required String state, required bool appInstalled}) =>
-      Uri.https(_apiHost, '/idshub/authorize', {
-        'redirect_uri': configuration.redirectUri.toString(),
-        'client_id': configuration.clientId,
-        'state': state,
-        'response_type': 'code',
-        'scope': configuration.scopes.join(' '),
-        'acr_values': appInstalled ? _mobileAcr : _webAcr,
-        'ui_locales': language,
-      });
+      buildUaePassAuthorizationUri(
+        environment: configuration.environment,
+        redirectUri: configuration.redirectUri,
+        clientId: configuration.clientId,
+        state: state,
+        scopes: configuration.scopes,
+        language: language,
+        appHandoff: appInstalled,
+      );
 
   UaePassResult<UaePassAuthorizationGrant>? authorizationResult(
     Uri uri,
     String state,
-  ) {
-    final redirect = configuration.redirectUri;
-    if (uri.scheme != redirect.scheme ||
-        uri.host != redirect.host ||
-        uri.port != redirect.port ||
-        (uri.path.isEmpty ? '/' : uri.path) !=
-            (redirect.path.isEmpty ? '/' : redirect.path)) {
-      return null;
-    }
-
-    final query = readUaePassQuery(uri);
-    if (query == null ||
-        uri.userInfo.isNotEmpty ||
-        uri.hasFragment ||
-        !listEquals(query['state'], [state]) ||
-        !redirect.queryParametersAll.entries.every(
-          (entry) => listEquals(query[entry.key], entry.value),
-        )) {
-      return const UaePassFailure(UaePassFailureReason.authorizationFailed);
-    }
-
-    final code = query['code'];
-    final error = query['error'];
-    if (code case [final value] when value.trim().isNotEmpty && error == null) {
-      return UaePassSuccess(
-        UaePassAuthorizationGrant(code: value, redirectUri: redirect),
-      );
-    }
-    if (code == null &&
-        error != null &&
-        error.length == 1 &&
-        _cancellationErrors.contains(error.single)) {
-      return const UaePassCancelled();
-    }
-    return const UaePassFailure(UaePassFailureReason.authorizationFailed);
-  }
+  ) => matchesUaePassRedirect(uri, configuration.redirectUri)
+      ? parseUaePassAuthorizationResult(uri, configuration.redirectUri, state)
+      : null;
 
   bool isAppHandoff(Uri uri) =>
       uri.scheme == 'uaepass' || uri.scheme == _appScheme;
@@ -91,7 +51,7 @@ final class UaePassAuthorizationFlow {
   bool _isResumeUri(Uri uri) =>
       isProviderPage(uri) &&
       !uri.hasFragment &&
-      (uri.host == _apiHost ||
+      (uri.host == uaePassApiHost(configuration.environment) ||
           uri.host == (_isStaging ? 'stg-ids.uaepass.ae' : 'ids.uaepass.ae'));
 
   UaePassAppHandoff? appHandoff(Uri uri, String state) {
@@ -139,6 +99,103 @@ final class UaePassAuthorizationFlow {
       successUri: success,
       failureUri: failure,
     );
+  }
+}
+
+String uaePassApiHost(UaePassEnvironment environment) => switch (environment) {
+  UaePassEnvironment.staging => 'stg-id.uaepass.ae',
+  UaePassEnvironment.production => 'id.uaepass.ae',
+};
+
+String generateUaePassState() {
+  final random = Random.secure();
+  return base64UrlEncode(List.generate(32, (_) => random.nextInt(256)));
+}
+
+Uri buildUaePassAuthorizationUri({
+  required UaePassEnvironment environment,
+  required Uri redirectUri,
+  required String clientId,
+  required String state,
+  required List<String> scopes,
+  required String language,
+  bool appHandoff = false,
+}) => Uri.https(uaePassApiHost(environment), '/idshub/authorize', {
+  'redirect_uri': redirectUri.toString(),
+  'client_id': clientId,
+  'state': state,
+  'response_type': 'code',
+  'scope': scopes.join(' '),
+  'acr_values': appHandoff
+      ? 'urn:digitalid:authentication:flow:mobileondevice'
+      : 'urn:safelayer:tws:policies:authentication:level:low',
+  'ui_locales': language,
+});
+
+bool sharesUaePassOrigin(Uri uri, Uri reference) =>
+    uri.scheme == reference.scheme &&
+    uri.host == reference.host &&
+    uri.port == reference.port;
+
+bool matchesUaePassRedirect(Uri uri, Uri redirect) =>
+    sharesUaePassOrigin(uri, redirect) &&
+    (uri.path.isEmpty ? '/' : uri.path) ==
+        (redirect.path.isEmpty ? '/' : redirect.path);
+
+const _cancellationErrors = {
+  'invalid_request',
+  'login_required',
+  'access_denied',
+  'cancelledOnApp',
+};
+
+UaePassResult<UaePassAuthorizationGrant> parseUaePassAuthorizationResult(
+  Uri uri,
+  Uri redirect,
+  String state,
+) {
+  final query = readUaePassQuery(uri);
+  if (query == null ||
+      uri.userInfo.isNotEmpty ||
+      uri.hasFragment ||
+      !listEquals(query['state'], [state]) ||
+      !redirect.queryParametersAll.entries.every(
+        (entry) => listEquals(query[entry.key], entry.value),
+      )) {
+    return const UaePassFailure(UaePassFailureReason.authorizationFailed);
+  }
+
+  final code = query['code'];
+  final error = query['error'];
+  if (code case [final value] when value.trim().isNotEmpty && error == null) {
+    return UaePassSuccess(
+      UaePassAuthorizationGrant(code: value, redirectUri: redirect),
+    );
+  }
+  if (code == null &&
+      error != null &&
+      error.length == 1 &&
+      _cancellationErrors.contains(error.single)) {
+    return const UaePassCancelled();
+  }
+  return const UaePassFailure(UaePassFailureReason.authorizationFailed);
+}
+
+Future<UaePassResult<T>> exchangeUaePassResult<T>(
+  UaePassResult<UaePassAuthorizationGrant> result,
+  UaePassCodeExchange<T> exchangeCode,
+) async {
+  switch (result) {
+    case UaePassSuccess(:final value):
+      try {
+        return await exchangeCode(value);
+      } catch (_) {
+        return const UaePassFailure(UaePassFailureReason.exchangeFailed);
+      }
+    case UaePassCancelled():
+      return const UaePassCancelled();
+    case UaePassFailure(:final reason):
+      return UaePassFailure(reason);
   }
 }
 

@@ -34,7 +34,7 @@ async function readCode(request) {
 
 export function createExampleServer(client) {
   return createServer(async (request, response) => {
-    if (request.headers.host !== `${host}:${request.socket.localPort}` || request.headers.origin) {
+    if (request.headers.host !== `${host}:${request.socket.localPort}`) {
       return reply(response, 403);
     }
     if (request.url !== '/auth/uaepass') return reply(response, 404);

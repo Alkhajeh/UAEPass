@@ -1,0 +1,9 @@
+server:
+  host: localhost
+  port: 8000
+  headers:
+    - name: Referrer-Policy
+      value: no-referrer
+  proxy:
+    - regex: '^/auth/uaepass$'
+      target: 'http://127.0.0.1:8787/'

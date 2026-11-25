@@ -12,6 +12,7 @@ dependencies:
   material_ui: ^1.11.1
   uaepass:
     path: ..
+  web: ^1.1.1
 
 dev_dependencies:
   flutter_test:

@@ -12,7 +12,7 @@ npm install @alkhajeh/uaepass-server
 
 ## Use in your server
 
-For web sign-in, generate a one-time `state` and bind it to the originating browser session. Verify and consume it at the callback before calling the SDK. In the Flutter flow, the plugin validates `state` before handing the authorization code to the app. [OAuth security guidance](https://www.rfc-editor.org/rfc/rfc9700.html#section-2.1)
+Use the UAE PASS client ID, client secret, and registered redirect URI from your server configuration. Pass the authorization code from your application's validated UAE PASS callback to `getUserInfoFromCode`. Use an HTTPS redirect URI for production. Staging also accepts HTTP on `localhost`. [UAE PASS authorization code guide](https://docs.uaepass.ae/feature-guides/authentication/web-application/1.-obtaining-the-oauth2-access-code)
 
 ```ts
 import { createUaePassClient } from '@alkhajeh/uaepass-server';
@@ -53,4 +53,20 @@ npm pack --dry-run
 
 For a local install check, run `npm pack` and install the generated `.tgz` file from your server project.
 
-For a live exchange with the sample backend, see **Verify the local backend** in `packages/flutter/example/README.md`. [UAEPass repository](https://github.com/Alkhajeh/UAEPass)
+## Optional staging server
+
+To try the sample server with your own OAuth client, open `packages/node` in a source checkout. Install the dependencies, build the SDK, and copy the example configuration. [UAEPass repository](https://github.com/Alkhajeh/UAEPass)
+
+```sh
+npm ci
+npm run build
+cp example/.env.example example/.env
+```
+
+Set `UAEPASS_CLIENT_ID`, `UAEPASS_CLIENT_SECRET`, and `UAEPASS_REDIRECT_URI` in `example/.env` to the staging credentials and exact redirect URI used by your client. Use the public sandbox credentials for this demo. [UAE PASS staging walkthrough](https://docs.uaepass.ae/quick-start-guide-uae-pass-staging-environment/conduct-a-poc-with-uae-pass-authentication)
+
+```sh
+node --env-file=example/.env example/server.mjs
+```
+
+After your client validates the callback, send the code promptly to `POST http://127.0.0.1:8787/auth/uaepass` with `Content-Type: application/json` and a JSON body of `{"code":"…"}`. HTTP `200` with `{"ok":true}` confirms a successful exchange and profile fetch. For fixture-based verification, run `npm test`.

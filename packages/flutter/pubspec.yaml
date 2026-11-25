@@ -1,6 +1,6 @@
 name: uaepass
-description: Flutter plugin for integrating UAE PASS sign-in on Android and iOS, with app-to-app handoff and a configurable backend exchange.
-version: 0.1.1
+description: UAE PASS sign-in on Android, iOS, and web, with native app handoff, browser redirects, and a configurable backend exchange.
+version: 0.1.2
 repository: https://github.com/Alkhajeh/UAEPass
 issue_tracker: https://github.com/Alkhajeh/UAEPass/issues
 
@@ -11,7 +11,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
   material_ui: ^1.11.1
+  web: ^1.1.1
   webview_flutter: ^4.14.1
   webview_flutter_wkwebview: ^3.27.2
 
@@ -29,6 +32,9 @@ flutter:
         pluginClass: UaepassPlugin
       ios:
         pluginClass: UaepassPlugin
+      web:
+        pluginClass: UaePassWebPlugin
+        fileName: src/platform/web_plugin.dart
 
   assets:
     - assets/buttons/authorize/ar/
