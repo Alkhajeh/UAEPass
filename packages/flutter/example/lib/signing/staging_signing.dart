@@ -358,13 +358,16 @@ class _StagingSigningState extends State<StagingSigning> {
                       selected: {_signatureLevel},
                       onSelectionChanged: _busy || _error == 'start-uncertain'
                           ? null
-                          : (selection) => setState(() {
-                              _signatureLevel = selection.single;
-                              _attempt = null;
-                              _error = null;
-                              _retry = null;
-                              _signInResult = null;
-                            }),
+                          : (selection) {
+                              backend.clearSigningReturn();
+                              setState(() {
+                                _signatureLevel = selection.single;
+                                _attempt = null;
+                                _error = null;
+                                _retry = null;
+                                _signInResult = null;
+                              });
+                            },
                     ),
                     const SizedBox(height: 16),
                     if (_retry == null && _error != 'start-failed')

@@ -83,6 +83,16 @@ void clearSigningReturn() {
   } catch (_) {
     // Storage can be unavailable when the browser blocks it.
   }
+  final uri = Uri.base;
+  if (uri.queryParameters['signing'] != 'return') return;
+  final query = Map.of(uri.queryParametersAll)
+    ..remove('signing')
+    ..remove('transaction');
+  web.window.history.replaceState(
+    web.window.history.state,
+    '',
+    uri.replace(queryParameters: query).toString(),
+  );
 }
 
 Future<void> exchangeWithLocalBackend(String code) async {
