@@ -1,6 +1,6 @@
 # UAE PASS SDKs
 
-Use either SDK independently to integrate UAE PASS sign-in. The Node SDK also includes a server-side client for qualified PDF signing.
+Use either SDK independently to integrate UAE PASS sign-in. The Node SDK also includes a server-side client for qualified and advanced PDF signing.
 
 ## SDKs
 

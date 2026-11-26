@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import {
   createUaePassSigningClient,
   UaePassSignatureAppearance,
+  UaePassSignatureLevel,
   UaePassSigningError,
 } from '@alkhajeh/uaepass-server';
 
@@ -105,6 +106,25 @@ test('runs the documented qualified PDF signing requests and preserves binary PD
   assert.deepEqual(await signing.downloadSignedPdf(documentId, accessToken), signedPdf);
   assert.equal(await signing.deleteProcess(processId, accessToken), undefined);
   assert.equal(fetch.mock.callCount(), 5);
+});
+
+test('requests the explicit signing level and rejects unsupported levels before sending', async (t) => {
+  const sentLabels = [];
+  const fetch = t.mock.method(globalThis, 'fetch', async (_, init) => {
+    sentLabels.push(JSON.parse(init.body.get('process')).labels);
+    return Response.json(processResponse, { status: 201 });
+  });
+  const signing = createUaePassSigningClient(config);
+  await signing.createProcess({ ...createInput, signatureLevel: UaePassSignatureLevel.Advanced }, accessToken);
+  await signing.createProcess({ ...createInput, signatureLevel: UaePassSignatureLevel.Qualified }, accessToken);
+  assert.deepEqual(sentLabels, [[['digitalid', 'server', 'advanced']], [['digitalid', 'server', 'qualified']]]);
+
+  for (const signatureLevel of ['auto', '', null]) {
+    await assert.rejects(signing.createProcess({ ...createInput, signatureLevel }, accessToken), {
+      name: 'TypeError', message: /supported UAE PASS signature level/,
+    });
+  }
+  assert.equal(fetch.mock.callCount(), 2);
 });
 
 test('omits unspecified signature options and serializes the explicit appearance presets', async (t) => {

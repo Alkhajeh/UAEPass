@@ -33,6 +33,13 @@ export interface UaePassSigningToken {
   readonly expiresInSeconds: number;
 }
 
+export const UaePassSignatureLevel = {
+  Qualified: 'qualified',
+  Advanced: 'advanced',
+} as const;
+
+export type UaePassSignatureLevel = (typeof UaePassSignatureLevel)[keyof typeof UaePassSignatureLevel];
+
 export const UaePassSignatureAppearance = {
   DateTimeOnly: 'date-time-only',
   SignerAndDateTime: 'signer-and-date-time',
@@ -45,6 +52,8 @@ export type UaePassSignatureAppearance =
 export interface UaePassCreateSigningProcessInput {
   readonly pdf: Uint8Array;
   readonly filename: string;
+  /** The UAE PASS signing level to request. Defaults to qualified. */
+  readonly signatureLevel?: UaePassSignatureLevel;
   readonly signatureField: {
     readonly name: string;
     readonly location?: {
@@ -227,11 +236,14 @@ function serializeSignatureLocation(location: UaePassCreateSigningProcessInput['
 }
 
 function createProcessForm(input: UaePassCreateSigningProcessInput, finishCallbackUrl: string): FormData {
-  const { pdf, filename, signatureField } = input;
+  const { pdf, filename, signatureField, signatureLevel = UaePassSignatureLevel.Qualified } = input;
   if (!isPdf(pdf) || !isNonemptyString(filename) || /[\u0000-\u001f\u007f/\\]/.test(filename)) {
     throw new TypeError('Provide PDF bytes and a valid document filename.');
   }
   if (pdf.byteLength > maxSigningPdfBytes) throw new TypeError('Provide a PDF up to 10 MiB.');
+  if (signatureLevel !== UaePassSignatureLevel.Qualified && signatureLevel !== UaePassSignatureLevel.Advanced) {
+    throw new TypeError('Choose a supported UAE PASS signature level.');
+  }
   if (!isRecord(signatureField) || !isXmlText(signatureField.name) || /[\u0000-\u001f\u007f]/.test(signatureField.name)) {
     throw new TypeError('Provide a valid signature field name.');
   }
@@ -243,7 +255,7 @@ function createProcessForm(input: UaePassCreateSigningProcessInput, finishCallba
 
   const process = {
     process_type: 'urn:safelayer:eidas:processes:document:sign:esigp',
-    labels: [['digitalid', 'server', 'qualified']],
+    labels: [['digitalid', 'server', signatureLevel]],
     signer: {
       signature_policy_id: 'urn:safelayer:eidas:policies:sign:document:pdf',
       parameters: {
