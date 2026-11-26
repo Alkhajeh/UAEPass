@@ -215,6 +215,33 @@ test('reports timeout without retrying or exposing transport errors', async (t) 
   assert.equal(fetch.mock.callCount(), 1);
 });
 
+test('bounds token and profile responses and cancels oversized bodies', async (t) => {
+  const limit = 256 * 1024;
+  let canceled = 0;
+  const advertised = new ReadableStream({ cancel() { canceled++; } });
+  const streamed = new ReadableStream({
+    start(controller) {
+      controller.enqueue(new Uint8Array(limit));
+      controller.enqueue(new Uint8Array(1));
+    },
+    cancel() { canceled++; },
+  });
+  const responses = [
+    new Response(advertised, { headers: { 'Content-Length': String(limit + 1) } }),
+    new Response(streamed),
+  ];
+  const fetch = t.mock.method(globalThis, 'fetch', async () => responses.shift());
+  const client = createUaePassClient(config);
+  await assert.rejects(client.exchangeAuthorizationCode(code), {
+    code: 'invalid_response', operation: 'token', status: 200,
+  });
+  await assert.rejects(client.getUserInfo(token.access_token), {
+    code: 'invalid_response', operation: 'userinfo', status: 200,
+  });
+  assert.equal(canceled, 2);
+  assert.equal(fetch.mock.callCount(), 2);
+});
+
 test('rejects malformed profile data and invalid configuration', async (t) => {
   const profiles = [
     { email: 'fixture@example.test' },
@@ -231,5 +258,12 @@ test('rejects malformed profile data and invalid configuration', async (t) => {
     });
   }
   assert.throws(() => createUaePassClient({ ...config, environment: 'custom' }), TypeError);
-  assert.throws(() => createUaePassClient({ ...config, redirectUri: 'http://example.test' }), TypeError);
+  for (const redirectUri of [
+    'http://example.test',
+    'https:///example.test/callback',
+    'https://example.test\\callback',
+    'https://example.test/callback\u0000',
+  ]) {
+    assert.throws(() => createUaePassClient({ ...config, redirectUri }), TypeError);
+  }
 });
