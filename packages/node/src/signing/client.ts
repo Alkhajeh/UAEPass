@@ -1,13 +1,13 @@
 import { Blob, Buffer } from 'node:buffer';
 
 import {
+  documentTransferTimeoutMs,
   isBearerToken,
   isBearerTokenResponse,
   isNonemptyString,
   isPdf,
   isRecord,
   isXmlText,
-  maxSigningPdfBytes,
   origins,
   parseCallbackUrl,
   parseProviderUrl,
@@ -20,12 +20,18 @@ const signingPath = '/trustedx-resources/esignsp/v2';
 const processPath = `${signingPath}/signer_processes`;
 const documentsPath = `${signingPath}/documents`;
 const pdfType = 'application/pdf';
+const defaultMaxUploadPdfBytes = 10 * 1024 * 1024;
+// Leave room for the signature to grow before sending the PDF as Base64 to the SOAP gateway.
+const maxAllowedUploadPdfBytes = 20 * 1024 * 1024;
+const maxSignedPdfResponseBytes = 32 * 1024 * 1024;
 
 export interface UaePassSigningConfig {
   readonly environment: keyof typeof origins;
   readonly clientId: string;
   readonly clientSecret: string;
   readonly finishCallbackUrl: string;
+  /** Maximum size in bytes of the original PDF passed to createProcess(). Defaults to 10 MiB and can be set up to 20 MiB. */
+  readonly maxUploadPdfBytes?: number;
 }
 
 export interface UaePassSigningToken {
@@ -193,7 +199,8 @@ async function request(
   init: RequestInit,
   expectedStatus: number,
 ): Promise<{ response: Response; signal: AbortSignal }> {
-  const signal = AbortSignal.timeout(15000);
+  const sendsOrReceivesPdf = operation === 'create' || operation === 'download';
+  const signal = AbortSignal.timeout(sendsOrReceivesPdf ? documentTransferTimeoutMs : 15_000);
   let response: Response;
   try {
     response = await fetch(url, { ...init, redirect: 'manual', signal });
@@ -235,12 +242,18 @@ function serializeSignatureLocation(location: UaePassCreateSigningProcessInput['
   return { page: { number: String(page) }, rectangle: { x, y, width, height } };
 }
 
-function createProcessForm(input: UaePassCreateSigningProcessInput, finishCallbackUrl: string): FormData {
+function createProcessForm(
+  input: UaePassCreateSigningProcessInput,
+  finishCallbackUrl: string,
+  maxUploadPdfBytes: number,
+): FormData {
   const { pdf, filename, signatureField, signatureLevel = UaePassSignatureLevel.Qualified } = input;
   if (!isPdf(pdf) || !isNonemptyString(filename) || /[\u0000-\u001f\u007f/\\]/.test(filename)) {
     throw new TypeError('Provide PDF bytes and a valid document filename.');
   }
-  if (pdf.byteLength > maxSigningPdfBytes) throw new TypeError('Provide a PDF up to 10 MiB.');
+  if (pdf.byteLength > maxUploadPdfBytes) {
+    throw new TypeError(`Provide an original PDF up to ${maxUploadPdfBytes} bytes.`);
+  }
   if (signatureLevel !== UaePassSignatureLevel.Qualified && signatureLevel !== UaePassSignatureLevel.Advanced) {
     throw new TypeError('Choose a supported UAE PASS signature level.');
   }
@@ -279,7 +292,7 @@ function createProcessForm(input: UaePassCreateSigningProcessInput, finishCallba
 }
 
 export function createUaePassSigningClient(config: UaePassSigningConfig): UaePassSigningClient {
-  const { environment, clientId, clientSecret, finishCallbackUrl } = config;
+  const { environment, clientId, clientSecret, finishCallbackUrl, maxUploadPdfBytes = defaultMaxUploadPdfBytes } = config;
   if (environment !== 'staging' && environment !== 'production') {
     throw new TypeError('Choose a UAE PASS environment.');
   }
@@ -289,6 +302,10 @@ export function createUaePassSigningClient(config: UaePassSigningConfig): UaePas
   const callback = parseCallbackUrl(finishCallbackUrl, environment);
   if (!callback || ['signer_process_id', 'status'].some((key) => callback.searchParams.has(key))) {
     throw new TypeError('Provide the HTTPS signing finish callback URL or use HTTP localhost in staging.');
+  }
+  if (!Number.isSafeInteger(maxUploadPdfBytes) || maxUploadPdfBytes <= 0 ||
+      maxUploadPdfBytes > maxAllowedUploadPdfBytes) {
+    throw new TypeError(`Provide maxUploadPdfBytes as a whole number from 1 to ${maxAllowedUploadPdfBytes} bytes.`);
   }
 
   const origin = origins[environment];
@@ -313,7 +330,7 @@ export function createUaePassSigningClient(config: UaePassSigningConfig): UaePas
       const result = await request('create', new URL(processPath, origin), {
         method: 'POST',
         headers: { Authorization: bearerHeader(accessToken), 'Cache-Control': 'no-cache' },
-        body: createProcessForm(input, finishCallbackUrl),
+        body: createProcessForm(input, finishCallbackUrl, maxUploadPdfBytes),
       }, 201);
       const data = await readBody('create', result, readProviderJson);
       const process = parseSigningProcess(data, origin);
@@ -345,7 +362,7 @@ export function createUaePassSigningClient(config: UaePassSigningConfig): UaePas
         void result.response.body?.cancel().catch(() => {});
         throw new UaePassSigningError('invalid_response', 'download', result.response.status);
       }
-      const bytes = await readBody('download', result, (response) => readBoundedBytes(response, maxSigningPdfBytes));
+      const bytes = await readBody('download', result, (response) => readBoundedBytes(response, maxSignedPdfResponseBytes));
       if (!isPdf(bytes)) throw new UaePassSigningError('invalid_response', 'download', result.response.status);
       return bytes;
     },

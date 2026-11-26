@@ -53,8 +53,10 @@ Turn on **Use local backend** on the home screen to test the full staging exchan
 
 The demo sends `POST /auth/uaepass` with JSON `{"code":"…"}`. You can use a staging backend written in any language. Configure it with the public sandbox credentials, keep the client secret on the server, and use the exact redirect URI the demo used to start authorization. After exchanging the code and fetching the profile, respond with HTTP `200` and JSON `{"ok":true}`. [Backend exchange steps](../README.md#4-complete-sign-in-on-your-backend) · [UAE PASS staging credentials](https://docs.uaepass.ae/quick-start-guide-uae-pass-staging-environment/conduct-a-poc-with-uae-pass-authentication)
 
-- **Local web.** Run the backend at `127.0.0.1:8787`. The Flutter development server forwards `/auth/uaepass` to it.
-- **Hosted web.** Serve `/auth/uaepass` on the same HTTPS origin as the demo.
+If you use the bundled Node server, set `UAEPASS_REDIRECT_URI` in `packages/node/example/.env` to the Flutter demo's callback. Use `http://localhost:8000` for the local web command above or `https://localhost:8000` for the default mobile callback. [Node staging server setup](../../node/example/README.md)
+
+- **Local web.** Run the backend at `127.0.0.1:8787`. The Flutter development server forwards `/auth/uaepass` and `/signing/app/` requests to it.
+- **Hosted web sign-in.** Serve your sign-in backend's `/auth/uaepass` endpoint on the same HTTPS origin as the demo.
 - **Mobile.** Run the demo in debug mode and start the backend at `127.0.0.1:8787`. The iOS simulator can reach it directly. For an Android emulator or ADB-connected Android device, run `adb reverse tcp:8787 tcp:8787`.
 
 Select **Try sign-in** and approve in the staging app. **Backend exchange complete** means the demo received a successful exchange response. Signing starts its own authorization. For a production integration, use your own backend to establish an app session. [Flutter integration guide](../README.md#4-complete-sign-in-on-your-backend)
@@ -64,6 +66,8 @@ If the demo cannot reach the backend, start the server and select **Retry**. Ret
 ### Sign a sample document
 
 Run the [Node staging server](../../node/example/README.md) with its public sandbox credentials and the redirect URI for the platform you are testing. Turn on **Use local backend** to enable **Sign a document**. Qualified signing requires an SOP3 account with a qualified certificate. Advanced signing requires an SOP2 or SOP3 account with an advanced certificate. The demo uses the verified Emirates ID from the account to match the signer.
+
+For web signing with the bundled server, run the Flutter example at `http://localhost:8000`. The server sends the browser back to that origin after UAE PASS approval.
 
 1. Select **Sign a document**, choose **Qualified** (the default) or **Advanced**, then select **Sign with UAE PASS**. The demo starts UAE PASS authorization and sends the resulting code to the backend to create the signing transaction.
 2. In UAE PASS, tap the document link to review the sample PDF. On Android and iOS, use Back to close the viewer and return to the same approval. Complete approval in UAE PASS.

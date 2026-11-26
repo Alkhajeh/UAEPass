@@ -249,7 +249,7 @@ test('validates signing configuration, request inputs, and binary responses', as
   const oversizedPdf = new Uint8Array(10 * 1024 * 1024 + 1);
   oversizedPdf.set(Buffer.from('%PDF-'));
   await assert.rejects(signing.createProcess({ ...createInput, pdf: oversizedPdf }, accessToken), {
-    name: 'TypeError', message: 'Provide a PDF up to 10 MiB.',
+    name: 'TypeError', message: 'Provide an original PDF up to 10485760 bytes.',
   });
   await assert.rejects(signing.createProcess({ ...createInput, filename: '../file' }, accessToken), TypeError);
   for (const name of ['Invalid\uFFFE', 'Invalid\uD800']) {
@@ -272,6 +272,33 @@ test('validates signing configuration, request inputs, and binary responses', as
   await assert.rejects(signing.getAccessToken(), {
     code: 'invalid_response', operation: 'token', status: 200,
   });
+});
+
+test('lets callers raise or lower the original PDF upload limit up to 20 MiB', async (t) => {
+  const maximum = 20 * 1024 * 1024;
+  const fetch = t.mock.method(globalThis, 'fetch', async (_url, init) => {
+    assert.equal(init.body.get('document').size, maximum);
+    return Response.json(processResponse, { status: 201 });
+  });
+  const largerPdf = new Uint8Array(maximum);
+  largerPdf.set(pdf);
+
+  const smallerLimit = pdf.byteLength - 1;
+  const smaller = createUaePassSigningClient({ ...config, maxUploadPdfBytes: smallerLimit });
+  await assert.rejects(smaller.createProcess(createInput, accessToken), {
+    name: 'TypeError', message: `Provide an original PDF up to ${smallerLimit} bytes.`,
+  });
+  assert.equal(fetch.mock.callCount(), 0);
+
+  const larger = createUaePassSigningClient({ ...config, maxUploadPdfBytes: maximum });
+  await larger.createProcess({ ...createInput, pdf: largerPdf }, accessToken);
+  assert.equal(fetch.mock.callCount(), 1);
+
+  for (const maxUploadPdfBytes of [0, -1, 1.5, Infinity, NaN, maximum + 1, '10485760', null]) {
+    assert.throws(() => createUaePassSigningClient({ ...config, maxUploadPdfBytes }), {
+      name: 'TypeError', message: `Provide maxUploadPdfBytes as a whole number from 1 to ${maximum} bytes.`,
+    });
+  }
 });
 
 test('rejects unsupported appearances and incomplete or invalid placements before sending a request', async (t) => {
@@ -304,15 +331,13 @@ test('rejects unsupported appearances and incomplete or invalid placements befor
 });
 
 test('cancels PDF downloads that exceed the response limit', async (t) => {
-  const limit = 10 * 1024 * 1024;
+  const limit = 32 * 1024 * 1024;
   let canceled = 0;
   const headers = { 'Content-Type': 'application/pdf' };
   const advertised = new ReadableStream({ cancel: () => { canceled++; } });
+  const chunk = new Uint8Array(1024 * 1024);
   const streamed = new ReadableStream({
-    start(controller) {
-      controller.enqueue(new Uint8Array(limit));
-      controller.enqueue(new Uint8Array(1));
-    },
+    pull(controller) { controller.enqueue(chunk); },
     cancel() { canceled++; },
   });
   const responses = [

@@ -2,7 +2,7 @@ import { Buffer } from 'node:buffer';
 
 const pdfHeader = Buffer.from('%PDF-');
 const maxJsonBytes = 256 * 1024;
-export const maxSigningPdfBytes = 10 * 1024 * 1024;
+export const documentTransferTimeoutMs = 60_000;
 
 export const origins = {
   staging: 'https://stg-id.uaepass.ae',

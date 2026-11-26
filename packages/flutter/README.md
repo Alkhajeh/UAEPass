@@ -1,8 +1,8 @@
 # UAE PASS for Flutter
 
-Add official English and Arabic UAE PASS buttons to your Flutter app. On Android and iOS, the SDK hands off to the UAE PASS app when installed and uses an embedded browser otherwise. On Flutter Web, it redirects the current browser tab to UAE PASS and resumes at your app's registered callback.
+Integrate UAE PASS sign-in and PDF signing approval on Android, iOS, and Flutter Web with official English and Arabic buttons. Your application's backend exchanges authorization codes, starts signing requests, and verifies signed PDFs.
 
-For document signing, use the [signing button and approval launcher](#document-signing).
+[Android and iOS sign-in](#quick-start) · [Web sign-in](#flutter-web-quick-start) · [Sign a PDF](#document-signing) · [Button options](#button-options)
 
 ## Requirements
 
@@ -10,41 +10,11 @@ For document signing, use the [signing button and approval launcher](#document-s
 - Android API 24+, iOS 15+, or a Flutter Web app
 - A UAE PASS client ID and a registered redirect URI for your environment and channel. [UAE PASS mobile guide](https://docs.uaepass.ae/feature-guides/authentication/mobile-application) · [UAE PASS web guide](https://docs.uaepass.ae/feature-guides/authentication/web-application)
 
-## Document signing
-
-1. Sign the user in and provide a way to review the exact PDF before approving. If the user picks a PDF on their device, upload it to your backend first.
-2. Start signing through your authenticated backend. Save its transaction ID before opening the UAE PASS approval URL it returns.
-3. After the mobile WebView closes or the web app reloads on return, check the transaction through your backend. Offer the finalized PDF once the backend reports success.
-
-```dart
-final signing = UaePassSigningClient(environment: appEnvironment);
-
-UaePassSigningButton(
-  onPressed: starting ? null : () async {
-    final transaction = await backend.startSigning(documentVersionId);
-    await saveTransactionId(transaction.id);
-    if (!context.mounted) return;
-    await signing.openApproval(
-      context,
-      transaction.approvalUri,
-      finishCallbackUri: transaction.finishCallbackUri,
-      callbackScheme: authCallbackScheme,
-    );
-  },
-)
-```
-
-Use the same environment for sign-in, signing, and your backend. On Android and iOS, pass the custom scheme registered for sign-in. The launcher intercepts the matching finish redirect in an embedded WebView and closes it. It also returns if the user dismisses the WebView. Handle `UaePassSigningLaunchException` for invalid configuration or a failed browser session. On web, omit `callbackScheme` and set the finish URL to a browser route that brings the user back to Flutter.
-
-For review inside UAE PASS, set `views.document_agreement.skip_server_id` to `"false"` when creating the signing process. On mobile, the document link opens a PDF viewer in the approval flow. Back returns the user to the same approval. [UAE PASS signer process options](https://docs.uaepass.ae/feature-guides/signature-integration-guide/digital-signature-single-document/signing-guide/untitled/2.-creating-the-document-signature-process)
-
-Your backend sets the finish URL when creating the signing process and returns it to Flutter with the approval URL. On mobile, Flutter intercepts the finish URL before the page loads. The app then requests the status of its saved transaction. The backend fetches the provider result, applies long-term validation, verifies the PDF and expected signer, and saves the finalized bytes. Authorize status and download requests against the current app session. The Node SDK provides the provider operations for Node backends. [Node signing guide](../node/README.md#sign-a-pdf) · [UAE PASS signing flow](https://docs.uaepass.ae/feature-guides/signature-integration-guide/digital-signature-single-document/signing-guide/untitled/3.-executing-the-document-signature-process)
-
-Use the branded button when UAE PASS is the only digital signing option. In a list of signing methods, use the **Sign with UAE PASS** label with or without the logo. [UAE PASS button guidance](https://docs.uaepass.ae/guidelines/design-guidelines/button-guidelines/sign-with-uae-pass)
+Set `environment` to `UaePassEnvironment.staging` for testing or `UaePassEnvironment.production` for live use. Use the same UAE PASS environment for sign-in, signing, and your backend. Keep the client secret and provider access tokens on your backend.
 
 ## Quick start
 
-Follow these steps for Android and iOS. For a browser app, see [Flutter Web quick start](#flutter-web-quick-start).
+Follow these steps for Android and iOS. The SDK hands off to the UAE PASS app when installed and uses an embedded browser otherwise. For a browser app, see [Flutter Web quick start](#flutter-web-quick-start).
 
 ### 1. Install
 
@@ -188,39 +158,77 @@ The SDK stores one-time authorization state in the current tab, validates and co
 
 For programmatic sign-in, call `webClient.startAuthorization(locale: locale)`. The button uses the app locale and exposes `onStart` for the navigation result. Handle the authorization result when Flutter starts again. When the user signs out, invalidate the app session and navigate the current tab to `webClient.logoutUri(redirectUri: returnUri)` with a return URL on the app's origin. [Web logout guide](https://docs.uaepass.ae/feature-guides/authentication/web-application/4.-web-single-sign-on-sso-and-logout-user-session-from-uae-pass)
 
-## Optional configuration
+## Document signing
+
+Use `UaePassSigningButton` and `UaePassSigningClient.openApproval()` with any backend that integrates UAE PASS signing.
+
+1. Authenticate the signer. If the user picks a PDF on the device, upload it to your backend first.
+2. Start signing for the document version through your backend. It returns an app transaction ID, the UAE PASS approval URI, and the exact finish callback URI used to create the request.
+3. Save the transaction ID, then open the approval URI. Give the signer a way to review the exact PDF before approving, either in your app or in UAE PASS.
+4. Check the transaction through your backend after the mobile WebView closes or Flutter Web reloads. Offer the finalized PDF once the backend confirms success.
+
+### Open approval
+
+```dart
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:uaepass/uaepass.dart';
+
+final signing = UaePassSigningClient(environment: appEnvironment);
+
+final signingButton = UaePassSigningButton(
+  onPressed: starting ? null : () async {
+    final transaction = await backend.startSigning(documentVersionId);
+    await saveTransactionId(transaction.id);
+    if (!context.mounted) return;
+
+    try {
+      await signing.openApproval(
+        context,
+        transaction.approvalUri,
+        finishCallbackUri: transaction.finishCallbackUri,
+        callbackScheme: kIsWeb ? null : authCallbackScheme,
+      );
+    } on UaePassSigningLaunchException catch (error) {
+      if (context.mounted) showSigningLaunchFailure(error.reason);
+      return;
+    }
+
+    if (!kIsWeb && context.mounted) {
+      await checkSigningResult(transaction.id);
+    }
+  },
+);
+```
+
+The backend and app helpers in this example belong to your application. The exception's `UaePassSigningLaunchFailure` reason is `invalidApprovalUri`, `invalidFinishCallbackUri`, `invalidCallbackScheme`, or `launchFailed`.
+
+For review inside UAE PASS, set `views.document_agreement.skip_server_id` to `"false"` when creating the signing process. On Android and iOS, the document link opens a PDF viewer inside the approval flow. Back returns the user to the same approval. [UAE PASS signer process options](https://docs.uaepass.ae/feature-guides/signature-integration-guide/digital-signature-single-document/signing-guide/untitled/2.-creating-the-document-signature-process)
+
+### Check the result
+
+- **Android and iOS.** Pass the custom scheme registered for sign-in. `openApproval()` closes the WebView when the finish URI matches the signing process. It also returns if the user dismisses the WebView. Check the backend transaction in either case.
+- **Web.** Omit `callbackScheme`. `openApproval()` navigates the current tab. Configure the finish callback to bring the user back to the Flutter app, then restore the saved transaction and check it when the app loads.
+
+The backend owns the upload limit, signature level and appearance, and finalization. It applies long-term validation (LTV), verifies the PDF and expected signer, and authorizes status and download requests for that transaction. [Node signing guide](https://github.com/Alkhajeh/UAEPass/blob/main/packages/node/README.md#sign-a-pdf) · [UAE PASS signing flow](https://docs.uaepass.ae/feature-guides/signature-integration-guide/digital-signature-single-document/signing-guide/untitled/3.-executing-the-document-signature-process)
+
+## Button options
+
+| Option | Values |
+| --- | --- |
+| `content` for sign-in | `UaePassSignInButtonContent.signIn` (default), `login`, `registerAccount`, `signUp`, `authorize`, or `logoOnly` |
+| `shape` | `UaePassButtonShape.rounded` (default), `fullyRounded`, or `squareCorners` |
+| `style` | `UaePassButtonStyle.white`, `whiteOutline`, or `black`. By default, light themes use `whiteOutline` and dark themes use `white`. |
+| `locale` | `Locale('en')` or `Locale('ar')`. The SDK follows the app locale by default and falls back to English. |
 
 - **Arabic.** Add `Locale('ar')` alongside `Locale('en')` in `supportedLocales`. Set `localizationsDelegates` to `GlobalMaterialLocalizations.delegates` or merge those delegates into your existing list. The SDK follows your app locale for the button and the UAE PASS authorization page, with English as the fallback. [Example app setup](example/lib/main.dart)
-- **Appearance.** Use `content` to choose `signIn`, `login`, `registerAccount`, `signUp`, `authorize`, or `logoOnly`. Set `shape` and `style` to suit your layout. By default, light themes use white with outline and dark themes use solid white. The gallery previews all available combinations. [UAE PASS button guidelines](https://docs.uaepass.ae/guidelines/design-guidelines/button-guidelines)
 - **Button space.** Give the text button its own row where possible. Allow at least 190 logical pixels of width and 60 of height for the default sign-in artwork in both languages, or 220 of width for all wording variants. The artwork keeps its aspect ratio and clear space. When the bounds are too small for text at 140 × 30, the `signIn` and `login` variants use official logo-only artwork with the same accessible label. [UAE PASS button size and margin](https://docs.uaepass.ae/guidelines/design-guidelines/button-guidelines/button-size-and-margin)
+- **Signing label.** Use the branded button when UAE PASS is the only digital signing option. In a list of signing methods, use the **Sign with UAE PASS** label with or without the logo. [UAE PASS button guidance](https://docs.uaepass.ae/guidelines/design-guidelines/button-guidelines/sign-with-uae-pass)
+
+## Optional configuration
+
 - **Programmatic mobile authorization.** `client.authorize(context)` returns the same typed result as the button. `client.login<T>()` also calls your app-supplied exchange callback and returns the session result. One attempt can be active per Flutter engine.
 - **Scopes and messages.** Pass `scopes` in your client configuration if your approved scopes differ from the default general-profile scope. Use `UaePassSignInMessages.forResult` for localized cancellation and failure messages.
 
 ## Example app
 
-Run the example app to try staging sign-in, preview localized outcomes offline, or explore the official button variations and copy a Flutter snippet. [Example app instructions](example/README.md) · [Demo redirect settings](example/README.md#redirect-configuration)
-
-## Development
-
-Use the Flutter version pinned in CI. Run these checks from both `packages/flutter` and `packages/flutter/example`.
-
-```sh
-flutter pub get
-dart format --output=none --set-exit-if-changed lib test
-flutter analyze --no-pub
-flutter test --no-pub
-```
-
-Both projects use `flutter_lints` and the same strict type checks. The example inherits the package's analyzer settings.
-
-From the plugin, run `flutter test --no-pub --platform chrome test/web_authorization_test.dart`. From the example directory, run `flutter build web --no-pub --dart-define=UAEPASS_WEB_REDIRECT_URI=http://localhost:8000`.
-
-### Release checks
-
-From `packages/flutter`, preview what will be published to pub.dev.
-
-```sh
-flutter pub publish --dry-run
-```
-
-Before publishing, verify app handoff and embedded-browser fallback with UAE PASS staging on Android and iOS. Verify Flutter Web approval, cancellation, backend exchange, and logout in English and Arabic using the staging demo. Include a cold browser return and confirm the exchange starts within 10 seconds. Confirm that the official button artwork may be redistributed with the package. [Staging demo](example/README.md) · [Demo backend exchange](example/README.md#optional-backend-exchange) · [UAE PASS exchange timing](https://docs.uaepass.ae/faq/common-integration-issues)
+Run the example app to try staging sign-in or signing, preview localized outcomes offline, and explore the official button variations. [Example app instructions](example/README.md)

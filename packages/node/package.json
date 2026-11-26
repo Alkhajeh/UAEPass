@@ -1,6 +1,6 @@
 {
   "name": "@alkhajeh/uaepass-server",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Server-side UAE PASS authentication and PDF signing clients.",
   "license": "MIT",
   "repository": {
@@ -18,7 +18,7 @@
       "node": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": ["dist", "CHANGELOG.md"],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test",
