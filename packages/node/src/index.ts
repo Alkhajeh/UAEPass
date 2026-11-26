@@ -9,7 +9,7 @@ export type {
 export { UaePassGender, UaePassProfileType, UaePassUserType } from './auth/user-info.js';
 export type { UaePassUserInfo } from './auth/user-info.js';
 
-export { createUaePassSigningClient, UaePassSigningError } from './signing/client.js';
+export { createUaePassSigningClient, UaePassSignatureAppearance, UaePassSigningError } from './signing/client.js';
 export type {
   UaePassCreateSigningProcessInput,
   UaePassSigningClient,

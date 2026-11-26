@@ -70,11 +70,7 @@ This flow supports one signer and one PDF. It spans the request that starts sign
      clientSecret: config.validationClientSecret,
    });
 
-   const signatureField = {
-     name: 'Sign1',
-     page: 'last' as const,
-     rectangle: { x: 72, y: 72, width: 320, height: 96 },
-   };
+   const signatureField = { name: 'Sign1' };
    const { accessToken } = await signing.getAccessToken();
    const { processId, documentId, approvalUrl } = await signing.createProcess({
      pdf: documentBytes,
@@ -108,6 +104,28 @@ This flow supports one signer and one PDF. It spans the request that starts sign
    Implement `matchesExpectedSigner` in your backend using the identity mapping approved by UAE PASS for your integration. Bind the expected signer to the authenticated account when you save the transaction. The matcher can return a boolean or a promise. The SDK returns the PDF bytes and `signature` evidence only after the verified field matches and the matcher returns `true`. [LTV API](https://docs.uaepass.ae/feature-guides/signature-integration-guide/digital-signature-single-document/signing-guide/untitled/ltv-configuration/integration-web-services) · [Signature verification API](https://docs.uaepass.ae/feature-guides/signature-integration-guide/digital-signature-single-document/verification-api-integration/integration-web-service-details)
 
 5. **Store the PDF and clean up.** Persist the verified `finalPdf` before calling `signing.deleteProcess(transaction.processId, signingAccessToken)`. Record cleanup progress so it can be retried independently. Check that the requesting account can access the PDF before serving it.
+
+### Signature placement and appearance
+
+With just `signatureField: { name: 'Sign1' }`, the SDK delegates placement and appearance to UAE PASS. The signing guide does not specify which details appear when `appearance` is omitted. Set `location` for a PDF template with a reserved signature area. Supply both a page (`1` for the first page, or `'last'` for the last) and a rectangle in PDF coordinates. [UAE PASS signer process options](https://docs.uaepass.ae/feature-guides/signature-integration-guide/digital-signature-single-document/signing-guide/untitled/2.-creating-the-document-signature-process)
+
+```ts
+import { UaePassSignatureAppearance, type UaePassCreateSigningProcessInput } from '@alkhajeh/uaepass-server';
+
+const signatureField: UaePassCreateSigningProcessInput['signatureField'] = {
+  name: 'Sign1',
+  location: { page: 'last', rectangle: { x: 72, y: 72, width: 320, height: 96 } },
+  appearance: UaePassSignatureAppearance.DateTimeOnly,
+};
+```
+
+| Preset | Visible stamp |
+| --- | --- |
+| `DateTimeOnly` | Signing date and time |
+| `SignerAndDateTime` | Signer details and signing date and time. UAE PASS may include the Emirates ID number. |
+| `Hidden` | Requests an empty appearance. The PDF still carries its digital signature. |
+
+In QA, omitting both settings produced a verified digital signature with no visible stamp. Supplying a rectangle while omitting `appearance` produced signer and date/time text. For a visible stamp with predictable content, supply `location` and an explicit preset.
 
 ### Limits and failures
 

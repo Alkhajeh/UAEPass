@@ -10,6 +10,7 @@ import {
   createUaePassSigningClient,
   createUaePassSigningValidationClient,
   UaePassError,
+  UaePassSignatureAppearance,
   UaePassSigningValidationError,
 } from '@alkhajeh/uaepass-server';
 import { matchesSignerIdn, normalizeSignerIdn } from './signer-idn.mjs';
@@ -39,7 +40,11 @@ const terminalMessages = {
 };
 const document = {
   filename: 'staging-test.pdf',
-  signatureField: { name: 'Sign1', page: 'last', rectangle: { x: 72, y: 72, width: 320, height: 96 } },
+  signatureField: {
+    name: 'Sign1',
+    location: { page: 'last', rectangle: { x: 72, y: 72, width: 320, height: 96 } },
+    appearance: UaePassSignatureAppearance.SignerAndDateTime,
+  },
 };
 
 const nonce = () => randomBytes(24).toString('base64url');

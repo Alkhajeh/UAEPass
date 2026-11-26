@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
 import { test } from 'node:test';
-import { createUaePassSigningClient, UaePassSigningError } from '@alkhajeh/uaepass-server';
+import {
+  createUaePassSigningClient,
+  UaePassSignatureAppearance,
+  UaePassSigningError,
+} from '@alkhajeh/uaepass-server';
 
 const config = {
   environment: 'staging',
@@ -23,8 +27,7 @@ const createInput = {
   filename: 'document.pdf',
   signatureField: {
     name: 'Sign1',
-    page: 'last',
-    rectangle: { x: 0, y: 10, width: 300, height: 90 },
+    location: { page: 'last', rectangle: { x: 0, y: 10, width: 300, height: 90 } },
   },
 };
 const tokenResponse = { access_token: accessToken, token_type: 'Bearer', expires_in: 600 };
@@ -68,8 +71,9 @@ test('runs the documented qualified PDF signing requests and preserves binary PD
       assert.equal(field.name, 'Sign1');
       assert.deepEqual(field.location, {
         page: { number: 'last' },
-        rectangle: createInput.signatureField.rectangle,
+        rectangle: createInput.signatureField.location.rectangle,
       });
+      assert.equal(Object.hasOwn(field, 'appearance'), false);
       assert.equal(process.views.document_agreement.skip_server_id, 'false');
       assert.equal(process.timestamp.provider_id, 'urn:uae:tws:generation:policy:digitalid');
       const document = form.get('document');
@@ -103,6 +107,35 @@ test('runs the documented qualified PDF signing requests and preserves binary PD
   assert.equal(fetch.mock.callCount(), 5);
 });
 
+test('omits unspecified signature options and serializes the explicit appearance presets', async (t) => {
+  assert.deepEqual(UaePassSignatureAppearance, {
+    DateTimeOnly: 'date-time-only',
+    SignerAndDateTime: 'signer-and-date-time',
+    Hidden: 'hidden',
+  });
+
+  let field;
+  t.mock.method(globalThis, 'fetch', async (_, init) => {
+    field = JSON.parse(init.body.get('process')).signer.parameters.signature_field;
+    return Response.json(processResponse, { status: 201 });
+  });
+  const signing = createUaePassSigningClient(config);
+  const name = createInput.signatureField.name;
+  await signing.createProcess({ ...createInput, signatureField: { name } }, accessToken);
+  assert.deepEqual(field, { name });
+
+  const date = { type: 'date', title: 'Signature Date: ' };
+  const subject = { type: 'subject', title: 'Signer Name: ' };
+  for (const [appearance, expected] of [
+    [UaePassSignatureAppearance.DateTimeOnly, { signature_details: { details: [date] } }],
+    [UaePassSignatureAppearance.SignerAndDateTime, { signature_details: { details: [subject, date] } }],
+    [UaePassSignatureAppearance.Hidden, {}],
+  ]) {
+    await signing.createProcess({ ...createInput, signatureField: { name, appearance } }, accessToken);
+    assert.deepEqual(field, { name, appearance: expected });
+  }
+});
+
 test('requires matching hosted approval and document references for one PDF', async (t) => {
   let payload = {
     ...processResponse,
@@ -115,7 +148,11 @@ test('requires matching hosted approval and document references for one PDF', as
     return Response.json(payload, { status: 201 });
   });
   const signing = createUaePassSigningClient(config);
-  const input = { ...createInput, signatureField: { ...createInput.signatureField, page: 1 } };
+  const signatureField = {
+    ...createInput.signatureField,
+    location: { ...createInput.signatureField.location, page: 1 },
+  };
+  const input = { ...createInput, signatureField };
   assert.equal((await signing.createProcess(input, accessToken)).documentId, documentId);
 
   for (const url of [
@@ -195,8 +232,6 @@ test('validates signing configuration, request inputs, and binary responses', as
     name: 'TypeError', message: 'Provide a PDF up to 10 MiB.',
   });
   await assert.rejects(signing.createProcess({ ...createInput, filename: '../file' }, accessToken), TypeError);
-  const badField = { ...createInput.signatureField, page: 0 };
-  await assert.rejects(signing.createProcess({ ...createInput, signatureField: badField }, accessToken), TypeError);
   for (const name of ['Invalid\uFFFE', 'Invalid\uD800']) {
     const signatureField = { ...createInput.signatureField, name };
     await assert.rejects(signing.createProcess({ ...createInput, signatureField }, accessToken), {
@@ -217,6 +252,35 @@ test('validates signing configuration, request inputs, and binary responses', as
   await assert.rejects(signing.getAccessToken(), {
     code: 'invalid_response', operation: 'token', status: 200,
   });
+});
+
+test('rejects unsupported appearances and incomplete or invalid placements before sending a request', async (t) => {
+  const fetch = t.mock.method(globalThis, 'fetch', async () => Response.json(processResponse, { status: 201 }));
+  const signing = createUaePassSigningClient(config);
+  const { name, location } = createInput.signatureField;
+  for (const appearance of ['', 'unknown', 'constructor', {}, null]) {
+    await assert.rejects(signing.createProcess({ ...createInput, signatureField: { name, appearance } }, accessToken), {
+      name: 'TypeError', message: /supported signature appearance/,
+    });
+  }
+  for (const invalidLocation of [
+    null,
+    { page: 1 },
+    { rectangle: location.rectangle },
+    { ...location, page: 'first' },
+    { ...location, page: 0 },
+    { ...location, page: 1.5 },
+    { ...location, page: Number.MAX_SAFE_INTEGER + 1 },
+    { ...location, rectangle: { ...location.rectangle, width: 0 } },
+    { ...location, rectangle: { ...location.rectangle, height: -1 } },
+    { ...location, rectangle: { ...location.rectangle, x: Infinity } },
+  ]) {
+    const signatureField = { name, location: invalidLocation };
+    await assert.rejects(signing.createProcess({ ...createInput, signatureField }, accessToken), {
+      name: 'TypeError', message: /signature location/,
+    });
+  }
+  assert.equal(fetch.mock.callCount(), 0);
 });
 
 test('cancels PDF downloads that exceed the response limit', async (t) => {

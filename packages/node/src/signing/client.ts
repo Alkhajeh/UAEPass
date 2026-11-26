@@ -33,20 +33,41 @@ export interface UaePassSigningToken {
   readonly expiresInSeconds: number;
 }
 
+export const UaePassSignatureAppearance = {
+  DateTimeOnly: 'date-time-only',
+  SignerAndDateTime: 'signer-and-date-time',
+  Hidden: 'hidden',
+} as const;
+
+export type UaePassSignatureAppearance =
+  (typeof UaePassSignatureAppearance)[keyof typeof UaePassSignatureAppearance];
+
 export interface UaePassCreateSigningProcessInput {
   readonly pdf: Uint8Array;
   readonly filename: string;
   readonly signatureField: {
     readonly name: string;
-    readonly page: 'last' | number;
-    readonly rectangle: {
-      readonly x: number;
-      readonly y: number;
-      readonly width: number;
-      readonly height: number;
+    readonly location?: {
+      readonly page: 'last' | number;
+      readonly rectangle: {
+        readonly x: number;
+        readonly y: number;
+        readonly width: number;
+        readonly height: number;
+      };
     };
+    readonly appearance?: UaePassSignatureAppearance;
   };
 }
+
+const dateDetail = { type: 'date', title: 'Signature Date: ' };
+const signatureAppearances = {
+  [UaePassSignatureAppearance.DateTimeOnly]: { signature_details: { details: [dateDetail] } },
+  [UaePassSignatureAppearance.SignerAndDateTime]: {
+    signature_details: { details: [{ type: 'subject', title: 'Signer Name: ' }, dateDetail] },
+  },
+  [UaePassSignatureAppearance.Hidden]: {},
+};
 
 export interface UaePassSigningProcess {
   readonly processId: string;
@@ -191,21 +212,34 @@ async function readBody<T>(
   }
 }
 
+function serializeSignatureLocation(location: UaePassCreateSigningProcessInput['signatureField']['location']) {
+  if (location === undefined) return undefined;
+  const message = 'Provide a signature location with a PDF page and a valid rectangle.';
+  if (!isRecord(location) || !isRecord(location.rectangle)) throw new TypeError(message);
+  const { page, rectangle: { x, y, width, height } } = location;
+  if (
+    (page !== 'last' && (!Number.isSafeInteger(page) || page <= 0)) ||
+    ![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0
+  ) {
+    throw new TypeError(message);
+  }
+  return { page: { number: String(page) }, rectangle: { x, y, width, height } };
+}
+
 function createProcessForm(input: UaePassCreateSigningProcessInput, finishCallbackUrl: string): FormData {
   const { pdf, filename, signatureField } = input;
   if (!isPdf(pdf) || !isNonemptyString(filename) || /[\u0000-\u001f\u007f/\\]/.test(filename)) {
     throw new TypeError('Provide PDF bytes and a valid document filename.');
   }
   if (pdf.byteLength > maxSigningPdfBytes) throw new TypeError('Provide a PDF up to 10 MiB.');
-  const { name, page, rectangle } = signatureField;
-  const { x, y, width, height } = rectangle;
-  if (
-    !isXmlText(name) || /[\u0000-\u001f\u007f]/.test(name) ||
-    (page !== 'last' && (!Number.isSafeInteger(page) || page <= 0)) ||
-    ![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0
-  ) {
-    throw new TypeError('Provide a signature field name, a PDF page, and a valid rectangle.');
+  if (!isRecord(signatureField) || !isXmlText(signatureField.name) || /[\u0000-\u001f\u007f]/.test(signatureField.name)) {
+    throw new TypeError('Provide a valid signature field name.');
   }
+  const { name, appearance } = signatureField;
+  if (appearance !== undefined && (typeof appearance !== 'string' || !Object.hasOwn(signatureAppearances, appearance))) {
+    throw new TypeError('Choose a supported signature appearance.');
+  }
+  const location = serializeSignatureLocation(signatureField.location);
 
   const process = {
     process_type: 'urn:safelayer:eidas:processes:document:sign:esigp',
@@ -216,8 +250,8 @@ function createProcessForm(input: UaePassCreateSigningProcessInput, finishCallba
         type: 'pades-baseline',
         signature_field: {
           name,
-          location: { page: { number: String(page) }, rectangle: { x, y, width, height } },
-          appearance: { signature_details: { details: [{ type: 'date', title: 'Signature Date: ' }] } },
+          ...(location === undefined ? {} : { location }),
+          ...(appearance === undefined ? {} : { appearance: signatureAppearances[appearance] }),
         },
       },
     },

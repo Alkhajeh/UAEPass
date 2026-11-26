@@ -6,6 +6,7 @@ import { test } from 'node:test';
 import {
   createUaePassSigningValidationClient,
   UaePassError,
+  UaePassSignatureAppearance,
   UaePassSigningValidationError,
 } from '@alkhajeh/uaepass-server';
 import { createExampleServer } from '../../example/server.mjs';
@@ -289,6 +290,7 @@ test('the signing demo confirms the provider result and publishes only the final
   assert.equal(started.headers.location, approvalUrl);
   const [[input, token]] = signingClient.createProcess.mock.calls.map(({ arguments: args }) => args);
   assert.deepEqual(Buffer.from(input.pdf), review.body);
+  assert.equal(input.signatureField.appearance, UaePassSignatureAppearance.SignerAndDateTime);
   assert.equal(token, 'fixture-token');
 
   await finish(send, other);
