@@ -8,7 +8,7 @@ import 'backend_response.dart';
 
 SigningTransaction? readApprovalTransaction(String id) => null;
 
-void rememberApprovalTransaction(SigningTransaction transaction) {}
+bool rememberApprovalTransaction(SigningTransaction transaction) => true;
 
 void clearSigningReturn() {}
 

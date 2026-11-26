@@ -47,6 +47,9 @@ class _StagingSigningState extends State<StagingSigning> {
   VoidCallback? _retry;
   UaePassResult<void>? _signInResult;
   bool _busy = false;
+  bool _popped = false;
+
+  bool get _active => mounted && !_popped;
 
   @override
   void initState() {
@@ -85,11 +88,11 @@ class _StagingSigningState extends State<StagingSigning> {
     try {
       await operation();
     } on BackendConnectionException {
-      if (mounted) _showConnectionError(retry);
+      if (_active) _showConnectionError(retry);
     } catch (_) {
-      if (mounted) setState(() => _error = 'unavailable');
+      if (_active) setState(() => _error = 'unavailable');
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (_active) setState(() => _busy = false);
     }
   }
 
@@ -142,7 +145,7 @@ class _StagingSigningState extends State<StagingSigning> {
     final result = await (widget.authorize ?? stagingMobileClient.authorize)(
       context,
     );
-    if (mounted) await _submitAuthorization(result);
+    if (_active) await _submitAuthorization(result);
   }
 
   Future<void> _submitAuthorization(
@@ -153,7 +156,7 @@ class _StagingSigningState extends State<StagingSigning> {
     } else {
       _clearTransaction();
       final message = await completeStagingSignIn(result, null);
-      if (mounted) setState(() => _signInResult = message);
+      if (_active) setState(() => _signInResult = message);
     }
   }
 
@@ -167,7 +170,7 @@ class _StagingSigningState extends State<StagingSigning> {
       body: code == null ? null : {'code': code},
       transactionToken: attempt.token,
     );
-    if (!mounted) return;
+    if (!mounted || _popped) return;
     if (code == null &&
         response.status == 404 &&
         response.json['error'] == 'authorization_required' &&
@@ -196,8 +199,11 @@ class _StagingSigningState extends State<StagingSigning> {
       if (finishCallbackUri is! String) {
         throw const FormatException('Missing signing return URL.');
       }
+      if (kIsWeb && !backend.rememberApprovalTransaction(attempt)) {
+        setState(() => _error = 'storage_unavailable');
+        return;
+      }
       try {
-        if (kIsWeb) backend.rememberApprovalTransaction(attempt);
         await _signing.openApproval(
           context,
           Uri.parse(approvalUri),
@@ -208,14 +214,14 @@ class _StagingSigningState extends State<StagingSigning> {
         launchFailed = true;
       }
     }
-    if (mounted && (!kIsWeb || launchFailed)) {
+    if (_active && (!kIsWeb || launchFailed)) {
       try {
         await _refresh();
       } on BackendConnectionException {
-        if (mounted) _showConnectionError(_check);
+        if (_active) _showConnectionError(_check);
       }
     }
-    if (mounted && launchFailed && _error == null && _status == 'pending') {
+    if (_active && launchFailed && _error == null && _status == 'pending') {
       setState(() => _error = 'unavailable');
     }
   }
@@ -230,7 +236,7 @@ class _StagingSigningState extends State<StagingSigning> {
       method: 'POST',
       transactionToken: attempt.token,
     );
-    if (!mounted) return;
+    if (!_active) return;
     if (response.status != 200) {
       _showBackendError(response);
       return;
@@ -251,7 +257,7 @@ class _StagingSigningState extends State<StagingSigning> {
       method: 'GET',
       transactionToken: attempt.token,
     );
-    if (!mounted) return;
+    if (!mounted || _popped) return;
     if (response.status != 200) {
       _showBackendError(response);
       return;
@@ -290,6 +296,10 @@ class _StagingSigningState extends State<StagingSigning> {
             'start-uncertain' => tr(
               'The signing request could not be confirmed.',
               'تعذّر تأكيد طلب التوقيع.',
+            ),
+            'storage_unavailable' => tr(
+              'Allow site storage in your browser, then select Return to UAE PASS.',
+              'اسمح بتخزين بيانات الموقع في المتصفح، ثم اختر العودة إلى الهوية الرقمية.',
             ),
             'unavailable' ||
             'start-failed' ||
@@ -358,13 +368,16 @@ class _StagingSigningState extends State<StagingSigning> {
                       selected: {_signatureLevel},
                       onSelectionChanged: _busy || _error == 'start-uncertain'
                           ? null
-                          : (selection) => setState(() {
-                              _signatureLevel = selection.single;
-                              _attempt = null;
-                              _error = null;
-                              _retry = null;
-                              _signInResult = null;
-                            }),
+                          : (selection) {
+                              backend.clearSigningReturn();
+                              setState(() {
+                                _signatureLevel = selection.single;
+                                _attempt = null;
+                                _error = null;
+                                _retry = null;
+                                _signInResult = null;
+                              });
+                            },
                     ),
                     const SizedBox(height: 16),
                     if (_retry == null && _error != 'start-failed')
@@ -388,6 +401,15 @@ class _StagingSigningState extends State<StagingSigning> {
                     TextButton(
                       onPressed: _busy ? null : _retryStart,
                       child: Text(tr('Retry', 'إعادة المحاولة')),
+                    ),
+                  if (_retry == null &&
+                      _attempt != null &&
+                      _status == 'pending')
+                    FilledButton(
+                      onPressed: _busy ? null : _retryStart,
+                      child: Text(
+                        tr('Return to UAE PASS', 'العودة إلى الهوية الرقمية'),
+                      ),
                     ),
                   if (_retry == null &&
                       _attempt != null &&
@@ -422,7 +444,9 @@ class _StagingSigningState extends State<StagingSigning> {
     );
     return PopScope<void>(
       onPopInvokedWithResult: (didPop, _) {
-        if (didPop) backend.clearSigningReturn();
+        if (!didPop) return;
+        _popped = true;
+        backend.clearSigningReturn();
       },
       child: page,
     );

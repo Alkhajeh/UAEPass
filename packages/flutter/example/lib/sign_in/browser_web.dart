@@ -73,8 +73,14 @@ SigningTransaction? readApprovalTransaction(String id) {
   }
 }
 
-void rememberApprovalTransaction(SigningTransaction transaction) =>
+bool rememberApprovalTransaction(SigningTransaction transaction) {
+  try {
     web.window.sessionStorage.setItem(_transactionKey, transaction.encode());
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
 
 void clearSigningReturn() {
   takeSigningIntent();
@@ -83,6 +89,12 @@ void clearSigningReturn() {
   } catch (_) {
     // Storage can be unavailable when the browser blocks it.
   }
+  final url = web.URL(web.window.location.href);
+  if (url.searchParams.get('signing') != 'return') return;
+  url.searchParams
+    ..delete('signing')
+    ..delete('transaction');
+  web.window.history.replaceState(web.window.history.state, '', url.href);
 }
 
 Future<void> exchangeWithLocalBackend(String code) async {
