@@ -142,6 +142,86 @@ void main() {
     expect(find.text('Retry'), findsNothing);
   });
 
+  testWidgets('pending approval resumes without another authorization', (
+    tester,
+  ) async {
+    const channel = MethodChannel('ae.uaepass/flutter_auth/callbacks');
+    final messenger = tester.binding.defaultBinaryMessenger;
+    var approvalLaunches = 0;
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      if (call.method == 'setCallbackScheme' && call.arguments != null) {
+        approvalLaunches++;
+        throw PlatformException(code: 'fixture-unavailable');
+      }
+      return null;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
+    final starts = <({String path, String? code, String? token})>[];
+    var authorizations = 0;
+    var checks = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: StagingSigning(
+          authorize: (_) async {
+            authorizations++;
+            return UaePassSuccess(
+              UaePassAuthorizationGrant(
+                code: 'fixture-code',
+                redirectUri: Uri.parse('https://localhost:8000'),
+              ),
+            );
+          },
+          requestBackend:
+              (path, {required method, body, transactionToken}) async {
+                final response = switch (method) {
+                  'PUT' => {
+                    'transactionId': Uri.parse(path).pathSegments.last,
+                    'status': 'pending',
+                    'approvalUri': 'https://stg-id.uaepass.ae/trustedx-resources/esignsp/v2/ui?signerProcessId=fixture-process',
+                    'finishCallbackUri': 'http://localhost:8787/signing/finish',
+                  },
+                  'POST' => {'status': ++checks == 1 ? 'pending' : 'signed'},
+                  _ => fail('Unexpected request method $method'),
+                };
+                if (method == 'PUT') {
+                  starts.add((
+                    path: path,
+                    code: body?['code'],
+                    token: transactionToken,
+                  ));
+                }
+                return BackendResponse(
+                  200,
+                  Uint8List.fromList(utf8.encode(jsonEncode(response))),
+                );
+              },
+        ),
+      ),
+    );
+    await tester.tap(find.byType(UaePassSigningButton));
+    await tester.pumpAndSettle();
+    expect(starts.single.code, 'fixture-code');
+    expect(checks, 1);
+
+    final resume = find.text('Return to UAE PASS');
+    expect(resume, findsOneWidget);
+    await tester.tap(resume);
+    await tester.pumpAndSettle();
+
+    expect(starts, hasLength(2));
+    expect(starts.last, (
+      path: starts.first.path,
+      code: null,
+      token: starts.first.token,
+    ));
+    expect(authorizations, 1);
+    expect(approvalLaunches, 2);
+    expect(checks, 2);
+    expect(resume, findsNothing);
+    expect(find.text('View signed PDF'), findsOneWidget);
+  });
+
   testWidgets(
     'signing defaults to Qualified and lets the user select Advanced',
     (tester) async {

@@ -76,6 +76,8 @@ For web signing with the bundled server, run the Flutter example at `http://loca
 
 Every visit to **Sign a document** from the home screen starts a new signing flow. A web approval redirect returns to the transaction you just submitted. After a cancellation, select **Start again** to start a new request.
 
+If you close the mobile approval window while signing is still pending, select **Return to UAE PASS** to reopen the same request. On web, allow site storage if the browser cannot save the transaction, then select **Return to UAE PASS**.
+
 Select **Sign out of UAE PASS** to end the provider's browser session. A PDF you've saved remains available in your chosen location.
 
 Keep the Node staging server running while opening results. Restarting it clears signing transactions and stored PDFs. Each signing transaction has an expiring credential for checking the result and opening the verified PDF. On web, the tab retains the credential across redirects and reloads of the signing return page. Returning to the demo home screen clears it.
