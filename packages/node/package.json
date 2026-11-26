@@ -22,7 +22,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test",
-    "example": "node --env-file=example/.env example/server.mjs",
+    "preexample": "npm run build",
+    "example": "node --env-file=example/.env example/main.mjs",
     "prepack": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && npm run build"
   },
   "dependencies": {

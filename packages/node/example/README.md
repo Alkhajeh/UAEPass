@@ -4,13 +4,25 @@ The demo uses one loopback server on port 8787 for standalone browser signing an
 
 ```sh
 npm ci
-npm run build
 cp example/.env.example example/.env
 ```
 
 Use the public UAE PASS sandbox credentials in the template. [Public staging credentials](https://docs.uaepass.ae/quick-start-guide-uae-pass-staging-environment/testing-credentials-for-poc)
 
-If using the code-exchange route, set `UAEPASS_REDIRECT_URI` in `example/.env` to the exact redirect URI used by your client. Start the server with `npm run example`.
+If using the code-exchange route, set `UAEPASS_REDIRECT_URI` in `example/.env` to the exact redirect URI used by your client. Start the server with `npm run example`, which builds the SDK first. The server checks for missing variables at startup and logs only sanitized error fields, never codes, tokens, or profile data.
+
+## Layout
+
+| File | Purpose |
+| --- | --- |
+| `main.mjs` | Reads the environment, creates the SDK clients, and starts the server. |
+| `server.mjs` | `createExampleServer()` and its routes for the browser demo, the Flutter signing API, and the code exchange. |
+| `signing-jobs.mjs` | The signing workflow: create the process, check the result, finalize and verify the PDF, and clean up. |
+| `store.mjs` | In-memory session and transaction store with expiry. A production backend would use a shared store. |
+| `views.mjs` | HTML pages, rendered with an escaping `html` template tag. |
+| `http.mjs` | Small request and response helpers. |
+| `config.mjs` | Ports, routes, lifetimes, and the sample document. |
+| `signer-idn.mjs` | Matches the signing certificate subject to the signed-in Emirates ID. |
 
 ## Browser signing demo
 
