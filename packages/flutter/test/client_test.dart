@@ -2,8 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:uaepass/src/signing/review_document_page.dart';
 import 'package:uaepass/uaepass.dart';
+import 'package:webview_flutter/webview_flutter.dart' show WebViewController;
 import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 
 void main() {
@@ -221,6 +225,28 @@ void main() {
     await tester.tap(find.byType(CloseButton));
     await tester.pumpAndSettle();
     await approvalAttempt;
+  });
+
+  test('accepts a 20 MiB PDF for mobile approval review', () async {
+    final document = approval.replace(
+      path: '/trustedx-resources/esignsp/v2/ui/documents/0',
+      queryParameters: {'x_correlation_id': 'fixture-correlation'},
+    );
+    final pdf = Uint8List(20 * 1024 * 1024)..setAll(0, '%PDF-'.codeUnits);
+    final loaded = await http.runWithClient(
+      () => fetchApprovalPdf(WebViewController(), document, approval),
+      () => MockClient.streaming((request, _) async {
+        expect(request.url, document);
+        return http.StreamedResponse(
+          Stream.value(pdf),
+          200,
+          contentLength: pdf.length,
+          headers: {'content-type': 'application/pdf'},
+        );
+      }),
+    );
+    expect(loaded.length, pdf.length);
+    expect(loaded.take(5), '%PDF-'.codeUnits);
   });
 
   testWidgets('rejects an unrelated signing return and allows dismissing', (
@@ -792,6 +818,11 @@ final class _TestWebViewPlatform extends WebViewPlatform {
   Future<void>? initialLoad;
 
   @override
+  PlatformWebViewCookieManager createPlatformCookieManager(
+    PlatformWebViewCookieManagerCreationParams params,
+  ) => _TestWebViewCookieManager(params);
+
+  @override
   PlatformWebViewController createPlatformWebViewController(
     PlatformWebViewControllerCreationParams params,
   ) {
@@ -811,6 +842,13 @@ final class _TestWebViewPlatform extends WebViewPlatform {
   ) => _TestWebViewWidget(params);
 }
 
+final class _TestWebViewCookieManager extends PlatformWebViewCookieManager {
+  _TestWebViewCookieManager(super.params) : super.implementation();
+
+  @override
+  Future<List<WebViewCookie>> getCookies(Uri url) async => [];
+}
+
 final class _TestWebViewController extends PlatformWebViewController {
   _TestWebViewController(super.params, this.initialLoad)
     : super.implementation();
@@ -818,6 +856,9 @@ final class _TestWebViewController extends PlatformWebViewController {
   final Future<void>? initialLoad;
   final requests = <Uri>[];
   late _TestNavigationDelegate navigation;
+
+  @override
+  Future<String?> getUserAgent() async => null;
 
   @override
   Future<void> setJavaScriptMode(JavaScriptMode javaScriptMode) async {}

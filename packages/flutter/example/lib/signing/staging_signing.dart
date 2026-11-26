@@ -53,7 +53,7 @@ class _StagingSigningState extends State<StagingSigning> {
     super.initState();
     final web = widget.webSandbox;
     if (widget.approvalReturnId case final id?) {
-      _attempt = backend.takeApprovalTransaction(id);
+      _attempt = backend.readApprovalTransaction(id);
       if (_attempt case final attempt?) {
         _signatureLevel = attempt.level;
         unawaited(_check());
@@ -98,6 +98,7 @@ class _StagingSigningState extends State<StagingSigning> {
   }
 
   void _clearTransaction() {
+    backend.clearSigningReturn();
     setState(() {
       _attempt = null;
       _status = null;
@@ -196,7 +197,7 @@ class _StagingSigningState extends State<StagingSigning> {
         throw const FormatException('Missing signing return URL.');
       }
       try {
-        if (kIsWeb) backend.rememberApprovalTransaction(attempt.encode());
+        if (kIsWeb) backend.rememberApprovalTransaction(attempt);
         await _signing.openApproval(
           context,
           Uri.parse(approvalUri),
@@ -321,7 +322,7 @@ class _StagingSigningState extends State<StagingSigning> {
                       ),
             },
           };
-    return Scaffold(
+    final page = Scaffold(
       appBar: AppBar(title: Text(tr('Sign a document', 'وقّع مستندًا'))),
       body: SafeArea(
         child: Align(
@@ -418,6 +419,12 @@ class _StagingSigningState extends State<StagingSigning> {
           ),
         ),
       ),
+    );
+    return PopScope<void>(
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) backend.clearSigningReturn();
+      },
+      child: page,
     );
   }
 }

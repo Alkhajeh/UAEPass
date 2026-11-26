@@ -62,21 +62,19 @@ String? takeSigningIntent() {
 void saveSigningIntent(String transaction) =>
     web.window.sessionStorage.setItem(_signingIntentKey, transaction);
 
-SigningTransaction? takeApprovalTransaction(String id) {
+SigningTransaction? readApprovalTransaction(String id) {
   try {
     final transaction = SigningTransaction.decode(
       web.window.sessionStorage.getItem(_transactionKey),
     );
-    if (transaction?.id != id) return null;
-    web.window.sessionStorage.removeItem(_transactionKey);
-    return transaction;
+    return transaction?.id == id ? transaction : null;
   } catch (_) {
     return null;
   }
 }
 
-void rememberApprovalTransaction(String id) =>
-    web.window.sessionStorage.setItem(_transactionKey, id);
+void rememberApprovalTransaction(SigningTransaction transaction) =>
+    web.window.sessionStorage.setItem(_transactionKey, transaction.encode());
 
 void clearSigningReturn() {
   takeSigningIntent();

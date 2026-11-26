@@ -39,6 +39,8 @@ jobs:
           flutter test --no-pub --platform chrome
           test/web_authorization_test.dart test/signing_client_test.dart
       - if: matrix.package == 'Example'
+        run: flutter test --no-pub --platform chrome test/web_signing_test.dart
+      - if: matrix.package == 'Example'
         run: >-
           flutter build web --no-pub
           --dart-define=UAEPASS_WEB_REDIRECT_URI=http://localhost:8000

@@ -6,7 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-const _maxPdfBytes = 10 * 1024 * 1024;
+const _maxReviewPdfBytes = 32 * 1024 * 1024;
 
 Future<Uint8List> fetchApprovalPdf(
   WebViewController webView,
@@ -40,12 +40,12 @@ Future<Uint8List> fetchApprovalPdf(
       final mime = response.headers['content-type']?.split(';').first.trim();
       if (response.statusCode != 200 ||
           mime?.toLowerCase() != 'application/pdf' ||
-          (response.contentLength ?? 0) > _maxPdfBytes) {
+          (response.contentLength ?? 0) > _maxReviewPdfBytes) {
         throw const FormatException('Invalid UAE PASS PDF response.');
       }
       final bytes = BytesBuilder(copy: false);
       await for (final chunk in response.stream) {
-        if (chunk.length > _maxPdfBytes - bytes.length) {
+        if (chunk.length > _maxReviewPdfBytes - bytes.length) {
           throw const FormatException(
             'The UAE PASS PDF exceeds the size limit.',
           );

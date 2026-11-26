@@ -6,9 +6,9 @@ import 'dart:typed_data';
 import '../signing/signing_transaction.dart';
 import 'backend_response.dart';
 
-SigningTransaction? takeApprovalTransaction(String id) => null;
+SigningTransaction? readApprovalTransaction(String id) => null;
 
-void rememberApprovalTransaction(String id) {}
+void rememberApprovalTransaction(SigningTransaction transaction) {}
 
 void clearSigningReturn() {}
 
