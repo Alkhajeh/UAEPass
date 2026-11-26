@@ -12,6 +12,8 @@ const trustedX = 'http://www.safelayer.com/TWS';
 const resultPrefix = 'urn:oasis:names:tc:dss:1.0:';
 const signerIdentityFormat = 'urn:oasis:names:tc:SAML:1.1:nameid-format:X509SubjectName';
 const maxLtvResponseBytes = 48 * 1024 * 1024;
+// Every PDF decoded from a bounded Base64 LTV response must fit a verification request.
+const maxValidationPdfBytes = (maxLtvResponseBytes / 4) * 3;
 const maxVerificationBytes = 128 * 1024;
 const xmlMediaTypes = new Set(['text/xml', 'application/xml', 'application/soap+xml']);
 const xmlEntities: Readonly<Record<string, string>> = {
@@ -236,6 +238,9 @@ export function createUaePassSigningValidationClient(
   ): Promise<T> {
     if (!isPdf(pdf)) {
       throw new TypeError('Provide signed PDF bytes.');
+    }
+    if (pdf.byteLength > maxValidationPdfBytes) {
+      throw new TypeError(`Provide signed PDF bytes up to ${maxValidationPdfBytes} bytes.`);
     }
     const body = requestBody(clientId, clientSecret, operation, pdf, optionalInputs);
     const signal = AbortSignal.timeout(documentTransferTimeoutMs);

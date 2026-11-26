@@ -2,6 +2,7 @@
 
 - **Breaking change.** Remove `maxPdfBytes` from the signing validation client. Set `maxUploadPdfBytes` on the signing client to control the original upload size. It defaults to 10 MiB and can be raised to 20 MiB. Signed PDFs can grow during signing and long-term validation (LTV).
 - Allow up to 60 seconds for PDF uploads, downloads, LTV, and verification.
+- Bound validation inputs at 36 MiB before encoding them for SOAP.
 
 ## 0.1.0
 

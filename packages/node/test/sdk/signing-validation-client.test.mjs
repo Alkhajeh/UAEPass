@@ -99,6 +99,18 @@ test('requires PDF bytes before calling the gateway', async (t) => {
   assert.equal(fetch.mock.callCount(), 0);
 });
 
+test('rejects oversized validation inputs before sending a SOAP request', async (t) => {
+  const fetch = mockGateway(t);
+  const validation = createUaePassSigningValidationClient(config);
+  const limit = 36 * 1024 * 1024;
+  const oversized = new Uint8Array(limit + 1);
+  oversized.set(Buffer.from('%PDF-'));
+  const error = { name: 'TypeError', message: `Provide signed PDF bytes up to ${limit} bytes.` };
+  await assert.rejects(() => validation.applyLongTermValidation(oversized, signatureFieldName), error);
+  await assert.rejects(() => validation.verifySignedPdf(oversized), error);
+  assert.equal(fetch.mock.callCount(), 0);
+});
+
 test('downloads, finalizes, and verifies a PDF that grows beyond the original upload limit', async (t) => {
   const timeout = t.mock.method(AbortSignal, 'timeout');
   const originalPdf = Buffer.alloc(10 * 1024 * 1024);
