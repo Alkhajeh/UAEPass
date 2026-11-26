@@ -131,4 +131,20 @@ const buttonAssetAliases = <String, String>{
       'sign_up/en/square_corners_white_outline_disabled',
   'sign_up/en/square_corners_black_pressed':
       'sign_up/en/square_corners_black_active',
+  'sign/ar/fully_rounded_black_disabled':
+      'sign/ar/fully_rounded_white_outline_disabled',
+  'sign/ar/fully_rounded_black_pressed': 'sign/ar/fully_rounded_black_active',
+  'sign/ar/rounded_black_disabled': 'sign/ar/rounded_white_outline_disabled',
+  'sign/ar/rounded_black_pressed': 'sign/ar/rounded_black_active',
+  'sign/ar/square_corners_black_disabled':
+      'sign/ar/square_corners_white_outline_disabled',
+  'sign/ar/square_corners_black_pressed': 'sign/ar/square_corners_black_active',
+  'sign/en/fully_rounded_black_disabled':
+      'sign/en/fully_rounded_white_outline_disabled',
+  'sign/en/fully_rounded_black_pressed': 'sign/en/fully_rounded_black_active',
+  'sign/en/rounded_black_disabled': 'sign/en/rounded_white_outline_disabled',
+  'sign/en/rounded_black_pressed': 'sign/en/rounded_black_active',
+  'sign/en/square_corners_black_disabled':
+      'sign/en/square_corners_white_outline_disabled',
+  'sign/en/square_corners_black_pressed': 'sign/en/square_corners_black_active',
 };

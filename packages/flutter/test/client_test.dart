@@ -2,8 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:uaepass/src/signing/review_document_page.dart';
 import 'package:uaepass/uaepass.dart';
+import 'package:webview_flutter/webview_flutter.dart' show WebViewController;
 import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 
 void main() {
@@ -53,6 +57,45 @@ void main() {
     ),
   );
 
+  testWidgets('ends the embedded UAE PASS session at the registered return', (
+    tester,
+  ) async {
+    await openHost(tester);
+    final logout = client.logout(hostContext);
+    await tester.pumpAndSettle();
+    final view = webViews.controllers.single;
+    expect(
+      view.requests.single,
+      Uri.https('stg-id.uaepass.ae', '/idshub/logout', {
+        'redirect_uri': client.configuration.redirectUri.toString(),
+      }),
+    );
+    expect(await client.logout(hostContext), isFalse);
+    expect(
+      await view.navigation.navigate(client.configuration.redirectUri),
+      NavigationDecision.prevent,
+    );
+    await tester.pumpAndSettle();
+    expect(await logout, isTrue);
+  });
+
+  testWidgets('reports a provider logout error as unsuccessful', (
+    tester,
+  ) async {
+    await openHost(tester);
+    final logout = client.logout(hostContext);
+    await tester.pumpAndSettle();
+    final error = client.configuration.redirectUri.replace(
+      queryParameters: {'error': 'invalid_request'},
+    );
+    expect(
+      await webViews.controllers.single.navigation.navigate(error),
+      NavigationDecision.prevent,
+    );
+    await tester.pumpAndSettle();
+    expect(await logout, isFalse);
+  });
+
   Future<void> redirect(
     WidgetTester tester, {
     String? code,
@@ -91,6 +134,153 @@ void main() {
       'failureURL': 'https://stg-id.uaepass.ae/resume?status=failure',
     },
   );
+
+  final approval = Uri.https(
+    'stg-id.uaepass.ae',
+    '/trustedx-resources/esignsp/v2/ui',
+    {'signerProcessId': 'fixture-process'},
+  );
+  final finish = Uri.parse('http://localhost:8787/signing/finish?app=demo');
+  const signing = UaePassSigningClient(environment: UaePassEnvironment.staging);
+
+  Future<void> openSigning() => signing.openApproval(
+    hostContext,
+    approval,
+    finishCallbackUri: finish,
+    callbackScheme: client.configuration.callbackScheme,
+  );
+
+  testWidgets('resumes signing in the same WebView and intercepts its return', (
+    tester,
+  ) async {
+    await openHost(tester);
+    var returned = false;
+    final attempt = openSigning().then((_) => returned = true);
+    await tester.pumpAndSettle();
+    final view = webViews.controllers.single;
+    expect(view.requests, [approval]);
+
+    expect(
+      await view.navigation.navigate(appHandoff),
+      NavigationDecision.prevent,
+    );
+    final launch = Uri.parse(nativeCalls.last.$2! as String);
+    final callback = Uri.parse(launch.queryParameters['successURL']!);
+    expect(callback.scheme, client.configuration.callbackScheme);
+    await deliverCallback(Uri.parse('poc://success?state=unrelated'));
+    expect(view.requests, [approval]);
+    await deliverCallback(callback);
+    await tester.pump();
+    final resume = Uri.parse(appHandoff.queryParameters['successURL']!);
+    expect(view.requests, [approval, resume]);
+    expect(returned, isFalse);
+
+    final callbackUri = finish.replace(
+      queryParameters: {
+        ...finish.queryParameters,
+        'signer_process_id': 'fixture-process',
+        'status': 'canceled',
+      },
+    );
+    expect(
+      await view.navigation.navigate(callbackUri),
+      NavigationDecision.prevent,
+    );
+    await tester.pumpAndSettle();
+    expect(await attempt, isTrue);
+    expect(view.requests, [approval, resume]);
+    expect(nativeCalls.last, ('setCallbackScheme', null));
+  });
+
+  testWidgets('routes a provider PDF popup to review and keeps approval open', (
+    tester,
+  ) async {
+    await openHost(tester);
+    final approvalAttempt = openSigning();
+    await tester.pumpAndSettle();
+    final view = webViews.controllers.single;
+    final document = approval.replace(
+      path: '/trustedx-resources/esignsp/v2/ui/documents/0',
+      queryParameters: {'x_correlation_id': 'fixture-correlation'},
+    );
+
+    expect(
+      await view.navigation.navigate(
+        document.replace(host: 'elsewhere.example'),
+        isMainFrame: false,
+      ),
+      NavigationDecision.navigate,
+    );
+    expect(
+      await view.navigation.navigate(document, isMainFrame: false),
+      NavigationDecision.prevent,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Review document'), findsOneWidget);
+    expect(view.requests, [approval]);
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.byType(CloseButton), findsOneWidget);
+    await tester.tap(find.byType(CloseButton));
+    await tester.pumpAndSettle();
+    await approvalAttempt;
+  });
+
+  test('accepts a 20 MiB PDF for mobile approval review', () async {
+    final document = approval.replace(
+      path: '/trustedx-resources/esignsp/v2/ui/documents/0',
+      queryParameters: {'x_correlation_id': 'fixture-correlation'},
+    );
+    final pdf = Uint8List(20 * 1024 * 1024)..setAll(0, '%PDF-'.codeUnits);
+    final loaded = await http.runWithClient(
+      () => fetchApprovalPdf(WebViewController(), document, approval),
+      () => MockClient.streaming((request, _) async {
+        expect(request.url, document);
+        return http.StreamedResponse(
+          Stream.value(pdf),
+          200,
+          contentLength: pdf.length,
+          headers: {'content-type': 'application/pdf'},
+        );
+      }),
+    );
+    expect(loaded.length, pdf.length);
+    expect(loaded.take(5), '%PDF-'.codeUnits);
+  });
+
+  testWidgets('rejects an unrelated signing return and allows dismissing', (
+    tester,
+  ) async {
+    await openHost(tester);
+    final attempt = openSigning();
+    final failure = expectLater(
+      attempt,
+      throwsA(isA<UaePassSigningLaunchException>()),
+    );
+    await tester.pumpAndSettle();
+    final view = webViews.controllers.single;
+    final unrelated = finish.replace(
+      queryParameters: {
+        ...finish.queryParameters,
+        'signer_process_id': 'different-process',
+      },
+    );
+    expect(
+      await view.navigation.navigate(unrelated),
+      NavigationDecision.prevent,
+    );
+    await tester.pumpAndSettle();
+    await failure;
+    expect(nativeCalls.last, ('setCallbackScheme', null));
+
+    final dismissed = openSigning();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(CloseButton));
+    await tester.pumpAndSettle();
+    await dismissed;
+    expect(nativeCalls.last, ('setCallbackScheme', null));
+  });
 
   testWidgets(
     'authorizes through the web flow and removes the Dart callback handler',
@@ -628,6 +818,11 @@ final class _TestWebViewPlatform extends WebViewPlatform {
   Future<void>? initialLoad;
 
   @override
+  PlatformWebViewCookieManager createPlatformCookieManager(
+    PlatformWebViewCookieManagerCreationParams params,
+  ) => _TestWebViewCookieManager(params);
+
+  @override
   PlatformWebViewController createPlatformWebViewController(
     PlatformWebViewControllerCreationParams params,
   ) {
@@ -647,6 +842,13 @@ final class _TestWebViewPlatform extends WebViewPlatform {
   ) => _TestWebViewWidget(params);
 }
 
+final class _TestWebViewCookieManager extends PlatformWebViewCookieManager {
+  _TestWebViewCookieManager(super.params) : super.implementation();
+
+  @override
+  Future<List<WebViewCookie>> getCookies(Uri url) async => [];
+}
+
 final class _TestWebViewController extends PlatformWebViewController {
   _TestWebViewController(super.params, this.initialLoad)
     : super.implementation();
@@ -654,6 +856,9 @@ final class _TestWebViewController extends PlatformWebViewController {
   final Future<void>? initialLoad;
   final requests = <Uri>[];
   late _TestNavigationDelegate navigation;
+
+  @override
+  Future<String?> getUserAgent() async => null;
 
   @override
   Future<void> setJavaScriptMode(JavaScriptMode javaScriptMode) async {}
@@ -678,8 +883,10 @@ final class _TestNavigationDelegate extends PlatformNavigationDelegate {
   late NavigationRequestCallback _handler;
   late HttpResponseErrorCallback _httpError;
 
-  FutureOr<NavigationDecision> navigate(Uri uri) =>
-      _handler(NavigationRequest(url: uri.toString(), isMainFrame: true));
+  FutureOr<NavigationDecision> navigate(Uri uri, {bool isMainFrame = true}) =>
+      _handler(
+        NavigationRequest(url: uri.toString(), isMainFrame: isMainFrame),
+      );
 
   @override
   Future<void> setOnNavigationRequest(

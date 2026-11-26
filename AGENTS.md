@@ -37,6 +37,12 @@ When the optional demo's exchange interface changes, run both sets of checks and
 
 - Document host integration in the relevant SDK README and demo setup in the example README. Use the GitHub repository root for package repository URLs. Set npm's `repository.directory` to `packages/node`.
 - When checking release contents, run `flutter pub publish --dry-run` from `packages/flutter` or `npm pack --dry-run` from `packages/node`, as applicable.
-- Flutter release tags use `flutter-v<version>` on the merged release commit. Match the tag version to the Flutter pubspec and changelog, and follow the package release checklist. Pushing the tag starts the pub.dev workflow. [Flutter release checks](packages/flutter/README.md#release-checks) · [Publish workflow](.github/workflows/publish-flutter.yml)
+- Flutter release tags use `flutter-v<version>` on the merged release commit. Match the tag version to the Flutter pubspec and changelog, and complete the [Flutter release checklist](#flutter-release-checklist). Pushing the tag starts the pub.dev workflow. [Publish workflow](.github/workflows/publish-flutter.yml)
 - Node release tags use `node-v<version>` on the merged release commit, matching `packages/node/package.json`. Set up `publish-node.yml` as a GitHub Actions Trusted Publisher with direct publish permission on npm before pushing the first Node release tag. [Node publish workflow](.github/workflows/publish-node.yml) · [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers/)
 - Use a locally packed tarball for Node install checks.
+
+### Flutter release checklist
+
+- Verify UAE PASS app handoff and the embedded-browser fallback on Android and iOS in staging. [Flutter staging demo](packages/flutter/example/README.md)
+- Verify Flutter Web approval, cancellation, backend exchange, and logout in English and Arabic. Include a cold browser return and confirm the code exchange starts within 10 seconds. [Demo backend exchange](packages/flutter/example/README.md#optional-backend-exchange) · [UAE PASS exchange timing](https://docs.uaepass.ae/faq/common-integration-issues)
+- Confirm that the official button artwork may be redistributed with the package.

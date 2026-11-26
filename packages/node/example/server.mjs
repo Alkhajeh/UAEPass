@@ -1,5 +1,5 @@
 import { Buffer } from 'node:buffer';
-import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { mkdtemp, open, readFile, rm } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
@@ -11,6 +11,7 @@ import {
   createUaePassSigningValidationClient,
   UaePassError,
   UaePassSignatureAppearance,
+  UaePassSignatureLevel,
   UaePassSigningValidationError,
 } from '@alkhajeh/uaepass-server';
 import { matchesSignerIdn, normalizeSignerIdn } from './signer-idn.mjs';
@@ -28,6 +29,8 @@ const start = root + '/start';
 const check = root + '/check';
 const review = root + '/review.pdf';
 const download = root + '/download.pdf';
+const app = root + '/app';
+const flutterWebOrigin = 'http://localhost:8000';
 const cookieName = 'uaepass_signing_session';
 const authLifetime = 10 * 60;
 const sessionLifetime = 60 * 60;
@@ -65,8 +68,14 @@ function setSession(response, id, lifetime) {
     cookieName + '=' + id + '; Path=' + root + '; HttpOnly; SameSite=Lax; Max-Age=' + lifetime);
 }
 
-function eligible(profile) {
-  return profile?.userType === 'SOP3' && typeof profile.uuid === 'string' &&
+function signingProfile({ uuid, idn, userType }) {
+  return { uuid, idn, userType };
+}
+
+function eligible(profile, level = UaePassSignatureLevel.Qualified) {
+  const eligibleType = profile?.userType === 'SOP3' ||
+    (level === UaePassSignatureLevel.Advanced && profile?.userType === 'SOP2');
+  return eligibleType && typeof profile.uuid === 'string' &&
     profile.uuid.trim() !== '' && normalizeSignerIdn(profile.idn) !== undefined;
 }
 
@@ -75,10 +84,14 @@ function redirect(response, location) {
 }
 
 function exchangeReply(response, status) {
+  json(response, status, { ok: status === 200 });
+}
+
+function json(response, status, payload) {
   response.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store',
-  }).end(JSON.stringify({ ok: status === 200 }));
+  }).end(JSON.stringify(payload));
 }
 
 async function readCode(request) {
@@ -176,7 +189,7 @@ function home(response, session, notice) {
   }
   if (Object.hasOwn(terminalMessages, job.state)) {
     return page(response, 200, '<p role="status">' + terminalMessages[job.state] + '</p>' +
-      form(login, 'Start a new signing session'));
+      (job.state === 'canceled' ? form(start, 'Start again') : form(login, 'Start a new signing session')));
   }
   if (job.state === 'start-failed') {
     return page(response, 200, '<p role="status">UAE PASS is unavailable. Signing has yet to start.</p>' +
@@ -220,25 +233,26 @@ export async function createExampleServer({
   const pdf = await readFile(new URL('./staging-test.pdf', import.meta.url));
   const directory = await mkdtemp(join(tmpdir(), 'uaepass-demo-signing-'));
   const sessions = new Map();
+  const appTransactions = new Map();
   const back = '<p><a href="' + root + '">Return to signing</a></p>';
 
-  function discard(id, session) {
-    sessions.delete(id);
-    if (session.job?.pdfPath) void rm(session.job.pdfPath, { force: true }).catch(() => {});
+  function discard(store, id, entry) {
+    if (store.get(id) === entry) store.delete(id);
+    if (entry.job?.pdfPath) void rm(entry.job.pdfPath, { force: true }).catch(() => {});
   }
 
-  function expireSession(id, session) {
-    const job = session.job;
-    if (job?.busy) return;
-    if (!job?.cleanupPending) return discard(id, session);
+  function expire(store, id, entry) {
+    const job = entry.job;
+    if (entry.authorization || job?.busy) return;
+    if (!job?.cleanupPending) return discard(store, id, entry);
     // Make one last attempt to remove the provider copy of a verified, stored PDF.
     job.busy = true;
-    void cleanup(job).finally(() => discard(id, session));
+    void cleanup(job).finally(() => discard(store, id, entry));
   }
 
   const sweep = setInterval(() => {
-    for (const [id, session] of sessions) {
-      if (session.expiresAt <= Date.now()) expireSession(id, session);
+    for (const store of [sessions, appTransactions]) {
+      for (const id of store.keys()) liveEntry(store, id);
     }
   }, 60_000).unref();
 
@@ -322,8 +336,154 @@ export async function createExampleServer({
     }
   }
 
+  async function startSigning(session, surface, id = nonce()) {
+    const current = session.job;
+    if (current && current.state !== 'start-failed' && current.state !== 'canceled') return current;
+
+    const job = { id, surface, state: 'starting', busy: true };
+    session.job = job;
+    try {
+      let token;
+      try {
+        token = await getToken(job);
+      } catch {
+        job.state = 'start-failed';
+        return job;
+      }
+      try {
+        job.process = await signingClient.createProcess({
+          ...document,
+          pdf,
+          ...(session.signatureLevel ? { signatureLevel: session.signatureLevel } : {}),
+        }, token);
+      } catch (error) {
+        const rejectedBeforeCreation = error?.code === 'invalid_token' ||
+          (error?.code === 'rejected' && [400, 403, 413, 415, 422].includes(error.status));
+        job.state = rejectedBeforeCreation ? 'start-failed' : 'start-uncertain';
+        return job;
+      }
+      job.state = 'awaiting';
+      return job;
+    } finally {
+      job.busy = false;
+    }
+  }
+
+  function appStatus(job) {
+    switch (job.state) {
+      case 'starting': return 'processing';
+      case 'awaiting': return 'pending';
+      case 'approved': return 'processing';
+      case 'signed':
+      case 'canceled': return job.state;
+      default: return 'failed';
+    }
+  }
+
+  function liveEntry(store, id) {
+    const entry = store.get(id);
+    if (entry?.expiresAt <= Date.now()) {
+      expire(store, id, entry);
+      return undefined;
+    }
+    return entry;
+  }
+
+  async function handleApp(request, response, url) {
+    const loopback = loopbackHost + ':' + request.socket.localPort;
+    if ((request.headers.host !== base.host && request.headers.host !== loopback) ||
+        (request.headers.origin !== undefined && request.headers.origin !== flutterWebOrigin)) {
+      return json(response, 403, { error: 'invalid_origin' });
+    }
+    const match = /^\/signing\/app\/transactions\/([A-Za-z0-9_-]{32})(?:\/(check|pdf))?$/.exec(url.pathname);
+    if (!match) return json(response, 404, { error: 'unavailable' });
+    const [, transactionId, action] = match;
+    const token = /^Bearer ([A-Za-z0-9_-]{32})$/i.exec(request.headers.authorization)?.[1];
+    if (!token) return json(response, 401, { error: 'missing_transaction_token' });
+    const tokenHash = createHash('sha256').update(token).digest();
+    const starting = request.method === 'PUT' && !action;
+    const levels = starting ? url.searchParams.getAll('level') : [];
+    const [requestedLevel] = levels;
+    if (levels.length > 1 || (requestedLevel !== undefined &&
+        !Object.values(UaePassSignatureLevel).includes(requestedLevel))) {
+      return json(response, 400, { error: 'invalid_level' });
+    }
+    let code;
+    if (starting && request.headers['content-type'] !== undefined) {
+      const contentType = request.headers['content-type'].split(';')[0].trim().toLowerCase();
+      if (contentType !== 'application/json') return json(response, 415, { error: 'invalid_authorization' });
+      code = await readCode(request);
+      if (!code) return json(response, 400, { error: 'invalid_authorization' });
+    }
+    let transaction = liveEntry(appTransactions, transactionId);
+    if (transaction && !timingSafeEqual(transaction.tokenHash, tokenHash)) {
+      return json(response, 404, { error: 'unavailable' });
+    }
+    if (starting) {
+      const signatureLevel = transaction?.signatureLevel ?? requestedLevel ?? UaePassSignatureLevel.Qualified;
+      if (requestedLevel !== undefined && requestedLevel !== signatureLevel) {
+        return json(response, 409, { error: 'level_conflict' });
+      }
+      const surface = singleQuery(url, 'return') === 'web' ? 'web' : 'native';
+      if (!transaction) {
+        if (appTransactions.has(transactionId)) return json(response, 404, { error: 'unavailable' });
+        if (!code) return json(response, 404, { error: 'authorization_required' });
+        if (appTransactions.size >= 100) return json(response, 503, { error: 'unavailable' });
+        transaction = { tokenHash, signatureLevel, surface, expiresAt: Date.now() + sessionLifetime * 1000 };
+        appTransactions.set(transactionId, transaction);
+        const entry = transaction;
+        entry.authorization = (async () => {
+          try {
+            const profile = signingProfile(await exchangeClient.getUserInfoFromCode(code));
+            if (eligible(profile, signatureLevel)) entry.profile = profile;
+            else entry.authorizationFailed = 'ineligible';
+          } catch {
+            entry.authorizationFailed = 'invalid_authorization';
+          }
+        })().finally(() => { delete entry.authorization; });
+      }
+      if (surface !== transaction.surface) return json(response, 409, { error: 'surface_conflict' });
+      await transaction.authorization;
+      if (transaction.authorizationFailed) {
+        const error = transaction.authorizationFailed;
+        return json(response, error === 'ineligible' ? 403 : 400, { error });
+      }
+      if (transaction.job?.state !== 'canceled') {
+        transaction.starting ??= startSigning(transaction, surface, transactionId)
+          .finally(() => { delete transaction.starting; });
+        await transaction.starting;
+      }
+      const job = transaction.job;
+      if (['start-failed', 'start-uncertain'].includes(job.state)) {
+        return json(response, 502, { error: job.state });
+      }
+      return json(response, 200, {
+        transactionId: job.id,
+        status: appStatus(job),
+        signatureLevel,
+        ...(job.state === 'awaiting' ? {
+          approvalUri: job.process.approvalUrl,
+          finishCallbackUri: origin + finish,
+        } : {}),
+      });
+    }
+    if (!transaction) return json(response, 404, { error: 'unavailable' });
+    const job = transaction?.job;
+    if (job && request.method === 'POST' && action === 'check') {
+      await complete(transaction);
+      return json(response, 200, { status: appStatus(job), signatureLevel: transaction.signatureLevel });
+    }
+    if (job?.state === 'signed' && request.method === 'GET' && action === 'pdf') {
+      const verified = await readFile(job.pdfPath);
+      return pdfResponse(response, verified, 'attachment', 'signed-staging-test.pdf');
+    }
+    return json(response, 404, { error: 'unavailable' });
+  }
+
   const server = createServer(async (request, response) => {
-    if (request.url === exchange) return exchangeCode(request, response, exchangeClient);
+    if (request.url === exchange) {
+      return exchangeCode(request, response, exchangeClient);
+    }
 
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('Referrer-Policy', 'no-referrer');
@@ -331,19 +491,18 @@ export async function createExampleServer({
     response.setHeader('Content-Security-Policy',
       "default-src 'none'; style-src 'unsafe-inline'; frame-src 'self'; frame-ancestors 'self'; " +
       "form-action 'self' https://stg-id.uaepass.ae https://stg-ids.uaepass.ae https://stg.uaepass.ae; base-uri 'none'");
-    if (request.headers.host !== base.host ||
-      (request.method === 'POST' && request.headers.origin !== origin)) {
-      return response.writeHead(403).end();
-    }
     try {
       const url = new URL(request.url, origin);
       if (url.origin !== origin) return response.writeHead(403).end();
-      const id = request.headers.cookie?.match(/(?:^|;\s*)uaepass_signing_session=([A-Za-z0-9_-]{32})(?:;|$)/)?.[1];
-      let session = sessions.get(id);
-      if (session?.expiresAt <= Date.now()) {
-        expireSession(id, session);
-        session = undefined;
+      if (url.pathname.startsWith(app + '/')) {
+        return await handleApp(request, response, url);
       }
+      if (request.headers.host !== base.host ||
+          (request.method === 'POST' && request.headers.origin !== origin)) {
+        return response.writeHead(403).end();
+      }
+      const id = request.headers.cookie?.match(/(?:^|;\s*)uaepass_signing_session=([A-Za-z0-9_-]{32})(?:;|$)/)?.[1];
+      const session = liveEntry(sessions, id);
       const route = request.method + ' ' + url.pathname;
       if (route === 'GET /') return redirect(response, root);
       if (route === 'GET ' + root) {
@@ -356,7 +515,7 @@ export async function createExampleServer({
             ['awaiting', 'approved', 'start-uncertain'].includes(session?.job?.state)) {
           return redirect(response, root);
         }
-        if (session) discard(id, session);
+        if (session) discard(sessions, id, session);
         if (sessions.size >= 100) return page(response, 503, '<p>Too many staging sessions. Try again later.</p>');
         const newId = nonce();
         const state = nonce();
@@ -394,7 +553,7 @@ export async function createExampleServer({
           return redirect(response, root + '?notice=error');
         }
         const newId = nonce();
-        const signer = { uuid: profile.uuid, idn: profile.idn, userType: profile.userType };
+        const signer = signingProfile(profile);
         sessions.set(newId, { profile: signer, expiresAt: Date.now() + sessionLifetime * 1000 });
         setSession(response, newId, sessionLifetime);
         return redirect(response, root);
@@ -403,36 +562,18 @@ export async function createExampleServer({
         return pdfResponse(response, pdf, 'inline', document.filename);
       }
       if (route === 'POST ' + start && eligible(session?.profile)) {
-        const current = session.job;
-        if (current?.busy) return redirect(response, root);
-        if (current?.state === 'awaiting') return redirect(response, current.process.approvalUrl);
-        if (current && current.state !== 'start-failed') return redirect(response, root);
-        const job = { state: 'starting', busy: true };
-        session.job = job;
-        try {
-          let token;
-          try {
-            token = await getToken(job);
-          } catch {
-            job.state = 'start-failed';
-            return redirect(response, root);
-          }
-          try {
-            job.process = await signingClient.createProcess({ ...document, pdf }, token);
-          } catch (error) {
-            const rejectedBeforeCreation = error?.code === 'invalid_token' ||
-              (error?.code === 'rejected' && [400, 403, 413, 415, 422].includes(error.status));
-            job.state = rejectedBeforeCreation ? 'start-failed' : 'start-uncertain';
-            return redirect(response, root);
-          }
-          job.state = 'awaiting';
-          return redirect(response, job.process.approvalUrl);
-        } finally {
-          job.busy = false;
-        }
+        const job = await startSigning(session, 'browser');
+        return redirect(response, job.state === 'awaiting' && !job.busy ? job.process.approvalUrl : root);
       }
       if (route === 'GET ' + finish) {
-        if (!session?.job?.process || session.job.process.processId !== singleQuery(url, 'signer_process_id')) {
+        const processId = singleQuery(url, 'signer_process_id');
+        const appTransaction = processId && [...appTransactions.values()].find((candidate) =>
+          candidate.expiresAt > Date.now() &&
+          candidate.job?.surface === 'web' && candidate.job.process?.processId === processId);
+        if (appTransaction) {
+          return redirect(response, flutterWebOrigin + '/?signing=return&transaction=' + appTransaction.job.id);
+        }
+        if (!session?.job?.process || session.job.process.processId !== processId) {
           return page(response, 403, '<p>The signing return could not be correlated.</p>' + back);
         }
         await complete(session);

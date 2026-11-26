@@ -124,10 +124,6 @@ final class UaePassWebClient {
         'Use a logout return URL on the configured origin.',
       );
     }
-    return Uri.https(
-      uaePassApiHost(configuration.environment),
-      '/idshub/logout',
-      {'redirect_uri': redirectUri.toString()},
-    );
+    return buildUaePassLogoutUri(configuration.environment, redirectUri);
   }
 }

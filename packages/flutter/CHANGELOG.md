@@ -1,3 +1,9 @@
+## 0.2.0
+
+- Add the UAE PASS signing approval launcher and official English and Arabic signing buttons for Android, iOS, and web.
+- Open the UAE PASS approval document link in an in-app PDF viewer on Android and iOS.
+- Add `UaePassClient.logout()` to end the UAE PASS embedded browser session on Android and iOS.
+
 ## 0.1.2
 
 - Add same-tab UAE PASS Web sign-in with a registered callback, one-time state, and the existing backend exchange hook. Add the official web sign-in button and a browser staging demo that supports HTTP on localhost.

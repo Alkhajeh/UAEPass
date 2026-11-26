@@ -3,11 +3,52 @@ import 'package:material_ui/material_ui.dart';
 import '../gallery/button_gallery.dart';
 import '../sign_in/outcome_preview.dart';
 import '../sign_in/sandbox_sign_in.dart';
+import '../signing/staging_signing.dart';
 
-class DemoHome extends StatelessWidget {
-  const DemoHome({super.key, required this.onLocaleChanged});
+class DemoHome extends StatefulWidget {
+  const DemoHome({
+    super.key,
+    required this.onLocaleChanged,
+    this.useLocalBackend = false,
+    this.onBackendChanged,
+    this.onSignOut,
+  });
 
   final ValueChanged<Locale> onLocaleChanged;
+  final bool useLocalBackend;
+  final ValueChanged<bool>? onBackendChanged;
+  final Future<void> Function(BuildContext context)? onSignOut;
+
+  @override
+  State<DemoHome> createState() => _DemoHomeState();
+}
+
+class _DemoHomeState extends State<DemoHome> {
+  bool _signingOut = false;
+
+  Future<void> _signOut(Future<void> Function(BuildContext) signOut) async {
+    setState(() => _signingOut = true);
+    var success = false;
+    try {
+      await signOut(context);
+      success = true;
+    } catch (_) {
+      // Show a generic message for other sign-out failures.
+    }
+    if (!mounted) return;
+    setState(() => _signingOut = false);
+    final ar = Localizations.localeOf(context).languageCode == 'ar';
+    final message = success
+        ? (ar
+              ? 'تم تسجيل الخروج من الهوية الرقمية.'
+              : 'Signed out of UAE PASS.')
+        : (ar
+              ? 'تعذّر تسجيل الخروج. حاول مرة أخرى.'
+              : 'Could not sign out. Try again.');
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +64,7 @@ class DemoHome extends StatelessWidget {
         title: Text(ar ? 'مثال الهوية الرقمية' : 'UAE PASS example'),
         actions: [
           TextButton(
-            onPressed: () => onLocaleChanged(Locale(ar ? 'en' : 'ar')),
+            onPressed: () => widget.onLocaleChanged(Locale(ar ? 'en' : 'ar')),
             child: Text(ar ? 'English' : 'العربية'),
           ),
           const SizedBox(width: 8),
@@ -59,9 +100,11 @@ class DemoHome extends StatelessWidget {
                           : 'Uses a UAE PASS staging account',
                     ),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () =>
-                        Navigator.of(context)
-                            .pushNamed(SandboxSignIn.routeName),
+                    onTap: _signingOut
+                        ? null
+                        : () =>
+                              Navigator.of(context)
+                                  .pushNamed(SandboxSignIn.routeName),
                   ),
                 ),
                 Card(
@@ -77,6 +120,50 @@ class DemoHome extends StatelessWidget {
                     onTap: () => open(const ButtonGallery()),
                   ),
                 ),
+                if (widget.onBackendChanged case final changeBackend?)
+                  SwitchListTile(
+                    title: Text(
+                      ar ? 'استخدم الخادم المحلي' : 'Use local backend',
+                    ),
+                    value: widget.useLocalBackend,
+                    onChanged: _signingOut
+                        ? null
+                        : (enabled) {
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                            changeBackend(enabled);
+                          },
+                  ),
+                if (widget.onBackendChanged != null)
+                  Card(
+                    child: ListTile(
+                      enabled: widget.useLocalBackend && !_signingOut,
+                      leading: const Icon(Icons.draw_outlined),
+                      title: Text(ar ? 'وقّع مستندًا' : 'Sign a document'),
+                      subtitle: widget.useLocalBackend
+                          ? null
+                          : Text(
+                              ar ? 'فعّل الخادم المحلي لتوقيع مستند.' : 'Enable the local backend to sign a document.',
+                            ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: _signingOut || !widget.useLocalBackend
+                          ? null
+                          : () =>
+                                Navigator.of(context)
+                                    .pushNamed(StagingSigning.routeName),
+                    ),
+                  ),
+                if (widget.onSignOut case final signOut?)
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextButton(
+                      onPressed: _signingOut ? null : () => _signOut(signOut),
+                      child: Text(
+                        ar
+                            ? 'تسجيل الخروج من الهوية الرقمية'
+                            : 'Sign out of UAE PASS',
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 Align(
                   alignment: AlignmentDirectional.centerStart,

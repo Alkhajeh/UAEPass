@@ -1,6 +1,10 @@
 /// The UAE PASS service environment.
 enum UaePassEnvironment { staging, production }
 
+bool isValidUaePassCallbackScheme(String value) =>
+    RegExp(r'^[a-z][a-z0-9+.-]*$').hasMatch(value) &&
+    !const {'http', 'https', 'uaepass', 'uaepassstg'}.contains(value);
+
 /// The registered client and redirect settings for UAE PASS authentication.
 final class UaePassConfiguration {
   UaePassConfiguration({
@@ -10,13 +14,7 @@ final class UaePassConfiguration {
     required this.redirectUri,
     Iterable<String> scopes = const [profileScope],
   }) : scopes = List.unmodifiable(scopes) {
-    if (!RegExp(r'^[a-z][a-z0-9+.-]*$').hasMatch(callbackScheme) ||
-        const {
-          'http',
-          'https',
-          'uaepass',
-          'uaepassstg',
-        }.contains(callbackScheme)) {
+    if (!isValidUaePassCallbackScheme(callbackScheme)) {
       throw ArgumentError.value(
         callbackScheme,
         'callbackScheme',

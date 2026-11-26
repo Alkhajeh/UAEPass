@@ -60,7 +60,8 @@ enum UaePassButtonLabel {
     323.75,
     'Authorize Using UAE PASS',
     'طلب المشاركة عبر الهوية الرقمية',
-  );
+  ),
+  sign('sign', 244, 225, 'Sign with UAE PASS', 'وقع بالهوية الرقمية');
 
   const UaePassButtonLabel(
     this._directory,

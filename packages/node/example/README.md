@@ -1,6 +1,6 @@
 # Node staging demo
 
-The demo uses one loopback server on port 8787 for browser signing and Flutter code exchange. From a source checkout, run these commands in `packages/node`. Copy the environment template on first setup.
+The demo uses one loopback server on port 8787 for standalone browser signing and for the Flutter example's code exchange and signing. From a source checkout, run these commands in `packages/node`. Copy the environment template on first setup.
 
 ```sh
 npm ci
@@ -14,7 +14,7 @@ If using the code-exchange route, set `UAEPASS_REDIRECT_URI` in `example/.env` t
 
 ## Browser signing demo
 
-Use a staging UAE PASS SOP3 account with a verified Emirates ID and a qualified certificate. The demo signs a synthetic PDF on loopback and uses `SignerAndDateTime` in the reserved box on the last page. The visible stamp may include the staging Emirates ID number. [Create a qualified staging certificate](https://docs.uaepass.ae/quick-start-guide-uae-pass-staging-environment/upgrade-staging-uae-pass-account)
+The standalone browser demo uses Qualified signing. Use a staging UAE PASS SOP3 account with a verified Emirates ID and a qualified certificate. The demo signs a synthetic PDF on loopback and uses `SignerAndDateTime` in the reserved box on the last page. The visible stamp may include the staging Emirates ID number. [Create a qualified staging certificate](https://docs.uaepass.ae/quick-start-guide-uae-pass-staging-environment/upgrade-staging-uae-pass-account)
 
 The signing demo uses `UAEPASS_CLIENT_ID` and `UAEPASS_CLIENT_SECRET` for sign-in. It uses `UAEPASS_SIGNING_CLIENT_ID` and `UAEPASS_SIGNING_CLIENT_SECRET` for REST signing, LTV, and signature verification.
 
@@ -22,10 +22,8 @@ The signing flow uses `http://localhost:8787/signing/auth/callback` and `http://
 
 Open `http://localhost:8787/signing`. Sign in, review the PDF, and choose **Sign with UAE PASS**. Complete approvals and enter any certificate password in UAE PASS. A download becomes available after LTV and signer verification succeed. The demo keeps short-lived local state and attempts pending cleanup for a stored PDF when its session expires.
 
-### Staging coverage
-
-Live staging checks passed for qualified and advanced signing with SOP3 accounts. They also covered cancellation, signature appearances, and rejection when a different account signed the PDF.
-
 ## Code-exchange demo
 
-After your client validates the callback, send the code promptly to `POST http://127.0.0.1:8787/auth/uaepass` with `Content-Type: application/json` and a JSON body of `{"code":"…"}`. HTTP `200` with `{"ok":true}` confirms a successful exchange and profile fetch. For fixture-based verification, run `npm test`.
+After your client validates the callback, send the code promptly to `POST http://127.0.0.1:8787/auth/uaepass` with `Content-Type: application/json` and a JSON body of `{"code":"…"}`. HTTP `200` with `{"ok":true}` confirms a successful exchange and profile fetch.
+
+The same loopback server lets the Flutter example use either Qualified or Advanced signing. The Flutter example sends a fresh authorization code for each signing transaction. The server exchanges the code once and binds the expected signer to that transaction. Checking the result and fetching the verified PDF require the transaction's expiring bearer credential. On Android and iOS, Flutter intercepts the finish URL. On web, the finish route redirects back to Flutter for the authenticated result check. [Flutter signing setup](../../flutter/example/README.md#sign-a-sample-document)

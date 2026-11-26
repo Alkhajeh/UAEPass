@@ -1,183 +1,158 @@
 # UAE PASS for Node.js
 
-Server-side TypeScript SDK for UAE PASS sign-in and qualified or advanced PDF signing. Requires Node.js 22 or later and ES module imports.
+Server-side TypeScript SDK for UAE PASS sign-in, PDF signing, and signature verification. Requires Node.js 22 or later and ES module imports.
 
-## Install
+[Sign in](#sign-in) · [Sign a PDF](#sign-a-pdf) · [Verify an existing PDF](#verify-an-existing-pdf)
+
+## Install and configure
 
 ```sh
 npm install @alkhajeh/uaepass-server
 ```
 
-## Configuration
+Set `environment` explicitly on each client. Use `'staging'` for testing and `'production'` for live integrations. The SDK selects the matching UAE PASS endpoints. Supply the `clientId` and `clientSecret` issued for that environment and handle the callback routes in your application.
 
-All clients take `environment` (`staging` or `production`), `clientId`, and `clientSecret`. The SDK selects the UAE PASS endpoints. Your server supplies the credentials and hosts the callback routes.
-
-| Client | Credentials | Additional options |
+| Client | Credentials | Additional configuration |
 | --- | --- | --- |
-| `createUaePassClient` | Credentials for sign-in | `redirectUri` for the OAuth callback |
-| `createUaePassSigningClient` | Credentials for document signing | `finishCallbackUrl` for the hosted approval return |
-| `createUaePassSigningValidationClient` | Credentials with access to LTV and verification | Optional `maxPdfBytes` to set a lower PDF size limit |
+| `createUaePassClient()` | Sign-in | `redirectUri`, where UAE PASS returns the OAuth authorization code |
+| `createUaePassSigningClient()` | Document signing | `finishCallbackUrl`, where UAE PASS returns when hosted signing ends, and optional `maxUploadPdfBytes` (default 10 MiB) |
+| `createUaePassSigningValidationClient()` | Long-term validation and verification | Common client configuration above |
 
-Use HTTPS for production callbacks. Staging also accepts HTTP on `localhost`. The signing and validation clients can use the same credential pair if UAE PASS enables both services for it.
+Use HTTPS for production callbacks. Staging also accepts HTTP on `localhost`. Signing and validation can share credentials when UAE PASS enables both services for them. [UAE PASS onboarding](https://docs.uaepass.ae/getting-onboarded-with-uae-pass/onboarding-process-for-uae-pass-service-providers/initiation-phase)
 
-For production, obtain credentials and register your callback URLs through UAE PASS. Request signing access if your app uses the signing clients. [UAE PASS onboarding](https://docs.uaepass.ae/getting-onboarded-with-uae-pass/onboarding-process-for-uae-pass-service-providers/initiation-phase)
+## Sign in
 
-## Sign in and fetch the user profile
-
-Start the UAE PASS authorization flow in your app. In the host callback, validate and consume the OAuth state once, then exchange the returned code using the exact redirect URI from the authorization request. Apply the result only if that sign-in attempt is still current. [UAE PASS authorization guide](https://docs.uaepass.ae/feature-guides/authentication/web-application/1.-obtaining-the-oauth2-access-code)
+Start UAE PASS authorization in your application. When the callback arrives, validate and consume its OAuth state before sending the code to the SDK. Use the exact registered redirect URI from the authorization request. [UAE PASS authorization guide](https://docs.uaepass.ae/feature-guides/authentication/web-application/1.-obtaining-the-oauth2-access-code)
 
 ```ts
 import { createUaePassClient } from '@alkhajeh/uaepass-server';
 
-const uaepass = createUaePassClient({
+const auth = createUaePassClient({
   environment: 'staging',
   clientId: config.clientId,
   clientSecret: config.clientSecret,
   redirectUri: config.redirectUri,
 });
 
-const profile = await uaepass.getUserInfoFromCode(validatedCode);
+const profile = await auth.getUserInfoFromCode(validatedCode);
 ```
 
-The host links the UAE PASS profile to an application account and creates its own session. Use the profile’s `uuid` for account linking. Available attributes depend on the profile and approved scopes. The SDK preserves provider field names and exports `UaePassUserType`, `UaePassProfileType`, and `UaePassGender` for known values. [UAE PASS account linking](https://docs.uaepass.ae/feature-guides/authentication/user-linking) · [Profile attributes](https://docs.uaepass.ae/resources/attributes-list)
+Use the returned profile to link the UAE PASS user to your application account. UAE PASS recommends `uuid` for account linking. Available profile fields depend on the account and approved scopes. [UAE PASS account linking](https://docs.uaepass.ae/feature-guides/authentication/user-linking)
 
-To manage the two calls separately, use `exchangeAuthorizationCode(validatedCode)` and `getUserInfo(accessToken)`. If User Info fails after a successful exchange, reuse the token for a User Info retry. Start a fresh sign-in if the code exchange times out or the code expires.
+To manage the exchange and profile fetch separately, use `exchangeAuthorizationCode(code)` followed by `getUserInfo(accessToken)`. If the profile fetch fails, you can retry it with the valid token. Start a fresh authorization if the code expires or its exchange times out.
 
 ## Sign a PDF
 
-This flow supports one signer and one PDF. It spans the request that starts signing and a later request that confirms approval. [UAE PASS single-document signing guide](https://docs.uaepass.ae/feature-guides/signature-integration-guide/digital-signature-single-document/signing-guide)
+Authenticate the signer through UAE PASS, check eligibility for the selected signature level, and let them review the exact version of the PDF they will sign. Use the identity mapping approved by UAE PASS to bind the expected signer to the transaction. [UAE PASS signing guide](https://docs.uaepass.ae/feature-guides/signature-integration-guide/digital-signature-single-document/signing-guide)
 
-1. **Prepare the request.** Authenticate the user through UAE PASS, check signing eligibility, and let them review the exact PDF version. Obtain the expected signer identity from that authenticated account using the mapping UAE PASS approved for your integration.
+1. Call `getAccessToken()` and `createProcess()`, then open the returned `approvalUrl`.
+2. After the approval return, call `getProcessResult()`. Once the result is `finished`, call `downloadSignedPdf()` and `finalizeSignedPdf()`.
+3. Save the verified PDF, then call `deleteProcess()` to remove the provider copy.
 
-2. **Create the process.** Get a signing access token and submit the PDF. The host supplies `documentBytes` for the version the user reviewed.
+### Start signing
 
-   ```ts
-   import {
-     createUaePassSigningClient,
-     createUaePassSigningValidationClient,
-   } from '@alkhajeh/uaepass-server';
+Pass the source PDF as a `Uint8Array` (`documentBytes` below). The signing token comes from the signing client and can be reused while valid.
 
-   const signing = createUaePassSigningClient({
-     environment: 'staging',
-     clientId: config.signingClientId,
-     clientSecret: config.signingClientSecret,
-     finishCallbackUrl: config.finishCallbackUrl,
-   });
-
-   const validation = createUaePassSigningValidationClient({
-     environment: 'staging',
-     clientId: config.validationClientId,
-     clientSecret: config.validationClientSecret,
-   });
-
-   const signatureField = { name: 'Sign1' };
-   const { accessToken } = await signing.getAccessToken();
-   const { processId, documentId, approvalUrl } = await signing.createProcess({
-     pdf: documentBytes,
-     filename: 'agreement.pdf',
-     signatureField,
-   }, accessToken);
-   ```
-
-   Use a field name such as `Sign1` that can be represented in XML for LTV. The client rejects control characters and invalid XML characters before creating a process. Save the IDs and field name in a durable transaction with the owning account, expected signer, and document version. Redirect the browser to `approvalUrl` after saving the transaction.
-
-3. **Confirm approval on your server.** On return to `finishCallbackUrl`, load the transaction for the signed-in account and check that the callback’s `signer_process_id` matches the saved process ID. The browser return signals when to check. The server response determines whether to proceed.
-
-   ```ts
-   const { accessToken: signingAccessToken } = await signing.getAccessToken();
-   const { status } = await signing.getProcessResult(transaction.processId, signingAccessToken);
-   ```
-
-   Continue after `finished`. Treat `canceled`, `failed`, and `failed_documents` as terminal. Keep the transaction recoverable if the result is temporarily unavailable.
-
-4. **Finalize the signed PDF.** Download the signed PDF, then call `finalizeSignedPdf()` to apply the required Long-Term Validation (LTV), verify the updated bytes through UAE PASS, and match the signer.
-
-   ```ts
-   const signedPdf = await signing.downloadSignedPdf(transaction.documentId, signingAccessToken);
-   const { pdf: finalPdf, signature } = await validation.finalizeSignedPdf(signedPdf, {
-     expectedSignatureFieldName: transaction.signatureFieldName,
-     matchSigner: (signerSubject) =>
-       matchesExpectedSigner(signerSubject, transaction.expectedSigner),
-   });
-   ```
-
-   Implement `matchesExpectedSigner` in your backend using the identity mapping approved by UAE PASS for your integration. Bind the expected signer to the authenticated account when you save the transaction. The matcher can return a boolean or a promise. The SDK returns the PDF bytes and `signature` evidence only after the verified field matches and the matcher returns `true`. [LTV API](https://docs.uaepass.ae/feature-guides/signature-integration-guide/digital-signature-single-document/signing-guide/untitled/ltv-configuration/integration-web-services) · [Signature verification API](https://docs.uaepass.ae/feature-guides/signature-integration-guide/digital-signature-single-document/verification-api-integration/integration-web-service-details)
-
-5. **Store the PDF and clean up.** Persist the verified `finalPdf` before calling `signing.deleteProcess(transaction.processId, signingAccessToken)`. Record cleanup progress so it can be retried independently. Check that the requesting account can access the PDF before serving it.
-
-### Signature level
-
-Omit `signatureLevel` to request a qualified signature. Your backend can explicitly select `UaePassSignatureLevel.Qualified` or, for a workflow approved for advanced signing, `UaePassSignatureLevel.Advanced`. Qualified signing requires an SOP3 account with a qualified certificate. UAE PASS lists SOP2 and SOP3 as eligible for advanced signing with an advanced certificate. Advanced signing also needs the corresponding permission on your signing client. [UAE PASS signing scenarios](https://docs.uaepass.ae/guidelines/use-cases/standard-digital-signature-scenarios-for-service-provider-use-cases) · [Signing permissions](https://docs.uaepass.ae/faq/common-integration-issues#digital-signature-issues)
+`createProcess()` accepts original PDFs up to **10 MiB** by default. Set `maxUploadPdfBytes` on `createUaePassSigningClient()` to change this limit, up to **20 MiB** (`20 * 1024 * 1024` bytes). This leaves room for the signature and the Base64 encoding used by the UAE PASS LTV and verification APIs.
 
 ```ts
-import { UaePassSignatureLevel } from '@alkhajeh/uaepass-server';
+import { createUaePassSigningClient } from '@alkhajeh/uaepass-server';
 
-const process = await signing.createProcess({
+const signing = createUaePassSigningClient({
+  environment: 'staging',
+  clientId: config.signingClientId,
+  clientSecret: config.signingClientSecret,
+  finishCallbackUrl: config.finishCallbackUrl,
+});
+
+const signatureFieldName = 'Sign1';
+const { accessToken } = await signing.getAccessToken();
+const { processId, documentId, approvalUrl } = await signing.createProcess({
   pdf: documentBytes,
   filename: 'agreement.pdf',
-  signatureField: { name: 'Sign1' },
-  signatureLevel: UaePassSignatureLevel.Advanced,
+  signatureField: { name: signatureFieldName },
 }, accessToken);
 ```
 
-Choose the level from the document's requirements and save it with the transaction. The SDK sends only the requested level to UAE PASS. Both levels use the same LTV and signer-matching flow. To independently classify a signed PDF, inspect its verified signing certificate policy. The SOAP verification result used by the SDK provides the signature field and signer subject.
+Before opening `approvalUrl`, save `processId`, `documentId`, and `signatureFieldName` with the authenticated account, expected signer, and document version in your application's transaction store.
 
-### Signature placement and appearance
+### After approval
 
-With just `signatureField: { name: 'Sign1' }`, the SDK delegates placement and appearance to UAE PASS. The signing guide does not specify which details appear when `appearance` is omitted. Set `location` for a PDF template with a reserved signature area. Supply both a page (`1` for the first page, or `'last'` for the last) and a rectangle in PDF coordinates. [UAE PASS signer process options](https://docs.uaepass.ae/feature-guides/signature-integration-guide/digital-signature-single-document/signing-guide/untitled/2.-creating-the-document-signature-process)
+Load the transaction associated with the authenticated account and correlate the browser callback's `signer_process_id` with the saved process ID. For mobile, use the finish URL as the cue to check the saved transaction through your backend.
+
+`getProcessResult()` returns a `status` typed as `UaePassSigningStatus`.
+
+| Status | What to do |
+| --- | --- |
+| `'finished'` | Download and finalize the signed PDF. |
+| `'canceled'`, `'failed'`, `'failed_documents'` | End the signing attempt and report the outcome. |
+
+If the result is temporarily unavailable, keep the transaction so you can check again.
 
 ```ts
-import { UaePassSignatureAppearance, type UaePassCreateSigningProcessInput } from '@alkhajeh/uaepass-server';
+import { createUaePassSigningValidationClient } from '@alkhajeh/uaepass-server';
 
-const signatureField: UaePassCreateSigningProcessInput['signatureField'] = {
-  name: 'Sign1',
-  location: { page: 'last', rectangle: { x: 72, y: 72, width: 320, height: 96 } },
-  appearance: UaePassSignatureAppearance.DateTimeOnly,
-};
+const validation = createUaePassSigningValidationClient({
+  environment: 'staging',
+  clientId: config.validationClientId,
+  clientSecret: config.validationClientSecret,
+});
+
+const { accessToken: signingAccessToken } = await signing.getAccessToken();
+const { status } = await signing.getProcessResult(transaction.processId, signingAccessToken);
+
+if (status === 'finished') {
+  const signedPdf = await signing.downloadSignedPdf(transaction.documentId, signingAccessToken);
+  const { pdf: finalPdf } = await validation.finalizeSignedPdf(signedPdf, {
+    expectedSignatureFieldName: transaction.signatureFieldName,
+    matchSigner: (signerSubject) =>
+      matchesExpectedSigner(signerSubject, transaction.expectedSigner),
+  });
+
+  await saveVerifiedPdf(transaction, finalPdf);
+  await signing.deleteProcess(transaction.processId, signingAccessToken);
+}
 ```
 
-| Preset | Visible stamp |
-| --- | --- |
-| `DateTimeOnly` | Signing date and time |
-| `SignerAndDateTime` | Signer details and signing date and time. UAE PASS may include the Emirates ID number. |
-| `Hidden` | Requests an empty appearance. The PDF still carries its digital signature. |
+`finalizeSignedPdf()` applies long-term validation (LTV), verifies the updated bytes, checks the signature field, and calls your `matchesExpectedSigner` function with the certificate subject. Your matcher returns `true` only when the subject matches the expected signer under your approved identity mapping. The result contains the verified PDF bytes and signature evidence. [LTV API](https://docs.uaepass.ae/feature-guides/signature-integration-guide/digital-signature-single-document/signing-guide/untitled/ltv-configuration/integration-web-services)
 
-In QA, omitting both settings produced a verified digital signature with no visible stamp. Supplying a rectangle while omitting `appearance` produced signer and date/time text. For a visible stamp with predictable content, supply `location` and an explicit preset.
+`saveVerifiedPdf()` represents storage in your application. Persist the verified bytes before deleting the provider copy. If deletion fails, retry it separately. Check that the requesting account can access the stored PDF before serving it.
 
-### Limits and failures
+### Signing options
 
-- The SDK caps each PDF at 10 MiB throughout signing and validation. If your app accepts uploads, set a lower upload limit before signing to leave room for the signature and LTV data added to the PDF.
-- The SDK exposes `UaePassError` for sign-in, `UaePassSigningError` for signing, and `UaePassSigningValidationError` for finalization. Use `code` and `operation` to handle failures. Provider errors can also include HTTP `status`. For finalization, `verification_failed` covers signature or field verification, `signer_unverified` means the evidence was missing or the matcher declined it, and `signer_match_failed` means the matcher threw or rejected.
-- `finalizeSignedPdf()` makes one attempt per step. For a resumable workflow, call `applyLongTermValidation()` and save its output as an intermediate artifact. Use `verifySignedPdf()` to verify those exact bytes independently, then check the signature field and match the signer before accepting the PDF.
-- Reacquire a signing token when it expires. A timed-out process creation can still have succeeded at UAE PASS. Reconcile that attempt before creating another process.
-- Keep credentials and tokens on the server. Keep secrets, authorization codes, tokens, profile data, certificate subjects, and PDF bytes out of logs.
+- **`signatureLevel`** accepts `UaePassSignatureLevel.Qualified` (default) or `UaePassSignatureLevel.Advanced`. Qualified requires an SOP3 account with a qualified certificate. Advanced requires an eligible SOP2 or SOP3 account with an advanced certificate and a signing client authorized for Advanced. [UAE PASS signing scenarios](https://docs.uaepass.ae/guidelines/use-cases/standard-digital-signature-scenarios-for-service-provider-use-cases)
+- **`signatureField.name`** is required. Save it with the transaction so you can verify the signature field during finalization.
+- **`signatureField.location`** is optional. Set `page` to a one-based page number or `'last'` and supply `rectangle: { x, y, width, height }` in PDF coordinates. Omit `location` to let UAE PASS place the signature. [UAE PASS signer process options](https://docs.uaepass.ae/feature-guides/signature-integration-guide/digital-signature-single-document/signing-guide/untitled/2.-creating-the-document-signature-process)
+- **`signatureField.appearance`** is optional. Choose `UaePassSignatureAppearance.DateTimeOnly`, `UaePassSignatureAppearance.SignerAndDateTime`, or `UaePassSignatureAppearance.Hidden`. `Hidden` requests an empty visual appearance while preserving the digital signature. Omit `appearance` to use the UAE PASS default.
 
-## Verify an already signed PDF
+## Verify an existing PDF
 
-Use `verifySignedPdf()` to check a PDF that already carries one UAE PASS signature, including a PDF signed outside your application. The SDK sends the PDF bytes to the UAE PASS verification service without needing a signing process ID. Verification leaves the original PDF unchanged. [UAE PASS Verification API](https://docs.uaepass.ae/feature-guides/signature-integration-guide/digital-signature-single-document/verification-api-integration)
+Use `verifySignedPdf()` on a PDF that already carries one UAE PASS signature. The method takes PDF bytes and returns the verified signature field name and, when available, the certificate subject. [UAE PASS verification API](https://docs.uaepass.ae/feature-guides/signature-integration-guide/digital-signature-single-document/verification-api-integration)
 
 ```ts
 import { readFile } from 'node:fs/promises';
 import { createUaePassSigningValidationClient } from '@alkhajeh/uaepass-server';
 
-const clientId = process.env.UAEPASS_VERIFICATION_CLIENT_ID;
-const clientSecret = process.env.UAEPASS_VERIFICATION_CLIENT_SECRET;
-if (!clientId || !clientSecret) {
-  throw new Error('Set the UAE PASS verification credentials.');
-}
-
-const verification = createUaePassSigningValidationClient({
+const validation = createUaePassSigningValidationClient({
   environment: 'staging',
-  clientId,
-  clientSecret,
+  clientId: config.validationClientId,
+  clientSecret: config.validationClientSecret,
 });
 
 const pdf = await readFile('already-signed.pdf');
-const signature = await verification.verifySignedPdf(pdf);
+const { signatureFieldName, signerSubject } = await validation.verifySignedPdf(pdf);
 ```
 
-On success, `signature.signatureFieldName` identifies the verified signature field. `signature.signerSubject` contains the certificate subject when UAE PASS returns it. If your workflow requires an expected signer, compare the subject using your approved identity mapping and require a match before accepting the PDF. Handle `verification_failed` separately from service errors such as `timeout` or `unavailable`.
+If you expect a particular signer, require the returned subject to match that identity before accepting the PDF.
 
-## Try the staging demo
+## Errors and limits
 
-One local server handles Flutter code exchange and browser signing of a synthetic PDF. Browser signing requires a staging SOP3 account with a qualified certificate. [Node demo setup](https://github.com/Alkhajeh/UAEPass/blob/main/packages/node/example/README.md)
+- The upload limit applies to the original PDF only. The SDK buffers up to **32 MiB** for the signed PDF download and **48 MiB** for the full LTV response, including Base64 and SOAP overhead. LTV and verification accept PDFs up to **36 MiB**, which covers every PDF the SDK can return from either response.
+- Handle `UaePassError` for sign-in, `UaePassSigningError` for signing, and `UaePassSigningValidationError` for validation. Use `code` and `operation` to distinguish a rejected signature or signer mismatch from a service timeout. Provider errors may include an HTTP `status`.
+- Refresh an expired signing token with `getAccessToken()`. If `createProcess()` times out, reconcile the attempt with UAE PASS before creating another process.
+- For resumable finalization, call `applyLongTermValidation()` and persist its output. Verify those exact bytes with `verifySignedPdf()` and check the expected signature field and signer before accepting the PDF.
+- Keep credentials and tokens on the server. Keep authorization codes, secrets, tokens, profile data, certificate subjects, and PDF bytes out of logs.
+
+## Staging demo
+
+[Run the staging demo](https://github.com/Alkhajeh/UAEPass/blob/main/packages/node/example/README.md)

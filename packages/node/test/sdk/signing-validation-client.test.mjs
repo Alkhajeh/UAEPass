@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
 import { test } from 'node:test';
 import {
+  createUaePassSigningClient,
   createUaePassSigningValidationClient,
   UaePassSigningValidationError,
 } from '@alkhajeh/uaepass-server';
@@ -89,15 +90,80 @@ test('sends the documented SOAP requests and returns the updated PDF and signer 
   assert.match(verify.body, /<css:ReturnSignerIdentity binary="true"\/>/);
 });
 
-test('requires PDF bytes within the signing limit before calling the gateway', async (t) => {
+test('requires PDF bytes before calling the gateway', async (t) => {
   const fetch = mockGateway(t);
   const validation = createUaePassSigningValidationClient(config);
-  await assert.rejects(() => validation.applyLongTermValidation(Buffer.from('not a PDF'), signatureFieldName), /signed PDF/);
-  const oversizedPdf = new Uint8Array(10 * 1024 * 1024 + 1);
-  oversizedPdf.set(Buffer.from('%PDF-'));
-  await assert.rejects(() => validation.applyLongTermValidation(oversizedPdf, signatureFieldName), TypeError);
-  await assert.rejects(() => validation.verifySignedPdf(oversizedPdf), TypeError);
+  const invalidPdf = Buffer.from('not a PDF');
+  await assert.rejects(() => validation.applyLongTermValidation(invalidPdf, signatureFieldName), /signed PDF/);
+  await assert.rejects(() => validation.verifySignedPdf(invalidPdf), /signed PDF/);
   assert.equal(fetch.mock.callCount(), 0);
+});
+
+test('rejects oversized validation inputs before sending a SOAP request', async (t) => {
+  const fetch = mockGateway(t);
+  const validation = createUaePassSigningValidationClient(config);
+  const limit = 36 * 1024 * 1024;
+  const oversized = new Uint8Array(limit + 1);
+  oversized.set(Buffer.from('%PDF-'));
+  const error = { name: 'TypeError', message: `Provide signed PDF bytes up to ${limit} bytes.` };
+  await assert.rejects(() => validation.applyLongTermValidation(oversized, signatureFieldName), error);
+  await assert.rejects(() => validation.verifySignedPdf(oversized), error);
+  assert.equal(fetch.mock.callCount(), 0);
+});
+
+test('downloads, finalizes, and verifies a PDF that grows beyond the original upload limit', async (t) => {
+  const timeout = t.mock.method(AbortSignal, 'timeout');
+  const originalPdf = Buffer.alloc(10 * 1024 * 1024);
+  pdf.copy(originalPdf);
+  const signedPdf = Buffer.concat([originalPdf, Buffer.from('\n% fixture signature\n%%EOF')]);
+  const ltvPdf = Buffer.concat([signedPdf, Buffer.from('\n% fixture LTV data\n%%EOF')]);
+  const origin = new URL(stagingGatewayUrl).origin;
+  const signingPath = '/trustedx-resources/esignsp/v2';
+  const processId = 'sp_fixture';
+  const documentId = 'dc_fixture';
+  const approvalUrl = `${origin}${signingPath}/ui?signerProcessId=${processId}`;
+  const fetch = t.mock.method(globalThis, 'fetch', async (url, init) => {
+    if (url.pathname.endsWith('/signer_processes')) {
+      assert.equal(init.body.get('document').size, originalPdf.byteLength);
+      return Response.json({
+        id: processId,
+        tasks: { pending: [{ type: 'UserBrowserTask', url: approvalUrl }] },
+        documents: [{ id: documentId }],
+      }, { status: 201 });
+    }
+    if (url.pathname === `${signingPath}/signer_processes/${processId}/result`) {
+      return Response.json({ status: 'finished' });
+    }
+    if (url.pathname === `${signingPath}/documents/${documentId}/content`) {
+      return new Response(signedPdf, { headers: { 'Content-Type': 'application/pdf' } });
+    }
+    assert.equal(url.href, stagingGatewayUrl);
+    if (init.headers.SOAPAction === 'Update') {
+      assert.ok(init.body.includes(`>${signedPdf.toString('base64')}</dss:Base64Data>`));
+      return response(updateResponse(ltvPdf.toString('base64')));
+    }
+    assert.equal(init.headers.SOAPAction, 'Verify');
+    assert.ok(init.body.includes(`>${ltvPdf.toString('base64')}</dss:Base64Data>`));
+    return response(verificationResponse());
+  });
+
+  const signing = createUaePassSigningClient({ ...config, finishCallbackUrl: 'https://example.test/signing' });
+  const validation = createUaePassSigningValidationClient(config);
+  const accessToken = 'fixture-signing-token';
+  const process = await signing.createProcess({
+    pdf: originalPdf, filename: 'fixture.pdf', signatureField: { name: signatureFieldName },
+  }, accessToken);
+  assert.deepEqual(await signing.getProcessResult(process.processId, accessToken), { status: 'finished' });
+  const downloaded = await signing.downloadSignedPdf(process.documentId, accessToken);
+  assert.equal(Buffer.compare(downloaded, signedPdf), 0);
+  const finalized = await validation.finalizeSignedPdf(downloaded, {
+    expectedSignatureFieldName: signatureFieldName,
+    matchSigner: (subject) => subject === expectedSigner,
+  });
+  assert.equal(Buffer.compare(finalized.pdf, ltvPdf), 0);
+  assert.deepEqual(finalized.signature, { signatureFieldName, signerSubject: expectedSigner });
+  assert.equal(fetch.mock.callCount(), 5);
+  assert.deepEqual(timeout.mock.calls.map(({ arguments: [ms] }) => ms), [60_000, 15_000, 60_000, 60_000, 60_000]);
 });
 
 test('a legacy gatewayUrl field cannot change the destination of SOAP requests', async (t) => {
@@ -128,15 +194,13 @@ test('rejects unexpected verification results', async (t) => {
   }
 });
 
-test('rejects malformed or oversized SOAP and invalid PDF results', async (t) => {
+test('rejects malformed SOAP and invalid PDF results', async (t) => {
   const valid = updateResponse();
   const failures = {
     'DTD': `<!DOCTYPE soap:Envelope [<!ENTITY fixture "data">]>${valid}`,
     'malformed XML': valid.replace('</dss:VerifyResponse>', '</dss:SignResponse>'),
     'untrusted namespace': valid.replace(namespace, 'https://example.test/dss'),
-    'unexpected SOAP response size': valid.replace('</dss:VerifyResponse>', `${' '.repeat(129 * 1024)}</dss:VerifyResponse>`),
     'noncanonical base64': updateResponse(`${finalPdf.toString('base64')}!`),
-    'decoded bytes exceed the configured limit': updateResponse(Buffer.concat([finalPdf, Buffer.alloc(64)]).toString('base64')),
     'wrong media type': valid.replace('application/pdf', 'text/plain'),
     'not PDF bytes': updateResponse(Buffer.from('wrong document bytes').toString('base64')),
   };
@@ -144,11 +208,33 @@ test('rejects malformed or oversized SOAP and invalid PDF results', async (t) =>
   for (const [name, xml] of Object.entries(failures)) {
     await t.test(name, async (subtest) => {
       const fetch = mockGateway(subtest, xml);
-      const validation = createUaePassSigningValidationClient({ ...config, maxPdfBytes: 64 });
+      const validation = createUaePassSigningValidationClient(config);
       await assert.rejects(() => validation.applyLongTermValidation(pdf, signatureFieldName), /unexpected signing SOAP response/);
       assert.equal(fetch.mock.callCount(), 1);
     });
   }
+});
+
+test('cancels oversized LTV and verification responses before buffering them', async (t) => {
+  let canceled = 0;
+  const responseLimits = { Update: 48 * 1024 * 1024, Verify: 128 * 1024 };
+  t.mock.method(globalThis, 'fetch', async (_url, init) => {
+    const body = new ReadableStream({ cancel: () => { canceled++; } });
+    return new Response(body, {
+      headers: {
+        'Content-Type': 'text/xml',
+        'Content-Length': String(responseLimits[init.headers.SOAPAction] + 1),
+      },
+    });
+  });
+  const validation = createUaePassSigningValidationClient(config);
+  await assert.rejects(() => validation.applyLongTermValidation(pdf, signatureFieldName), {
+    code: 'invalid_response', operation: 'ltv', status: 200,
+  });
+  await assert.rejects(() => validation.verifySignedPdf(pdf), {
+    code: 'invalid_response', operation: 'verify', status: 200,
+  });
+  assert.equal(canceled, 2);
 });
 
 test('reports sanitized provider transport failures without retrying', async (t) => {
@@ -250,13 +336,12 @@ test('validates finalization inputs before making a provider request', async (t)
   const fetch = mockGateway(t);
   const matchSigner = t.mock.fn(() => true);
   const options = { expectedSignatureFieldName: signatureFieldName, matchSigner };
-  const validation = createUaePassSigningValidationClient({ ...config, maxPdfBytes: 64 });
+  const validation = createUaePassSigningValidationClient(config);
   for (const [input, settings] of [
     [pdf, undefined],
     [pdf, { ...options, matchSigner: true }],
     [pdf, { ...options, expectedSignatureFieldName: '' }],
     [Buffer.from('not a PDF'), options],
-    [Buffer.concat([pdf, Buffer.alloc(64)]), options],
   ]) {
     await assert.rejects(() => validation.finalizeSignedPdf(input, settings), TypeError);
   }

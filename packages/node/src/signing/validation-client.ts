@@ -1,7 +1,7 @@
 import { Buffer } from 'node:buffer';
 import { DOMParser, type Element } from '@xmldom/xmldom';
 
-import { isPdf, isXmlText, maxSigningPdfBytes, origins, readBoundedBytes } from '../internal/provider.js';
+import { documentTransferTimeoutMs, isPdf, isXmlText, origins, readBoundedBytes } from '../internal/provider.js';
 
 const gatewayPath = '/trustedx-gw/SoapGateway';
 const soap = 'http://schemas.xmlsoap.org/soap/envelope/';
@@ -11,6 +11,9 @@ const dss = 'http://www.docs.oasis-open.org/dss/2004/06/oasis-dss-1.0-core-schem
 const trustedX = 'http://www.safelayer.com/TWS';
 const resultPrefix = 'urn:oasis:names:tc:dss:1.0:';
 const signerIdentityFormat = 'urn:oasis:names:tc:SAML:1.1:nameid-format:X509SubjectName';
+const maxLtvResponseBytes = 48 * 1024 * 1024;
+// Every PDF decoded from a bounded Base64 LTV response must fit a verification request.
+const maxValidationPdfBytes = (maxLtvResponseBytes / 4) * 3;
 const maxVerificationBytes = 128 * 1024;
 const xmlMediaTypes = new Set(['text/xml', 'application/xml', 'application/soap+xml']);
 const xmlEntities: Readonly<Record<string, string>> = {
@@ -21,7 +24,6 @@ export interface UaePassSigningValidationConfig {
   readonly environment: keyof typeof origins;
   readonly clientId: string;
   readonly clientSecret: string;
-  readonly maxPdfBytes?: number;
 }
 
 export interface UaePassVerifiedPdfSignature {
@@ -146,17 +148,17 @@ function soapOutputs(
   return requiredChild(response, dss, 'OptionalOutputs');
 }
 
-function updatedPdf(outputs: Element, maxPdfBytes: number): Uint8Array {
+function updatedPdf(outputs: Element): Uint8Array {
   const document = requiredChild(outputs, dss, 'DocumentWithSignature');
   const data = requiredChild(document, dss, 'XMLData');
   const encoded = requiredChild(data, dss, 'Base64Data');
   if (encoded.getAttribute('MimeType') !== 'application/pdf') throw new Error('Unexpected document media type.');
   const value = elementText(encoded).replace(/[\t\n\r ]/g, '');
-  if (value.length > 4 * Math.ceil(maxPdfBytes / 3) || !/^[A-Za-z0-9+/]+={0,2}$/.test(value)) {
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(value)) {
     throw new Error('Unexpected PDF encoding.');
   }
   const pdf = Buffer.from(value, 'base64');
-  if (!isPdf(pdf) || pdf.byteLength > maxPdfBytes || pdf.toString('base64') !== value) {
+  if (!isPdf(pdf) || pdf.toString('base64') !== value) {
     throw new Error('Invalid updated PDF.');
   }
   return pdf;
@@ -218,15 +220,12 @@ function requestBody(
 export function createUaePassSigningValidationClient(
   config: UaePassSigningValidationConfig,
 ): UaePassSigningValidationClient {
-  const { environment, clientId, clientSecret, maxPdfBytes = maxSigningPdfBytes } = config;
+  const { environment, clientId, clientSecret } = config;
   if (environment !== 'staging' && environment !== 'production') {
     throw new TypeError('Choose a UAE PASS environment.');
   }
   if (!isXmlText(clientId) || !isXmlText(clientSecret)) {
     throw new TypeError('Provide UAE PASS SOAP credentials.');
-  }
-  if (!Number.isSafeInteger(maxPdfBytes) || maxPdfBytes < 5 || maxPdfBytes > maxSigningPdfBytes) {
-    throw new TypeError('Provide a PDF byte limit up to 10 MiB.');
   }
   const gateway = new URL(gatewayPath, origins[environment]);
 
@@ -237,11 +236,14 @@ export function createUaePassSigningValidationClient(
     responseLimit: number,
     parse: (outputs: Element, status: number) => T,
   ): Promise<T> {
-    if (!isPdf(pdf) || pdf.byteLength > maxPdfBytes) {
-      throw new TypeError('Provide signed PDF bytes within the configured byte limit.');
+    if (!isPdf(pdf)) {
+      throw new TypeError('Provide signed PDF bytes.');
+    }
+    if (pdf.byteLength > maxValidationPdfBytes) {
+      throw new TypeError(`Provide signed PDF bytes up to ${maxValidationPdfBytes} bytes.`);
     }
     const body = requestBody(clientId, clientSecret, operation, pdf, optionalInputs);
-    const signal = AbortSignal.timeout(15_000);
+    const signal = AbortSignal.timeout(documentTransferTimeoutMs);
     let response: Response;
     try {
       response = await fetch(gateway, {
@@ -279,8 +281,7 @@ export function createUaePassSigningValidationClient(
     const inputs =
       '<dss:ReturnUpdatedSignature Type="urn:oasis:names:tc:dss:1.0:profiles:XAdES:forms:ES-A"/>' +
       `<css:PdfFieldLabel>${escapeXml(signatureFieldName)}</css:PdfFieldLabel>`;
-    return request('ltv', pdf, inputs, 4 * Math.ceil(maxPdfBytes / 3) + maxVerificationBytes,
-      (outputs) => updatedPdf(outputs, maxPdfBytes));
+    return request('ltv', pdf, inputs, maxLtvResponseBytes, updatedPdf);
   }
 
   async function verifySignedPdf(pdf: Uint8Array): Promise<UaePassVerifiedPdfSignature> {

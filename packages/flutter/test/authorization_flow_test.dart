@@ -171,7 +171,7 @@ void main() {
         'session': ['one', 'two'],
       },
     );
-    final handoff = staging.appHandoff(handoffUrl, 'state')!;
+    final handoff = staging.appFlow.appHandoff(handoffUrl, 'state')!;
     expect(handoff.appUri.scheme, 'uaepassstg');
     expect(handoff.appUri.path, nativeUrl.path);
     expect(handoff.successUri.queryParameters['status'], 'success');
@@ -185,7 +185,7 @@ void main() {
       handoff.appUri.queryParameters['failureURL'],
       'poc://failure?state=state',
     );
-    expect(production.appHandoff(handoffUrl, 'state'), isNull);
+    expect(production.appFlow.appHandoff(handoffUrl, 'state'), isNull);
 
     for (final invalidDestination in [
       'http://stg-id.uaepass.ae/resume',
@@ -201,7 +201,7 @@ void main() {
           'successURL': invalidDestination,
         },
       );
-      expect(staging.appHandoff(invalid, 'state'), isNull);
+      expect(staging.appFlow.appHandoff(invalid, 'state'), isNull);
     }
   });
 }
