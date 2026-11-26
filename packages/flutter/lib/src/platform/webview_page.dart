@@ -1,44 +1,112 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
-import '../platform/native_bridge.dart';
-import 'flow.dart';
-import 'result.dart';
+import '../authorization/flow.dart';
+import '../localization/locale.dart';
+import '../signing/review_document_page.dart';
+import 'native_bridge.dart';
 
-class UaePassAuthorizationPage extends StatefulWidget {
-  const UaePassAuthorizationPage({
+bool _webViewInProgress = false;
+
+// UAE PASS uses one native callback channel for the WebViews on this isolate.
+Future<T?> openUaePassWebView<T extends Object>(
+  BuildContext context, {
+  required UaePassAppFlow flow,
+  required FutureOr<Uri> Function(String state, UaePassPlatform platform)
+  initialUri,
+  required T? Function(Uri uri, String state) onRedirect,
+  required T failure,
+  bool Function(Uri uri)? isReviewDocument,
+  Locale? locale,
+}) async {
+  if (!context.mounted) return null;
+  if (_webViewInProgress) return failure;
+  final language = resolveUaePassLocale(context, locale).languageCode;
+  _webViewInProgress = true;
+  final platform = UaePassPlatform();
+  final events = StreamController<UaePassPlatformEvent>();
+
+  try {
+    final state = generateUaePassState();
+    platform.setEventHandler(events.add);
+    await platform.setCallbackScheme(flow.callbackScheme);
+    final uri = await initialUri(state, platform);
+    if (!context.mounted) return null;
+
+    final route = MaterialPageRoute<T>(
+      fullscreenDialog: true,
+      builder: (_) => _UaePassWebViewPage(
+        flow: flow,
+        state: state,
+        initialUri: uri,
+        events: events.stream,
+        platform: platform,
+        language: language,
+        onRedirect: onRedirect,
+        failure: failure,
+        isReviewDocument: isReviewDocument,
+      ),
+    );
+    return await Future.any([
+      Navigator.of(context).push(route),
+      route.completed,
+    ]);
+  } on Exception {
+    return failure;
+  } finally {
+    platform.setEventHandler(null);
+    unawaited(events.close());
+    try {
+      await platform.setCallbackScheme(null);
+    } on PlatformException {
+      // The platform may have detached before the route closed.
+    } on MissingPluginException {
+      // The platform may not support UAE PASS.
+    } finally {
+      _webViewInProgress = false;
+    }
+  }
+}
+
+class _UaePassWebViewPage<T extends Object> extends StatefulWidget {
+  const _UaePassWebViewPage({
     required this.flow,
     required this.state,
     required this.initialUri,
     required this.events,
     required this.platform,
-    super.key,
+    required this.language,
+    required this.onRedirect,
+    required this.failure,
+    required this.isReviewDocument,
   });
 
-  final UaePassAuthorizationFlow flow;
+  final UaePassAppFlow flow;
   final String state;
   final Uri initialUri;
   final Stream<UaePassPlatformEvent> events;
   final UaePassPlatform platform;
+  final String language;
+  final T? Function(Uri uri, String state) onRedirect;
+  final T failure;
+  final bool Function(Uri uri)? isReviewDocument;
 
   @override
-  State<UaePassAuthorizationPage> createState() =>
-      _UaePassAuthorizationPageState();
+  State<_UaePassWebViewPage<T>> createState() => _UaePassWebViewPageState<T>();
 }
 
-class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
-  static const _failed = UaePassFailure<UaePassAuthorizationGrant>(
-    UaePassFailureReason.authorizationFailed,
-  );
-
+class _UaePassWebViewPageState<T extends Object>
+    extends State<_UaePassWebViewPage<T>> {
   late final StreamSubscription<UaePassPlatformEvent> _subscription;
   WebViewController? _webView;
   Uri? _loadingPage;
   UaePassAppHandoff? _pendingHandoff;
   bool _finished = false;
+  bool _reviewOpen = false;
 
   ModalRoute<dynamic>? get _activeRoute {
     if (!mounted || _finished) return null;
@@ -85,7 +153,7 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
             if (error.isForMainFrame == true &&
                 _pendingHandoff == null &&
                 (uri == null || !widget.flow.isAppHandoff(uri))) {
-              _finish(_failed);
+              _finish(widget.failure);
             }
           },
         ),
@@ -101,7 +169,7 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
       setState(() => _webView = webView);
       await _loadPage(webView, widget.initialUri);
     } catch (_) {
-      _finish(_failed);
+      _finish(widget.failure);
     }
   }
 
@@ -119,7 +187,7 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
         status < 600 &&
         uri != null &&
         uri.removeFragment() == _loadingPage) {
-      _finish(_failed);
+      _finish(widget.failure);
     }
   }
 
@@ -128,7 +196,7 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
       case UaePassAppCallback(:final uri):
         unawaited(_resumeAuthentication(uri));
       case UaePassMainFrameHttpError(:final state) when state == widget.state:
-        _finish(_failed);
+        _finish(widget.failure);
       case UaePassMainFrameHttpError():
         break;
     }
@@ -138,9 +206,13 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
     NavigationRequest request,
   ) async {
     if (_activeRoute == null) return NavigationDecision.prevent;
+    final uri = Uri.tryParse(request.url);
+    if (uri != null && widget.isReviewDocument?.call(uri) == true) {
+      unawaited(_openReview(uri));
+      return NavigationDecision.prevent;
+    }
     if (!request.isMainFrame) return NavigationDecision.navigate;
 
-    final uri = Uri.tryParse(request.url);
     if (uri != null) {
       if (_handleRedirect(uri)) return NavigationDecision.prevent;
       if (widget.flow.isAppHandoff(uri)) {
@@ -153,13 +225,32 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
       }
     }
 
-    _finish(_failed);
+    _finish(widget.failure);
     return NavigationDecision.prevent;
+  }
+
+  Future<void> _openReview(Uri uri) async {
+    final webView = _webView;
+    if (_reviewOpen || webView == null) return;
+    _reviewOpen = true;
+    try {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => ReviewDocumentPage(
+            language: widget.language,
+            loadDocument: () =>
+                fetchApprovalPdf(webView, uri, widget.initialUri),
+          ),
+        ),
+      );
+    } finally {
+      _reviewOpen = false;
+    }
   }
 
   bool _handleRedirect(Uri? uri) {
     if (uri == null) return false;
-    final result = widget.flow.authorizationResult(uri, widget.state);
+    final result = widget.onRedirect(uri, widget.state);
     if (result == null) return false;
     _finish(result);
     return true;
@@ -176,7 +267,7 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
         // Treat an app launch error like a rejected launch.
       }
     }
-    _finish(_failed);
+    _finish(widget.failure);
   }
 
   Future<void> _resumeAuthentication(String callback) async {
@@ -185,7 +276,7 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
     if (handoff == null || webView == null || _activeRoute == null) return;
 
     final uri = Uri.tryParse(callback);
-    if (uri == null || uri.scheme != widget.flow.configuration.callbackScheme) {
+    if (uri == null || uri.scheme != widget.flow.callbackScheme) {
       return;
     }
 
@@ -197,7 +288,7 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
         uri.hasPort ||
         (uri.path.isNotEmpty && uri.path != '/') ||
         uri.hasFragment) {
-      _finish(_failed);
+      _finish(widget.failure);
       return;
     }
 
@@ -207,7 +298,7 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
       _ => null,
     };
     if (destination == null) {
-      _finish(_failed);
+      _finish(widget.failure);
       return;
     }
 
@@ -215,11 +306,11 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
     try {
       await _loadPage(webView, destination);
     } on Exception {
-      _finish(_failed);
+      _finish(widget.failure);
     }
   }
 
-  void _finish(UaePassResult<UaePassAuthorizationGrant> result) {
+  void _finish(T result) {
     final route = _activeRoute;
     if (route == null) return;
 
@@ -238,9 +329,7 @@ class _UaePassAuthorizationPageState extends State<UaePassAuthorizationPage> {
     final webView = _webView;
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.flow.language == 'ar' ? 'الهوية الرقمية' : 'UAE PASS',
-        ),
+        title: Text(widget.language == 'ar' ? 'الهوية الرقمية' : 'UAE PASS'),
       ),
       body: webView == null
           ? const Center(child: CircularProgressIndicator())

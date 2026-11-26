@@ -14,13 +14,13 @@ Use either SDK independently to integrate UAE PASS sign-in. The Node SDK also in
 Run the Flutter example with the Node staging server from the same repository checkout to test authorization, code exchange, and profile retrieval together.
 
 1. Configure the sample server in `packages/node` and start it with `npm run example`. Set its `UAEPASS_REDIRECT_URI` to `http://localhost:8000` for local web or `https://localhost:8000` for the default mobile demo. [Staging server setup](packages/node/example/README.md)
-2. From `packages/flutter/example`, run `flutter pub get`, then run the command below. For Android or iOS, use `flutter run --dart-define=UAEPASS_LOCAL_BACKEND=true` and follow the device networking steps. [Flutter demo backend setup](packages/flutter/example/README.md#optional-backend-exchange)
+2. From `packages/flutter/example`, run `flutter pub get`, then run the command below. For Android or iOS, use `flutter run` and follow the device networking steps. [Flutter demo backend setup](packages/flutter/example/README.md#optional-backend-exchange)
 
    ```sh
-   flutter run -d chrome --dart-define=UAEPASS_WEB_REDIRECT_URI=http://localhost:8000 --dart-define=UAEPASS_LOCAL_BACKEND=true
+   flutter run -d chrome --dart-define=UAEPASS_WEB_REDIRECT_URI=http://localhost:8000
    ```
 
-Select **Try sign-in** and approve in the UAE PASS staging app. **Backend exchange complete** confirms that the server exchanged the code and fetched the profile.
+Turn on **Use local backend**, then select **Try sign-in** and approve in the UAE PASS staging app. **Backend exchange complete** confirms that the server exchanged the code and fetched the profile.
 
 ## Development
 

@@ -1,5 +1,5 @@
 name: uaepass
-description: UAE PASS sign-in on Android, iOS, and web, with native app handoff, browser redirects, and a configurable backend exchange.
+description: UAE PASS sign-in and document signing approval on Android, iOS, and web, with official branded buttons.
 version: 0.1.2
 repository: https://github.com/Alkhajeh/UAEPass
 issue_tracker: https://github.com/Alkhajeh/UAEPass/issues
@@ -13,7 +13,9 @@ dependencies:
     sdk: flutter
   flutter_web_plugins:
     sdk: flutter
+  http: ^1.6.0
   material_ui: ^1.11.1
+  pdfrx: ^3.1.0
   web: ^1.1.1
   webview_flutter: ^4.14.1
   webview_flutter_wkwebview: ^3.27.2
@@ -44,6 +46,8 @@ flutter:
     - assets/buttons/login/en/
     - assets/buttons/register_account/ar/
     - assets/buttons/register_account/en/
+    - assets/buttons/sign/ar/
+    - assets/buttons/sign/en/
     - assets/buttons/sign_in/ar/
     - assets/buttons/sign_in/en/
     - assets/buttons/sign_up/ar/

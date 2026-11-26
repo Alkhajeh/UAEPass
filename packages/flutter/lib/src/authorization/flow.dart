@@ -17,9 +17,10 @@ final class UaePassAuthorizationFlow {
   final UaePassConfiguration configuration;
   final String language;
 
-  bool get _isStaging =>
-      configuration.environment == UaePassEnvironment.staging;
-  String get _appScheme => _isStaging ? 'uaepassstg' : 'uaepass';
+  UaePassAppFlow get appFlow => UaePassAppFlow(
+    environment: configuration.environment,
+    callbackScheme: configuration.callbackScheme,
+  );
 
   Uri authorizationUri({required String state, required bool appInstalled}) =>
       buildUaePassAuthorizationUri(
@@ -38,6 +39,20 @@ final class UaePassAuthorizationFlow {
   ) => matchesUaePassRedirect(uri, configuration.redirectUri)
       ? parseUaePassAuthorizationResult(uri, configuration.redirectUri, state)
       : null;
+}
+
+/// Validates and resumes UAE PASS app handoffs from an embedded browser.
+final class UaePassAppFlow {
+  const UaePassAppFlow({
+    required this.environment,
+    required this.callbackScheme,
+  });
+
+  final UaePassEnvironment environment;
+  final String callbackScheme;
+
+  bool get _isStaging => environment == UaePassEnvironment.staging;
+  String get _appScheme => _isStaging ? 'uaepassstg' : 'uaepass';
 
   bool isAppHandoff(Uri uri) =>
       uri.scheme == 'uaepass' || uri.scheme == _appScheme;
@@ -51,7 +66,7 @@ final class UaePassAuthorizationFlow {
   bool _isResumeUri(Uri uri) =>
       isProviderPage(uri) &&
       !uri.hasFragment &&
-      (uri.host == uaePassApiHost(configuration.environment) ||
+      (uri.host == uaePassApiHost(environment) ||
           uri.host == (_isStaging ? 'stg-ids.uaepass.ae' : 'ids.uaepass.ae'));
 
   UaePassAppHandoff? appHandoff(Uri uri, String state) {
@@ -84,7 +99,7 @@ final class UaePassAuthorizationFlow {
 
       parameters[entry.key] = [
         Uri(
-          scheme: configuration.callbackScheme,
+          scheme: callbackScheme,
           host: host,
           queryParameters: {'state': state},
         ).toString(),
@@ -131,6 +146,11 @@ Uri buildUaePassAuthorizationUri({
       : 'urn:safelayer:tws:policies:authentication:level:low',
   'ui_locales': language,
 });
+
+Uri buildUaePassLogoutUri(UaePassEnvironment environment, Uri redirectUri) =>
+    Uri.https(uaePassApiHost(environment), '/idshub/logout', {
+      'redirect_uri': redirectUri.toString(),
+    });
 
 bool sharesUaePassOrigin(Uri uri, Uri reference) =>
     uri.scheme == reference.scheme &&

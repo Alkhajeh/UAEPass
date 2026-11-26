@@ -29,3 +29,5 @@ Live staging checks passed for qualified and advanced signing with SOP3 accounts
 ## Code-exchange demo
 
 After your client validates the callback, send the code promptly to `POST http://127.0.0.1:8787/auth/uaepass` with `Content-Type: application/json` and a JSON body of `{"code":"…"}`. HTTP `200` with `{"ok":true}` confirms a successful exchange and profile fetch. For fixture-based verification, run `npm test`.
+
+The same loopback listener supports the [Flutter signing example](../../flutter/example/README.md#sign-a-sample-document). The Flutter example sends a fresh authorization code to create each qualified or advanced signing transaction. The server exchanges the code once and binds the expected signer to that transaction. Checking the result and fetching the verified PDF require the transaction's expiring bearer credential. On Android and iOS, Flutter intercepts the finish URL. On web, the finish route redirects back to Flutter for the authenticated result check.

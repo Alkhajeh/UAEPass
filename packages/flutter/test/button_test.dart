@@ -76,12 +76,12 @@ void main() {
         }
       }
     }
-    expect(variants, hasLength(396));
-    expect(densityCounts, hasLength(324));
+    expect(variants, hasLength(468));
+    expect(densityCounts, hasLength(384));
     final files = Directory('assets/buttons')
         .listSync(recursive: true)
         .whereType<File>();
-    expect(files, hasLength(852));
+    expect(files, hasLength(1032));
 
     final scales = await tester.runAsync(() async {
       final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
@@ -103,6 +103,35 @@ void main() {
     expect(scales!.map((key) => key.scale), [1.0, 2.0, 3.0]);
     expect(scales[1].name, contains('/2.0x/'));
     expect(scales[2].name, contains('/3.0x/'));
+  });
+
+  testWidgets('signing button activates and uses the localized signing label', (
+    tester,
+  ) async {
+    var presses = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Center(child: UaePassSigningButton(onPressed: () => presses++)),
+      ),
+    );
+    expect(find.bySemanticsLabel('Sign with UAE PASS'), findsOneWidget);
+    final key = tester.widget<Image>(find.byType(Image)).image as AssetImage;
+    expect(key.keyName, contains('/sign/en/'));
+    await tester.tap(find.byType(UaePassSigningButton));
+    expect(presses, 1);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Center(
+          child: UaePassSigningButton(locale: Locale('ar'), onPressed: null),
+        ),
+      ),
+    );
+    expect(find.bySemanticsLabel('وقع بالهوية الرقمية'), findsOneWidget);
+    expect(
+      tester.widget<TextButton>(find.byType(TextButton)).onPressed,
+      isNull,
+    );
   });
 
   testWidgets(

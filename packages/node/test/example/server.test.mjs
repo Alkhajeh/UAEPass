@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
 import { once } from 'node:events';
+import { readFile } from 'node:fs/promises';
 import { request } from 'node:http';
 import { test } from 'node:test';
 import {
@@ -13,6 +14,9 @@ import { createExampleServer } from '../../example/server.mjs';
 
 const origin = 'http://localhost:8787';
 const approvalUrl = 'https://stg-id.uaepass.ae/trustedx-resources/esignsp/v2/ui?signerProcessId=fixture-process';
+const appTransactions = '/signing/app/transactions';
+const firstTransaction = appTransactions + '/' + 'a'.repeat(32);
+const secondTransaction = appTransactions + '/' + 'b'.repeat(32);
 const profile = { uuid: 'fixture-uuid', userType: 'SOP3', idn: '784-1900-0000000-0' };
 const unverifiedPdf = Buffer.from('%PDF-1.7\nunverified fixture');
 const verifiedPdf = Buffer.from('%PDF-1.7\nverified fixture');
@@ -56,15 +60,16 @@ async function listen(t, overrides = {}) {
     await closed;
   });
 
-  function send(path, { method = 'GET', cookie, headers = {} } = {}) {
+  function send(path, { method = 'GET', cookie, headers = {}, body, origin: requestOrigin = origin } = {}) {
     return new Promise((resolve, reject) => {
       const outgoing = request(`http://127.0.0.1:${server.address().port}${path}`, {
         method,
         signal: AbortSignal.timeout(2000),
         headers: {
           Host: new URL(origin).host,
-          ...(method === 'POST' ? { Origin: origin } : {}),
+          ...(method === 'POST' && requestOrigin ? { Origin: requestOrigin } : {}),
           ...(cookie ? { Cookie: cookie } : {}),
+          ...(body ? { 'Content-Type': 'application/json' } : {}),
           ...headers,
         },
       }, async (incoming) => {
@@ -77,12 +82,12 @@ async function listen(t, overrides = {}) {
         }
       });
       outgoing.on('error', reject);
-      outgoing.end();
+      outgoing.end(body ? JSON.stringify(body) : undefined);
     });
   }
 
   const exchangeUrl = `http://127.0.0.1:${server.address().port}/auth/uaepass`;
-  return { send, exchangeUrl, authClient, signingClient, finalizeSignedPdf };
+  return { send, exchangeUrl, authClient, exchangeClient, signingClient, finalizeSignedPdf };
 }
 
 function post(endpoint, body, headers) {
@@ -92,6 +97,165 @@ function post(endpoint, body, headers) {
     body: JSON.stringify(body),
   });
 }
+
+const transactionHeaders = { Authorization: 'Bearer ' + 'x'.repeat(32) };
+const otherTransactionHeaders = { Authorization: 'Bearer ' + 'y'.repeat(32) };
+
+function appRequest(method, headers = transactionHeaders, body) {
+  return { method, headers, body, origin: null };
+}
+
+test('signing requires its own one-time authorization and an expiring transaction credential', async (t) => {
+  t.mock.timers.enable({ apis: ['Date'], now: Date.now() });
+  const { send, exchangeUrl, exchangeClient, signingClient } = await listen(t);
+  const start = (headers, body) => send(firstTransaction, appRequest('PUT', headers, body));
+  assert.equal((await start({})).status, 401);
+
+  const exchange = await post(exchangeUrl, { code: 'standalone-code' });
+  assert.deepEqual(await exchange.json(), { ok: true });
+  assert.equal(exchange.headers.has('set-cookie'), false);
+  const missing = await start(transactionHeaders);
+  assert.equal(missing.status, 404);
+  assert.deepEqual(JSON.parse(missing.body), { error: 'authorization_required' });
+  assert.equal(signingClient.getAccessToken.mock.callCount(), 0);
+
+  const { promise, resolve } = Promise.withResolvers();
+  const { promise: entered, resolve: enter } = Promise.withResolvers();
+  exchangeClient.getUserInfoFromCode.mock.mockImplementationOnce(async () => {
+    enter();
+    return promise;
+  });
+  const initial = start(transactionHeaders, { code: 'signing-code' });
+  await entered;
+  const retry = start(transactionHeaders);
+  assert.equal((await start(otherTransactionHeaders, { code: 'other-code' })).status, 404);
+  resolve(profile);
+  const [first, second] = await Promise.all([initial, retry]);
+  assert.equal(first.status, 200);
+  assert.equal(first.headers['set-cookie'], undefined);
+  assert.deepEqual(second.body, first.body);
+  assert.deepEqual(exchangeClient.getUserInfoFromCode.mock.calls.map(call => call.arguments), [
+    ['standalone-code'], ['signing-code'],
+  ]);
+  assert.equal(signingClient.createProcess.mock.callCount(), 1);
+
+  t.mock.timers.tick(60 * 60 * 1000);
+  assert.equal((await send(firstTransaction + '/check', appRequest('POST'))).status, 404);
+  assert.equal((await send(firstTransaction + '/pdf', appRequest('GET'))).status, 404);
+});
+
+test('Flutter signing correlates the browser return and protects the verified PDF', async (t) => {
+  let result;
+  const { send, signingClient, finalizeSignedPdf } = await listen(t, {
+    signingClient: {
+      async getProcessResult() {
+        if (!result) throw Object.assign(new Error('Not ready'), { status: 404 });
+        return { status: result };
+      },
+    },
+  });
+  const appOrigin = 'http://localhost:8000';
+  const headers = { ...transactionHeaders, Origin: appOrigin };
+  const check = appRequest('POST', headers);
+  const start = firstTransaction + '?return=web';
+  const options = appRequest('PUT', headers, { code: 'owner-code' });
+  const original = await readFile(new URL('../../example/staging-test.pdf', import.meta.url));
+  assert.equal((await send(start, {
+    ...options, headers: { ...headers, Origin: 'https://example.invalid' },
+  })).status, 403);
+  const first = await send(start, options);
+  assert.equal(first.status, 200);
+  assert.deepEqual(JSON.parse(first.body), {
+    transactionId: firstTransaction.split('/').at(-1), approvalUri: approvalUrl,
+    finishCallbackUri: origin + '/signing/finish', status: 'pending', signatureLevel: 'qualified',
+  });
+  assert.deepEqual(signingClient.createProcess.mock.calls[0].arguments[0].pdf, original);
+  assert.deepEqual((await send(start, appRequest('PUT', headers))).body, first.body);
+  assert.equal(signingClient.createProcess.mock.callCount(), 1);
+  assert.equal((await send(firstTransaction, appRequest('PUT', headers))).status, 409);
+
+  const pending = await send(firstTransaction + '/check', check);
+  assert.deepEqual(JSON.parse(pending.body), { status: 'pending', signatureLevel: 'qualified' });
+  assert.equal((await send(firstTransaction + '/pdf', appRequest('GET'))).status, 404);
+  const callback = '/signing/finish?signer_process_id=fixture-process&status=canceled';
+  result = 'finished';
+  const returned = await send(callback);
+  assert.equal(returned.status, 303);
+  assert.equal(returned.headers.location,
+    appOrigin + '/?signing=return&transaction=' + firstTransaction.split('/').at(-1));
+  assert.equal(returned.body.length, 0);
+  assert.equal(finalizeSignedPdf.mock.callCount(), 0);
+  assert.equal((await send(firstTransaction + '/check', appRequest('POST', otherTransactionHeaders))).status, 404);
+  const verified = await send(firstTransaction + '/check', check);
+  assert.deepEqual(JSON.parse(verified.body), { status: 'signed', signatureLevel: 'qualified' });
+  assert.equal(finalizeSignedPdf.mock.callCount(), 1);
+  assert.equal((await send(firstTransaction + '/pdf', appRequest('GET', otherTransactionHeaders))).status, 404);
+  assert.equal((await send(firstTransaction + '/pdf')).status, 401);
+  assert.deepEqual((await send(firstTransaction + '/pdf', appRequest('GET'))).body, verifiedPdf);
+});
+
+test('mobile signing finalizes through its transaction credential and rejects a different signer', async (t) => {
+  const { send, finalizeSignedPdf } = await listen(t, {
+    exchangeClient: {
+      async getUserInfoFromCode(code) {
+        return code === 'other-code' ? { ...profile, idn: '784-1900-0000001-0' } : profile;
+      },
+    },
+  });
+  const started = await send(firstTransaction, appRequest('PUT', transactionHeaders, { code: 'fixture-code' }));
+  assert.equal(started.status, 200);
+  const { finishCallbackUri } = JSON.parse(started.body);
+  const path = new URL(finishCallbackUri).pathname;
+  assert.equal((await send(path + '?signer_process_id=fixture-process&status=finished')).status, 403);
+  assert.equal(finalizeSignedPdf.mock.callCount(), 0);
+  const result = await send(firstTransaction + '/check', appRequest('POST'));
+  assert.deepEqual(JSON.parse(result.body), { status: 'signed', signatureLevel: 'qualified' });
+  assert.deepEqual((await send(firstTransaction + '/pdf', appRequest('GET'))).body, verifiedPdf);
+  assert.equal((await send(secondTransaction, appRequest('PUT', otherTransactionHeaders, { code: 'other-code' }))).status, 200);
+  const mismatch = await send(secondTransaction + '/check', appRequest('POST', otherTransactionHeaders));
+  assert.deepEqual(JSON.parse(mismatch.body), { status: 'failed', signatureLevel: 'qualified' });
+  assert.equal((await send(secondTransaction + '/pdf', appRequest('GET', otherTransactionHeaders))).status, 404);
+});
+
+test('a canceled signing transaction can restart with fresh authorization and a new credential', async (t) => {
+  const { send, signingClient, exchangeClient, finalizeSignedPdf } = await listen(t, {
+    signingClient: { async getProcessResult() { return { status: 'canceled' }; } },
+  });
+  const start = await send(firstTransaction, appRequest('PUT', transactionHeaders, { code: 'fixture-code' }));
+  const first = JSON.parse(start.body);
+  assert.equal(first.status, 'pending');
+  const check = firstTransaction + '/check';
+  assert.deepEqual(JSON.parse((await send(check, appRequest('POST'))).body), {
+    status: 'canceled', signatureLevel: 'qualified',
+  });
+  assert.equal(JSON.parse((await send(firstTransaction, appRequest('PUT'))).body).status, 'canceled');
+  const restarted = await send(secondTransaction, appRequest('PUT', otherTransactionHeaders, { code: 'next-code' }));
+  assert.equal(restarted.status, 200);
+  assert.equal(JSON.parse(restarted.body).status, 'pending');
+  assert.equal(signingClient.createProcess.mock.callCount(), 2);
+  assert.equal(exchangeClient.getUserInfoFromCode.mock.callCount(), 2);
+  assert.equal(finalizeSignedPdf.mock.callCount(), 0);
+});
+
+test('Flutter can request advanced signing and the transaction keeps its selected level', async (t) => {
+  const { send, signingClient } = await listen(t, {
+    exchangeClient: { async getUserInfoFromCode() { return { ...profile, userType: 'SOP2' }; } },
+  });
+  const options = appRequest('PUT', transactionHeaders, { code: 'fixture-code' });
+  assert.equal((await send(firstTransaction + '?level=other', options)).status, 400);
+  assert.equal((await send(firstTransaction + '?level=advanced&level=qualified', options)).status, 400);
+  assert.equal((await send(firstTransaction + '?level=qualified', options)).status, 403);
+  assert.equal(signingClient.getAccessToken.mock.callCount(), 0);
+
+  const advanced = await send(secondTransaction + '?level=advanced',
+    appRequest('PUT', otherTransactionHeaders, { code: 'advanced-code' }));
+  assert.equal(advanced.status, 200);
+  assert.equal(JSON.parse(advanced.body).signatureLevel, 'advanced');
+  assert.equal(signingClient.createProcess.mock.calls[0].arguments[0].signatureLevel, 'advanced');
+  assert.deepEqual((await send(secondTransaction, appRequest('PUT', otherTransactionHeaders))).body, advanced.body);
+  assert.equal((await send(secondTransaction + '?level=qualified', appRequest('PUT', otherTransactionHeaders))).status, 409);
+  assert.equal(signingClient.createProcess.mock.callCount(), 1);
+});
 
 test('one listener serves browser signing and exchanges codes with only a success flag', { timeout: 5000 }, async (t) => {
   const getUserInfoFromCode = t.mock.fn(async (code) => {
@@ -402,6 +566,9 @@ test('the signing demo blocks an ineligible signer and honors a provider cancell
   assert.notEqual((await download(send, owner)).status, 200);
   const landing = await send('/signing', { cookie: owner });
   assert.match(landing.body.toString('utf8'), /cancel(?:l)?ed/i);
+  assert.match(landing.body.toString('utf8'), /Start again/);
+  await start(send, owner);
+  assert.equal(signingClient.createProcess.mock.callCount(), 2);
 });
 
 test('the signing demo retries interrupted finalization and cleanup', { timeout: 5000 }, async (t) => {

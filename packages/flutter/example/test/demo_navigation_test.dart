@@ -1,13 +1,197 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:uaepass/uaepass.dart';
+import 'package:uaepass_example/home/demo_home.dart';
 import 'package:uaepass_example/main.dart';
+import 'package:uaepass_example/sign_in/backend_response.dart';
 import 'package:uaepass_example/sign_in/sandbox_sign_in.dart';
+import 'package:uaepass_example/signing/staging_signing.dart';
+import 'package:uaepass_example/signing/signing_transaction.dart';
+import 'package:uaepass_example/staging_config.dart';
 
 void main() {
+  testWidgets('the home switch enables signing and keeps sign-in available', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const UaePassDemo());
+    final signIn = find.widgetWithText(ListTile, 'Try sign-in');
+    final signing = find.widgetWithText(ListTile, 'Sign a document');
+    final toggle = find.widgetWithText(SwitchListTile, 'Use local backend');
+    expect(tester.widget<SwitchListTile>(toggle).value, isFalse);
+    expect(tester.widget<ListTile>(signIn).onTap, isNotNull);
+    expect(tester.widget<ListTile>(signing).enabled, isFalse);
+    expect(
+      find.text('Enable the local backend to sign a document.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(tester.widget<SwitchListTile>(toggle).value, isTrue);
+    expect(tester.widget<ListTile>(signIn).onTap, isNotNull);
+    expect(tester.widget<ListTile>(signing).enabled, isTrue);
+    await tester.tap(signIn);
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<SandboxSignIn>(find.byType(SandboxSignIn)).exchangeCode,
+      isNotNull,
+    );
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    await tester.tap(signing);
+    await tester.pumpAndSettle();
+    expect(find.byType(UaePassSigningButton), findsOneWidget);
+    await tester.tap(find.text('Advanced'));
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(signing);
+    await tester.pumpAndSettle();
+    final levels = find.byType(SegmentedButton<DemoSignatureLevel>);
+    expect(
+      tester.widget<SegmentedButton<DemoSignatureLevel>>(levels).selected,
+      {DemoSignatureLevel.qualified},
+    );
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(tester.widget<ListTile>(signing).onTap, isNull);
+  });
+
+  testWidgets('signing retries the failed step only when requested', (
+    tester,
+  ) async {
+    final requests =
+        <({String method, String path, String? code, String? token})>[];
+    var authorizations = 0;
+    var available = false;
+    var checkAvailable = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: StagingSigning(
+          authorize: (_) async {
+            authorizations++;
+            return UaePassSuccess(
+              UaePassAuthorizationGrant(
+                code: 'fixture-code',
+                redirectUri: Uri.parse('https://localhost:8000'),
+              ),
+            );
+          },
+          requestBackend:
+              (path, {required method, body, transactionToken}) async {
+                requests.add((
+                  method: method,
+                  path: path,
+                  code: body?['code'],
+                  token: transactionToken,
+                ));
+                if (!available || (method == 'POST' && !checkAvailable)) {
+                  throw const BackendConnectionException();
+                }
+                final uri = Uri(path: path.split('?').first);
+                final json = <String, Object?>{
+                  if (method == 'PUT') 'transactionId': uri.pathSegments.last,
+                  'signatureLevel': 'advanced',
+                  'status': 'signed',
+                };
+                return BackendResponse(
+                  200,
+                  Uint8List.fromList(utf8.encode(jsonEncode(json))),
+                );
+              },
+        ),
+      ),
+    );
+    await tester.tap(find.text('Advanced'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(UaePassSigningButton));
+    await tester.pumpAndSettle();
+    expect(find.text(backendUnavailableMessage(false)), findsOneWidget);
+    expect(requests.single.path, endsWith('?level=advanced'));
+    expect(requests.single.code, 'fixture-code');
+    expect(requests.single.token, matches(r'^[a-zA-Z0-9_-]{32}$'));
+
+    available = true;
+    await tester.pump(const Duration(minutes: 1));
+    expect(requests, hasLength(1));
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+    expect(requests, hasLength(3));
+    expect(requests[1].path, requests[0].path);
+    expect(requests[1].token, requests[0].token);
+    expect(requests[1].code, isNull);
+    expect(authorizations, 1);
+    expect(requests[2].method, 'POST');
+    expect(requests[2].path, endsWith('/check'));
+    expect(find.text('Retry'), findsOneWidget);
+
+    checkAvailable = true;
+    await tester.pump(const Duration(minutes: 1));
+    expect(requests, hasLength(3));
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+    expect(requests, hasLength(4));
+    expect(requests[3], requests[2]);
+    expect(find.text('Signed PDF verified.'), findsOneWidget);
+    expect(find.text('Retry'), findsNothing);
+  });
+
+  testWidgets(
+    'signing defaults to Qualified and lets the user select Advanced',
+    (tester) async {
+      final webSandbox = WebSandbox(
+        null,
+        const UaePassCancelled(),
+        SigningTransaction.start(DemoSignatureLevel.advanced),
+      )..takeAuthorization();
+      await tester.pumpWidget(
+        MaterialApp(home: StagingSigning(webSandbox: webSandbox)),
+      );
+      final control = find.byType(SegmentedButton<DemoSignatureLevel>);
+      expect(
+        tester.widget<SegmentedButton<DemoSignatureLevel>>(control).selected,
+        {DemoSignatureLevel.qualified},
+      );
+      await tester.tap(find.text('Advanced'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<SegmentedButton<DemoSignatureLevel>>(control).selected,
+        {DemoSignatureLevel.advanced},
+      );
+    },
+  );
+
+  testWidgets('home waits for demo sign-out before reporting success', (
+    tester,
+  ) async {
+    final signOut = Completer<void>();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DemoHome(
+          onLocaleChanged: (_) {},
+          onSignOut: (_) => signOut.future,
+        ),
+      ),
+    );
+    final action = find.widgetWithText(TextButton, 'Sign out of UAE PASS');
+    await tester.ensureVisible(action);
+    await tester.tap(action);
+    await tester.pump();
+    expect(tester.widget<TextButton>(action).onPressed, isNull);
+    expect(find.text('Signed out of UAE PASS.'), findsNothing);
+
+    signOut.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('Signed out of UAE PASS.'), findsOneWidget);
+    expect(tester.widget<TextButton>(action).onPressed, isNotNull);
+  });
+
   testWidgets('reopening web sign-in starts with a fresh result', (
     tester,
   ) async {
@@ -19,7 +203,12 @@ void main() {
           redirectUri: Uri.parse('http://localhost:8000'),
         ),
       ),
-      Future.value(const UaePassSuccess<void>(null)),
+      UaePassSuccess(
+        UaePassAuthorizationGrant(
+          code: 'fixture-code',
+          redirectUri: Uri.parse('http://localhost:8000'),
+        ),
+      ),
     );
     await tester.pumpWidget(UaePassDemo(webSandbox: webSandbox));
     await tester.pumpAndSettle();

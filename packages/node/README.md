@@ -81,7 +81,7 @@ This flow supports one signer and one PDF. It spans the request that starts sign
 
    Use a field name such as `Sign1` that can be represented in XML for LTV. The client rejects control characters and invalid XML characters before creating a process. Save the IDs and field name in a durable transaction with the owning account, expected signer, and document version. Redirect the browser to `approvalUrl` after saving the transaction.
 
-3. **Confirm approval on your server.** On return to `finishCallbackUrl`, load the transaction for the signed-in account and check that the callback’s `signer_process_id` matches the saved process ID. The browser return signals when to check. The server response determines whether to proceed.
+3. **Confirm approval on your server.** A browser callback can trigger the check after you correlate its `signer_process_id` with the saved process ID. A mobile app can intercept the finish URL and ask your backend to check the transaction through its authenticated session. Use UAE PASS's result response to determine whether to proceed.
 
    ```ts
    const { accessToken: signingAccessToken } = await signing.getAccessToken();

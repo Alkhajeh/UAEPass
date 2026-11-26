@@ -18,16 +18,21 @@ class ButtonGallery extends StatefulWidget {
 }
 
 class _ButtonGalleryState extends State<ButtonGallery> {
-  var _content = UaePassSignInButtonContent.signIn;
+  Object _content = UaePassSignInButtonContent.signIn;
   var _shape = UaePassButtonShape.rounded;
   UaePassButtonStyle? _style;
   var _background = Brightness.light;
 
   String _snippet(Locale locale) => [
-    'UaePassSignInButton(',
-    '  client: client,',
-    '  onResult: handleAuthorizationResult,',
-    '  content: UaePassSignInButtonContent.${_content.name},',
+    if (_content case final UaePassSignInButtonContent content) ...[
+      'UaePassSignInButton(',
+      '  client: client,',
+      '  onResult: handleAuthorizationResult,',
+      '  content: UaePassSignInButtonContent.${content.name},',
+    ] else ...[
+      'UaePassSigningButton(',
+      '  onPressed: startSigning,',
+    ],
     "  locale: const Locale('${locale.languageCode}'),",
     '  shape: UaePassButtonShape.${_shape.name},',
     if (_style case final style?) '  style: UaePassButtonStyle.${style.name},',
@@ -43,7 +48,7 @@ class _ButtonGalleryState extends State<ButtonGallery> {
       UaePassButtonLabel.login => '$artwork (Login)',
       UaePassButtonLabel.registerAccount => '$artwork (Register account)',
       UaePassButtonLabel.signUp => '$artwork (Sign up)',
-      UaePassButtonLabel.authorize => artwork,
+      UaePassButtonLabel.authorize || UaePassButtonLabel.sign => artwork,
     };
   }
 
@@ -52,7 +57,10 @@ class _ButtonGalleryState extends State<ButtonGallery> {
     final locale = Localizations.localeOf(context);
     final ar = locale.languageCode == 'ar';
     final theme = Theme.of(context);
-    final label = signInButtonLabel(_content);
+    final label = switch (_content) {
+      final UaePassSignInButtonContent content => signInButtonLabel(content),
+      _ => UaePassButtonLabel.sign,
+    };
     final snippet = _snippet(locale);
     final dark = _background == Brightness.dark;
     final boardColor = dark ? const Color(0xFF242825) : const Color(0xFFF4F6F5);
@@ -162,7 +170,7 @@ class _ButtonGalleryState extends State<ButtonGallery> {
                   ar ? 'محتوى الزر' : 'Button content',
                   style: theme.textTheme.titleSmall,
                 ),
-                DropdownButton<UaePassSignInButtonContent>(
+                DropdownButton<Object>(
                   value: _content,
                   isExpanded: true,
                   itemHeight: null,
@@ -175,6 +183,10 @@ class _ButtonGalleryState extends State<ButtonGallery> {
                           null => ar ? 'شعار فقط' : 'Logo only',
                         }),
                       ),
+                    DropdownMenuItem(
+                      value: UaePassButtonLabel.sign,
+                      child: Text(_wording(UaePassButtonLabel.sign, locale)),
+                    ),
                   ],
                   onChanged: (content) {
                     if (content != null) setState(() => _content = content);
