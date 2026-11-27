@@ -215,7 +215,22 @@ test('requires matching hosted approval and document references for one PDF', as
     });
   }
   for (const documents of [
+    [{ id: documentId }],
+    [{ content: `${documentUrl}/content` }],
+    [{ id: documentId, content: `${documentUrl}/content` }],
+  ]) {
+    payload = { ...processResponse, documents };
+    assert.equal((await signing.createProcess(input, accessToken)).documentId, documentId);
+  }
+  for (const documents of [
     [],
+    [{}],
+    [{ id: 'dc other' }],
+    [{ id: 42, url: documentUrl }],
+    [{ url: `${documentUrl}/content` }],
+    [{ content: documentUrl }],
+    [{ content: `${documentUrl}/content/` }],
+    [{ id: documentId, content: `${origin}${base}/documents/dc_other/content` }],
     [...processResponse.documents, ...processResponse.documents],
     [{ id: 'dc_other', url: documentUrl }],
     [{ url: documentUrl, content: `${origin}${base}/documents/dc_other/content` }],

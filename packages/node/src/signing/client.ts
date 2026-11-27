@@ -1,6 +1,11 @@
 import { Blob, Buffer } from 'node:buffer';
 
+import { UaePassBaseError } from '../errors.js';
 import {
+  apiTimeoutMs,
+  assertEnvironment,
+  classifyStatus,
+  discardBody,
   documentTransferTimeoutMs,
   isBearerToken,
   isBearerTokenResponse,
@@ -8,12 +13,15 @@ import {
   isPdf,
   isRecord,
   isXmlText,
+  mediaType,
   origins,
   parseCallbackUrl,
   parseProviderUrl,
   readBoundedBytes,
   readProviderJson,
+  send,
 } from '../internal/provider.js';
+import type { UaePassEnvironment } from '../types.js';
 
 const scope = 'urn:safelayer:eidas:sign:process:document';
 const signingPath = '/trustedx-resources/esignsp/v2';
@@ -26,7 +34,7 @@ const maxAllowedUploadPdfBytes = 20 * 1024 * 1024;
 const maxSignedPdfResponseBytes = 32 * 1024 * 1024;
 
 export interface UaePassSigningConfig {
-  readonly environment: keyof typeof origins;
+  readonly environment: UaePassEnvironment;
   readonly clientId: string;
   readonly clientSecret: string;
   readonly finishCallbackUrl: string;
@@ -122,13 +130,9 @@ const errorMessages = {
 export type UaePassSigningErrorCode = keyof typeof errorMessages;
 export type UaePassSigningOperation = 'token' | 'create' | 'result' | 'download' | 'delete';
 
-export class UaePassSigningError extends Error {
-  constructor(
-    readonly code: UaePassSigningErrorCode,
-    readonly operation: UaePassSigningOperation,
-    readonly status?: number,
-  ) {
-    super(errorMessages[code]);
+export class UaePassSigningError extends UaePassBaseError<UaePassSigningErrorCode, UaePassSigningOperation> {
+  constructor(code: UaePassSigningErrorCode, operation: UaePassSigningOperation, status?: number) {
+    super(code, operation, errorMessages[code], status);
     this.name = 'UaePassSigningError';
   }
 }
@@ -138,26 +142,27 @@ function isId(value: unknown): value is string {
 }
 
 function isSigningStatus(value: unknown): value is UaePassSigningStatus {
-  return signingStatuses.some((status) => status === value);
+  return (signingStatuses as readonly unknown[]).includes(value);
 }
 
+// The document reference fields UAE PASS may return, and the path each one must have.
+const documentPaths = {
+  url: new RegExp(`^${documentsPath}/([a-zA-Z0-9_-]+)$`),
+  content: new RegExp(`^${documentsPath}/([a-zA-Z0-9_-]+)/content$`),
+};
+
+/** Returns the document ID when `id`, `url`, and `content` are valid and all name the same document. */
 function parseDocumentId(data: unknown, origin: string): string | undefined {
   if (!isRecord(data)) return undefined;
-  let id = data.id;
-  if (id !== undefined && !isId(id)) return undefined;
-  for (const key of ['url', 'content'] as const) {
+  const ids: unknown[] = data.id === undefined ? [] : [data.id];
+  for (const [key, path] of Object.entries(documentPaths)) {
     if (data[key] === undefined) continue;
     const url = parseProviderUrl(data[key]);
-    if (url?.origin !== origin || url.search || !url.pathname.startsWith(`${documentsPath}/`)) {
-      return undefined;
-    }
-    const suffix = key === 'content' ? '/content' : '';
-    if (suffix && !url.pathname.endsWith(suffix)) return undefined;
-    const urlId = url.pathname.slice(documentsPath.length + 1, url.pathname.length - suffix.length);
-    if (!isId(urlId) || (id !== undefined && id !== urlId)) return undefined;
-    id = urlId;
+    if (url?.origin !== origin || url.search) return undefined;
+    ids.push(path.exec(url.pathname)?.[1]);
   }
-  return isId(id) ? id : undefined;
+  const [id] = ids;
+  return isId(id) && ids.every((other) => other === id) ? id : undefined;
 }
 
 function parseSigningProcess(data: unknown, origin: string): UaePassSigningProcess | undefined {
@@ -171,8 +176,9 @@ function parseSigningProcess(data: unknown, origin: string): UaePassSigningProce
   const pending: unknown[] = data.tasks.pending;
   const tasks = pending.filter((task): task is Record<string, unknown> =>
     isRecord(task) && task.type === 'UserBrowserTask');
-  if (tasks.length !== 1) return undefined;
-  const approvalUrl = parseProviderUrl(tasks[0].url);
+  const [task] = tasks;
+  if (!task || tasks.length !== 1) return undefined;
+  const approvalUrl = parseProviderUrl(task.url);
   if (approvalUrl?.origin !== origin || approvalUrl.pathname !== `${signingPath}/ui`) {
     return undefined;
   }
@@ -188,13 +194,6 @@ function bearerHeader(accessToken: string): string {
   return `Bearer ${accessToken}`;
 }
 
-function rejectionCode(operation: UaePassSigningOperation, status: number): UaePassSigningErrorCode {
-  if (status === 429 || status >= 500) return 'unavailable';
-  if (status === 401) return operation === 'token' ? 'invalid_client' : 'invalid_token';
-  if (status >= 400) return 'rejected';
-  return 'invalid_response';
-}
-
 async function request(
   operation: UaePassSigningOperation,
   url: URL,
@@ -202,18 +201,15 @@ async function request(
   expectedStatus: number,
 ): Promise<{ response: Response; signal: AbortSignal }> {
   const sendsOrReceivesPdf = operation === 'create' || operation === 'download';
-  const signal = AbortSignal.timeout(sendsOrReceivesPdf ? documentTransferTimeoutMs : 15_000);
-  let response: Response;
-  try {
-    response = await fetch(url, { ...init, redirect: 'manual', signal });
-  } catch {
-    throw new UaePassSigningError(signal.aborted ? 'timeout' : 'unavailable', operation);
+  const result = await send(url, init, sendsOrReceivesPdf ? documentTransferTimeoutMs : apiTimeoutMs,
+    (code) => new UaePassSigningError(code, operation));
+  const { status } = result.response;
+  if (status !== expectedStatus) {
+    discardBody(result.response);
+    const code = classifyStatus(status, operation === 'token' ? 'invalid_client' : 'invalid_token');
+    throw new UaePassSigningError(code, operation, status);
   }
-  if (response.status !== expectedStatus) {
-    void response.body?.cancel().catch(() => {});
-    throw new UaePassSigningError(rejectionCode(operation, response.status), operation, response.status);
-  }
-  return { response, signal };
+  return result;
 }
 
 async function readBody<T>(
@@ -298,9 +294,7 @@ function createProcessForm(
 
 export function createUaePassSigningClient(config: UaePassSigningConfig): UaePassSigningClient {
   const { environment, clientId, clientSecret, finishCallbackUrl, maxUploadPdfBytes = defaultMaxUploadPdfBytes } = config;
-  if (environment !== 'staging' && environment !== 'production') {
-    throw new TypeError('Choose a UAE PASS environment.');
-  }
+  assertEnvironment(environment);
   if (!isNonemptyString(clientId) || clientId.includes(':') || !isNonemptyString(clientSecret)) {
     throw new TypeError('Provide valid UAE PASS signing client credentials.');
   }
@@ -362,9 +356,8 @@ export function createUaePassSigningClient(config: UaePassSigningConfig): UaePas
         method: 'GET',
         headers: { Authorization: bearerHeader(accessToken), Accept: pdfType },
       }, 200);
-      const contentType = result.response.headers.get('content-type')?.split(';')[0].trim().toLowerCase();
-      if (contentType !== pdfType) {
-        void result.response.body?.cancel().catch(() => {});
+      if (mediaType(result.response) !== pdfType) {
+        discardBody(result.response);
         throw new UaePassSigningError('invalid_response', 'download', result.response.status);
       }
       const bytes = await readBody('download', result, (response) => readBoundedBytes(response, maxSignedPdfResponseBytes));

@@ -1,7 +1,21 @@
 import { Buffer } from 'node:buffer';
 import { DOMParser, type Element } from '@xmldom/xmldom';
 
-import { documentTransferTimeoutMs, isPdf, isXmlText, origins, readBoundedBytes } from '../internal/provider.js';
+import { UaePassBaseError } from '../errors.js';
+import {
+  assertEnvironment,
+  classifyStatus,
+  decodeUtf8,
+  discardBody,
+  documentTransferTimeoutMs,
+  isPdf,
+  isXmlText,
+  mediaType,
+  origins,
+  readBoundedBytes,
+  send,
+} from '../internal/provider.js';
+import type { UaePassEnvironment } from '../types.js';
 
 const gatewayPath = '/trustedx-gw/SoapGateway';
 const soap = 'http://schemas.xmlsoap.org/soap/envelope/';
@@ -21,7 +35,7 @@ const xmlEntities: Readonly<Record<string, string>> = {
 };
 
 export interface UaePassSigningValidationConfig {
-  readonly environment: keyof typeof origins;
+  readonly environment: UaePassEnvironment;
   readonly clientId: string;
   readonly clientSecret: string;
 }
@@ -64,19 +78,16 @@ export type UaePassSigningValidationErrorCode = keyof typeof errorMessages;
 type SoapOperation = 'ltv' | 'verify';
 export type UaePassSigningValidationOperation = SoapOperation | 'match_signer';
 
-export class UaePassSigningValidationError extends Error {
-  constructor(
-    readonly code: UaePassSigningValidationErrorCode,
-    readonly operation: UaePassSigningValidationOperation,
-    readonly status?: number,
-  ) {
-    super(errorMessages[code]);
+export class UaePassSigningValidationError
+  extends UaePassBaseError<UaePassSigningValidationErrorCode, UaePassSigningValidationOperation> {
+  constructor(code: UaePassSigningValidationErrorCode, operation: UaePassSigningValidationOperation, status?: number) {
+    super(code, operation, errorMessages[code], status);
     this.name = 'UaePassSigningValidationError';
   }
 }
 
 function escapeXml(value: string): string {
-  return value.replace(/[&<>"'\r]/g, (character) => xmlEntities[character]);
+  return value.replace(/[&<>"'\r]/g, (character) => xmlEntities[character] ?? character);
 }
 
 function elements(parent: Element): Element[] {
@@ -89,8 +100,9 @@ function children(parent: Element, namespace: string, name: string): Element[] {
 
 function requiredChild(parent: Element, namespace: string, name: string): Element {
   const matches = children(parent, namespace, name);
-  if (matches.length !== 1) throw new Error('Unexpected XML element count.');
-  return matches[0];
+  const [match] = matches;
+  if (!match || matches.length !== 1) throw new Error('Unexpected XML element count.');
+  return match;
 }
 
 function elementText(element: Element): string {
@@ -103,13 +115,12 @@ function childText(parent: Element, namespace: string, name: string): string {
 }
 
 async function readXml(response: Response, maxResponseBytes: number): Promise<Element> {
-  const contentType = response.headers.get('content-type')?.split(';')[0].trim().toLowerCase();
+  const contentType = mediaType(response);
   if (!contentType || !xmlMediaTypes.has(contentType)) {
-    void response.body?.cancel().catch(() => {});
+    discardBody(response);
     throw new Error('Unexpected SOAP media type.');
   }
-  const bytes = await readBoundedBytes(response, maxResponseBytes);
-  const xml = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  const xml = decodeUtf8(await readBoundedBytes(response, maxResponseBytes));
   if (/<!DOCTYPE|<!ENTITY/i.test(xml)) throw new Error('Unexpected declaration in signing SOAP.');
   const parser = new DOMParser({ onError: () => { throw new Error('Malformed signing SOAP XML.'); } });
   const { documentElement } = parser.parseFromString(xml, 'application/xml');
@@ -128,7 +139,7 @@ function soapOutputs(
   const body = requiredChild(envelope, soap, 'Body');
   const responses = elements(body);
   const [response] = responses;
-  if (responses.length !== 1) throw new Error('Unexpected SOAP body.');
+  if (!response || responses.length !== 1) throw new Error('Unexpected SOAP body.');
   if (response.namespaceURI === soap && response.localName === 'Fault') {
     throw new UaePassSigningValidationError('rejected', operation, status);
   }
@@ -178,7 +189,7 @@ function verifiedSignature(outputs: Element, status: number): UaePassVerifiedPdf
   const identities = children(outputs, dss, 'SignerIdentity');
   if (identities.length === 0) return { signatureFieldName };
   const [identity] = identities;
-  if (identities.length !== 1 || identity.getAttribute('Format') !== signerIdentityFormat) {
+  if (!identity || identities.length !== 1 || identity.getAttribute('Format') !== signerIdentityFormat) {
     throw new Error('Unexpected signer identity format.');
   }
   const signerSubject = elementText(identity).trim();
@@ -221,9 +232,7 @@ export function createUaePassSigningValidationClient(
   config: UaePassSigningValidationConfig,
 ): UaePassSigningValidationClient {
   const { environment, clientId, clientSecret } = config;
-  if (environment !== 'staging' && environment !== 'production') {
-    throw new TypeError('Choose a UAE PASS environment.');
-  }
+  assertEnvironment(environment);
   if (!isXmlText(clientId) || !isXmlText(clientSecret)) {
     throw new TypeError('Provide UAE PASS SOAP credentials.');
   }
@@ -243,29 +252,19 @@ export function createUaePassSigningValidationClient(
       throw new TypeError(`Provide signed PDF bytes up to ${maxValidationPdfBytes} bytes.`);
     }
     const body = requestBody(clientId, clientSecret, operation, pdf, optionalInputs);
-    const signal = AbortSignal.timeout(documentTransferTimeoutMs);
-    let response: Response;
-    try {
-      response = await fetch(gateway, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/xml; charset=utf-8',
-          SOAPAction: operation === 'ltv' ? 'Update' : 'Verify',
-          TwsAuthN: 'urn:safelayer:tws:policies:authentication:oauth:clients',
-        },
-        body,
-        redirect: 'manual',
-        signal,
-      });
-    } catch {
-      throw new UaePassSigningValidationError(signal.aborted ? 'timeout' : 'unavailable', operation);
-    }
+    const { response, signal } = await send(gateway, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/xml; charset=utf-8',
+        SOAPAction: operation === 'ltv' ? 'Update' : 'Verify',
+        TwsAuthN: 'urn:safelayer:tws:policies:authentication:oauth:clients',
+      },
+      body,
+    }, documentTransferTimeoutMs, (code) => new UaePassSigningValidationError(code, operation));
     const { status } = response;
     if (!response.ok) {
-      void response.body?.cancel().catch(() => {});
-      const code = status === 401 ? 'invalid_client' : status === 429 || status >= 500 ? 'unavailable' :
-        status >= 400 ? 'rejected' : 'invalid_response';
-      throw new UaePassSigningValidationError(code, operation, status);
+      discardBody(response);
+      throw new UaePassSigningValidationError(classifyStatus(status, 'invalid_client'), operation, status);
     }
     try {
       const outputs = soapOutputs(await readXml(response, responseLimit), operation, status);

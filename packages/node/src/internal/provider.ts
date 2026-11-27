@@ -1,13 +1,70 @@
 import { Buffer } from 'node:buffer';
 
+import type { UaePassEnvironment } from '../types.js';
+
 const pdfHeader = Buffer.from('%PDF-');
 const maxJsonBytes = 256 * 1024;
+const utf8 = new TextDecoder('utf-8', { fatal: true });
+
+export const tokenTimeoutMs = 5_000;
+export const apiTimeoutMs = 15_000;
 export const documentTransferTimeoutMs = 60_000;
 
-export const origins = {
+export const origins: Readonly<Record<UaePassEnvironment, string>> = {
   staging: 'https://stg-id.uaepass.ae',
   production: 'https://id.uaepass.ae',
-} as const;
+};
+
+export function assertEnvironment(value: unknown): asserts value is UaePassEnvironment {
+  if (value !== 'staging' && value !== 'production') {
+    throw new TypeError('Choose a UAE PASS environment.');
+  }
+}
+
+export type TransportFailure = 'timeout' | 'unavailable';
+
+/**
+ * Sends a provider request that never follows redirects and aborts after `timeoutMs`.
+ * Returns the timeout signal so callers can tell a timed-out body read from a malformed one.
+ */
+export async function send(
+  url: URL,
+  init: RequestInit,
+  timeoutMs: number,
+  toError: (code: TransportFailure) => Error,
+): Promise<{ response: Response; signal: AbortSignal }> {
+  const signal = AbortSignal.timeout(timeoutMs);
+  try {
+    const response = await fetch(url, { ...init, redirect: 'manual', signal });
+    return { response, signal };
+  } catch {
+    throw toError(signal.aborted ? 'timeout' : 'unavailable');
+  }
+}
+
+/** Maps an unexpected HTTP status to an error code. */
+export function classifyStatus<Unauthorized extends string>(
+  status: number,
+  unauthorized: Unauthorized,
+): Unauthorized | 'unavailable' | 'rejected' | 'invalid_response' {
+  if (status === 429 || status >= 500) return 'unavailable';
+  if (status === 401) return unauthorized;
+  if (status >= 400) return 'rejected';
+  return 'invalid_response';
+}
+
+export function discardBody(response: Response): void {
+  void response.body?.cancel().catch(() => {});
+}
+
+/** Returns the lowercase media type of the response without parameters. */
+export function mediaType(response: Response): string | undefined {
+  return response.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase();
+}
+
+export function decodeUtf8(bytes: Uint8Array): string {
+  return utf8.decode(bytes);
+}
 
 export function isNonemptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
@@ -37,7 +94,7 @@ export function parseProviderUrl(value: unknown): URL | undefined {
   return url.username || url.password ? undefined : url;
 }
 
-export function parseCallbackUrl(value: unknown, environment: keyof typeof origins): URL | undefined {
+export function parseCallbackUrl(value: unknown, environment: UaePassEnvironment): URL | undefined {
   if (typeof value !== 'string' || !/^https?:\/\/[^/]/.test(value)) return undefined;
   const url = parseProviderUrl(value);
   if (url && (url.protocol === 'https:' || (environment === 'staging' && url.hostname === 'localhost'))) {
@@ -57,7 +114,7 @@ export function isXmlText(value: unknown): value is string {
 
 export async function readBoundedBytes(response: Response, limit: number): Promise<Uint8Array> {
   if (Number(response.headers.get('content-length')) > limit) {
-    void response.body?.cancel().catch(() => {});
+    discardBody(response);
     throw new RangeError('The UAE PASS response is too large.');
   }
   const reader = response.body?.getReader();
@@ -89,5 +146,5 @@ export async function readBoundedBytes(response: Response, limit: number): Promi
 
 export async function readProviderJson(response: Response): Promise<unknown> {
   const bytes = await readBoundedBytes(response, maxJsonBytes);
-  return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+  return JSON.parse(decodeUtf8(bytes));
 }

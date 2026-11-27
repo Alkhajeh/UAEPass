@@ -149,7 +149,7 @@ If you expect a particular signer, require the returned subject to match that id
 ## Errors and limits
 
 - The upload limit applies to the original PDF only. The SDK buffers up to **32 MiB** for the signed PDF download and **48 MiB** for the full LTV response, including Base64 and SOAP overhead. LTV and verification accept PDFs up to **36 MiB**, which covers every PDF the SDK can return from either response.
-- Handle `UaePassError` for sign-in, `UaePassSigningError` for signing, and `UaePassSigningValidationError` for validation. Use `code` and `operation` to distinguish a rejected signature or signer mismatch from a service timeout. Provider errors may include an HTTP `status`.
+- Handle `UaePassError` for sign-in, `UaePassSigningError` for signing, and `UaePassSigningValidationError` for validation. All three extend `UaePassBaseError`, so one `instanceof UaePassBaseError` check catches any of them. Use `code` and `operation` to distinguish a rejected signature or signer mismatch from a service timeout. Provider errors may include an HTTP `status`.
 - Refresh an expired signing token with `getAccessToken()`. If `createProcess()` times out, reconcile the attempt with UAE PASS before creating another process.
 - For resumable finalization, call `applyLongTermValidation()` and persist its output. Verify those exact bytes with `verifySignedPdf()` and check the expected signature field and signer before accepting the PDF.
 - Keep credentials and tokens on the server. Keep authorization codes, secrets, tokens, profile data, certificate subjects, and PDF bytes out of logs.
