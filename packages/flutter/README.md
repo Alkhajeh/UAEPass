@@ -1,8 +1,33 @@
 # UAE PASS for Flutter
 
-Integrate UAE PASS sign-in and PDF signing approval on Android, iOS, and Flutter Web with official English and Arabic buttons. Your application's backend exchanges authorization codes, starts signing requests, and verifies signed PDFs.
+An independently maintained Flutter plugin for UAE PASS sign-in and PDF signing approval on Android, iOS, and Flutter Web, with the official English and Arabic buttons.
 
-[Android and iOS sign-in](#quick-start) · [Web sign-in](#flutter-web-quick-start) · [Sign a PDF](#document-signing) · [Button options](#button-options)
+The app starts UAE PASS authorization and receives a one-time code. Your backend exchanges that code, applies your account rules, and returns an app session. For signing, your backend starts the request and verifies the signed PDF, and the app opens the UAE PASS approval.
+
+![The UAE PASS sign-in button in English and Arabic in the example app](doc/screenshots/sign-in-en-ar.png)
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:uaepass/uaepass.dart';
+
+final client = UaePassClient(
+  UaePassConfiguration(
+    environment: UaePassEnvironment.staging,
+    clientId: 'your-client-id',
+    callbackScheme: 'com.example.yourapp',
+    redirectUri: Uri.parse('https://service.example/uaepass/callback'),
+  ),
+);
+
+Widget buildSignInButton() => UaePassSignInButton(
+  client: client,
+  onResult: (result) {
+    // Send a UaePassSuccess grant's code to your backend.
+  },
+);
+```
+
+[Android and iOS sign-in](#android-and-ios-quick-start) · [Web sign-in](#flutter-web-quick-start) · [Sign a PDF](#document-signing) · [Button options](#button-options)
 
 ## Requirements
 
@@ -12,7 +37,7 @@ Integrate UAE PASS sign-in and PDF signing approval on Android, iOS, and Flutter
 
 Set `environment` to `UaePassEnvironment.staging` for testing or `UaePassEnvironment.production` for live use. Use the same UAE PASS environment for sign-in, signing, and your backend. Keep the client secret and provider access tokens on your backend.
 
-## Quick start
+## Android and iOS quick start
 
 Follow these steps for Android and iOS. The SDK hands off to the UAE PASS app when installed and uses an embedded browser otherwise. For a browser app, see [Flutter Web quick start](#flutter-web-quick-start).
 
@@ -68,13 +93,17 @@ Merge these keys and array entries into your app's `Info.plist`. The URL type re
 </array>
 ```
 
-These platform settings let the SDK receive the custom-scheme return and resume the active WebView. Your Flutter sign-in screen handles the result through the button's `onResult` callback. The deep-link opt-out disables Flutter's default deep-link routing across the host app. If you also use app links or universal links elsewhere, route those URLs with your app's link handler. [Flutter deep-link setup](https://docs.flutter.dev/ui/navigation/deep-linking#migrating-from-plugin-based-deep-linking)
+These platform settings let the SDK receive the custom-scheme return and resume the active WebView. Your sign-in screen gets the result from the button's `onResult` callback.
+
+- The deep-link opt-out turns off Flutter's default deep-link routing for the whole app.
+- If you also use app links or universal links, route those URLs with your app's own link handler. [Flutter deep-link setup](https://docs.flutter.dev/ui/navigation/deep-linking#migrating-from-plugin-based-deep-linking)
 
 ### 3. Add the button and handle the result
 
 Create one client for your integration and place `UaePassSignInButton` on your sign-in page. The button disables itself during UAE PASS authorization. Its `onResult` callback receives a typed grant, cancellation, or authorization failure.
 
 ```dart
+import 'package:flutter/widgets.dart';
 import 'package:uaepass/uaepass.dart';
 
 final client = UaePassClient(
@@ -86,11 +115,19 @@ final client = UaePassClient(
   ),
 );
 
-final signInButton = UaePassSignInButton(
-  client: client,
-  onResult: handleAuthorizationResult,
-);
+class SignInPage extends StatelessWidget {
+  const SignInPage({super.key});
 
+  @override
+  Widget build(BuildContext context) {
+    return UaePassSignInButton(
+      client: client,
+      onResult: handleAuthorizationResult,
+    );
+  }
+}
+
+// completeSignInOnBackend and showSignInFailure are your app's functions.
 Future<void> handleAuthorizationResult(
   UaePassResult<UaePassAuthorizationGrant> result,
 ) async {
@@ -110,14 +147,26 @@ Future<void> handleAuthorizationResult(
 Implement `completeSignInOnBackend` by sending the one-time code over HTTPS to an endpoint on your own backend. The backend can use any language or framework that can call the UAE PASS APIs.
 
 1. Exchange the code promptly at UAE PASS `/idshub/token`. Use the client secret stored on your server and the exact registered redirect URI used to start authorization.
-2. Fetch the UAE PASS profile at `/idshub/userinfo` from the backend. Apply your approved account eligibility rules and use the stored UAE PASS `uuid` to look up a linked account. Apply your approved first-time account flow when there is no match.
+2. Fetch the UAE PASS profile at `/idshub/userinfo` from the backend. Apply your approved account eligibility rules and use the stored UAE PASS `uuid` to look up a linked account. Keep `uuid` and `sub` as separate fields. Apply your approved first-time account flow when there is no match.
 3. Return an app session on success, or a result the app can present or route. Use `UaePassSignInMessages.forResult` to display supported eligibility and sign-in errors in the app's locale. The app owns loading and navigation during this step.
 
-When the user signs out, invalidate your app session, clear its local credentials, and call `await client.logout(context)` to end the UAE PASS session in the embedded browser. It returns `true` when UAE PASS returns to the configured redirect URI. Verify that the next UAE PASS sign-in challenges the user again on both mobile paths as part of your assessment. [UAE PASS logout guide](https://docs.uaepass.ae/feature-guides/authentication/web-application/4.-web-single-sign-on-sso-and-logout-user-session-from-uae-pass) · [Authentication checklist](https://docs.uaepass.ae/getting-onboarded-with-uae-pass/onboarding-process-for-uae-pass-service-providers/development-phase#assessment-check-list)
+When the user signs out:
+
+- Invalidate your app session and clear its local credentials.
+- Call `await client.logout(context)` to end the UAE PASS session in the embedded browser. It returns `true` when UAE PASS returns to the configured redirect URI.
+- For your UAE PASS assessment, verify that the next sign-in challenges the user again through both the UAE PASS app and the embedded browser.
+
+[UAE PASS logout guide](https://docs.uaepass.ae/feature-guides/authentication/web-application/4.-web-single-sign-on-sso-and-logout-user-session-from-uae-pass) · [Authentication checklist](https://docs.uaepass.ae/getting-onboarded-with-uae-pass/onboarding-process-for-uae-pass-service-providers/development-phase#assessment-check-list)
 
 ## Flutter Web quick start
 
-Install `uaepass` and register a callback on the same origin as your Flutter Web app. Use HTTPS for hosted apps. Web staging can use HTTP at `localhost`. Configure your web host to serve the Flutter entry document at that path and process the callback before your router or analytics initialize. Set `Referrer-Policy: no-referrer` on the callback response and omit its query string from access logs and traces. Use the exact registered redirect URI in the app and backend configuration. UAE PASS issues separate credentials for the approved web channel. [Flutter URL strategies](https://docs.flutter.dev/ui/navigation/url-strategies) · [UAE PASS onboarding guidelines](https://docs.uaepass.ae/guidelines/use-cases/standard-implementation-guidelines)
+Install `uaepass` with `flutter pub add uaepass`, then set up the callback:
+
+- Register a callback on the same origin as your Flutter Web app. Use HTTPS for hosted apps. Web staging can use HTTP at `localhost`.
+- Serve the Flutter entry document at the callback path, and process the callback before your router or analytics initialize. [Flutter URL strategies](https://docs.flutter.dev/ui/navigation/url-strategies)
+- Set `Referrer-Policy: no-referrer` on the callback response, and keep its query string out of access logs and traces.
+- Use the exact registered redirect URI in the app and backend configuration.
+- Use the web channel's credentials. UAE PASS issues separate credentials for the approved web channel. [UAE PASS onboarding guidelines](https://docs.uaepass.ae/guidelines/use-cases/standard-implementation-guidelines)
 
 ```dart
 import 'package:flutter/widgets.dart';
@@ -231,4 +280,4 @@ The backend owns the upload limit, signature level and appearance, and finalizat
 
 ## Example app
 
-Run the example app to try staging sign-in or signing, preview localized outcomes offline, and explore the official button variations. [Example app instructions](example/README.md)
+Run the example app to try staging sign-in or signing, preview localized outcomes offline, and explore the official button variations. [Example app instructions](example/README.md) · [Minimal examples](example/example.md)

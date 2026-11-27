@@ -1,8 +1,11 @@
 name: uaepass
 description: UAE PASS sign-in and document signing approval on Android, iOS, and web, with official branded buttons.
-version: 0.2.0
+version: 0.2.1
 repository: https://github.com/Alkhajeh/UAEPass
 issue_tracker: https://github.com/Alkhajeh/UAEPass/issues
+screenshots:
+  - description: The UAE PASS sign-in button in English and Arabic in the example app.
+    path: doc/screenshots/sign-in-en-ar.png
 
 environment:
   sdk: ^3.14.0
