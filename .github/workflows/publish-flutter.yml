@@ -9,7 +9,30 @@ permissions:
   contents: read
 
 jobs:
+  verify:
+    name: Verify release tag
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/flutter
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - run: |
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo 'The release tag must point to a commit on main.' >&2
+            exit 1
+          fi
+          version="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | tr -d "\"'[:space:]")"
+          if [ "$GITHUB_REF_NAME" != "flutter-v$version" ]; then
+            printf 'Expected tag flutter-v%s, got %s\n' "$version" "$GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+
   checks:
+    needs: verify
     uses: ./.github/workflows/flutter.yml
 
   publish:
@@ -19,4 +42,5 @@ jobs:
       id-token: write
     uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
     with:
+      environment: pub.dev
       working-directory: packages/flutter
