@@ -4,15 +4,21 @@ export const UaePassUserType = {
   SOP3: 'SOP3',
 } as const;
 
+export type UaePassUserType = (typeof UaePassUserType)[keyof typeof UaePassUserType];
+
 export const UaePassProfileType = {
   CitizenOrResident: '1',
   Visitor: '2',
 } as const;
 
+export type UaePassProfileType = (typeof UaePassProfileType)[keyof typeof UaePassProfileType];
+
 export const UaePassGender = {
   Male: 'Male',
   Female: 'Female',
 } as const;
+
+export type UaePassGender = (typeof UaePassGender)[keyof typeof UaePassGender];
 
 const stringFields = [
   'uuid',

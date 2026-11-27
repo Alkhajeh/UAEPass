@@ -1,6 +1,11 @@
 import { Blob, Buffer } from 'node:buffer';
 
+import { UaePassBaseError } from '../errors.js';
 import {
+  apiTimeoutMs,
+  assertEnvironment,
+  classifyStatus,
+  discardBody,
   documentTransferTimeoutMs,
   isBearerToken,
   isBearerTokenResponse,
@@ -8,12 +13,15 @@ import {
   isPdf,
   isRecord,
   isXmlText,
+  mediaType,
   origins,
   parseCallbackUrl,
   parseProviderUrl,
   readBoundedBytes,
   readProviderJson,
+  send,
 } from '../internal/provider.js';
+import type { UaePassEnvironment } from '../types.js';
 
 const scope = 'urn:safelayer:eidas:sign:process:document';
 const signingPath = '/trustedx-resources/esignsp/v2';
@@ -26,7 +34,7 @@ const maxAllowedUploadPdfBytes = 20 * 1024 * 1024;
 const maxSignedPdfResponseBytes = 32 * 1024 * 1024;
 
 export interface UaePassSigningConfig {
-  readonly environment: keyof typeof origins;
+  readonly environment: UaePassEnvironment;
   readonly clientId: string;
   readonly clientSecret: string;
   readonly finishCallbackUrl: string;
@@ -122,13 +130,9 @@ const errorMessages = {
 export type UaePassSigningErrorCode = keyof typeof errorMessages;
 export type UaePassSigningOperation = 'token' | 'create' | 'result' | 'download' | 'delete';
 
-export class UaePassSigningError extends Error {
-  constructor(
-    readonly code: UaePassSigningErrorCode,
-    readonly operation: UaePassSigningOperation,
-    readonly status?: number,
-  ) {
-    super(errorMessages[code]);
+export class UaePassSigningError extends UaePassBaseError<UaePassSigningErrorCode, UaePassSigningOperation> {
+  constructor(code: UaePassSigningErrorCode, operation: UaePassSigningOperation, status?: number) {
+    super(code, operation, errorMessages[code], status);
     this.name = 'UaePassSigningError';
   }
 }
@@ -188,13 +192,6 @@ function bearerHeader(accessToken: string): string {
   return `Bearer ${accessToken}`;
 }
 
-function rejectionCode(operation: UaePassSigningOperation, status: number): UaePassSigningErrorCode {
-  if (status === 429 || status >= 500) return 'unavailable';
-  if (status === 401) return operation === 'token' ? 'invalid_client' : 'invalid_token';
-  if (status >= 400) return 'rejected';
-  return 'invalid_response';
-}
-
 async function request(
   operation: UaePassSigningOperation,
   url: URL,
@@ -202,18 +199,15 @@ async function request(
   expectedStatus: number,
 ): Promise<{ response: Response; signal: AbortSignal }> {
   const sendsOrReceivesPdf = operation === 'create' || operation === 'download';
-  const signal = AbortSignal.timeout(sendsOrReceivesPdf ? documentTransferTimeoutMs : 15_000);
-  let response: Response;
-  try {
-    response = await fetch(url, { ...init, redirect: 'manual', signal });
-  } catch {
-    throw new UaePassSigningError(signal.aborted ? 'timeout' : 'unavailable', operation);
+  const result = await send(url, init, sendsOrReceivesPdf ? documentTransferTimeoutMs : apiTimeoutMs,
+    (code) => new UaePassSigningError(code, operation));
+  const { status } = result.response;
+  if (status !== expectedStatus) {
+    discardBody(result.response);
+    const code = classifyStatus(status, operation === 'token' ? 'invalid_client' : 'invalid_token');
+    throw new UaePassSigningError(code, operation, status);
   }
-  if (response.status !== expectedStatus) {
-    void response.body?.cancel().catch(() => {});
-    throw new UaePassSigningError(rejectionCode(operation, response.status), operation, response.status);
-  }
-  return { response, signal };
+  return result;
 }
 
 async function readBody<T>(
@@ -298,9 +292,7 @@ function createProcessForm(
 
 export function createUaePassSigningClient(config: UaePassSigningConfig): UaePassSigningClient {
   const { environment, clientId, clientSecret, finishCallbackUrl, maxUploadPdfBytes = defaultMaxUploadPdfBytes } = config;
-  if (environment !== 'staging' && environment !== 'production') {
-    throw new TypeError('Choose a UAE PASS environment.');
-  }
+  assertEnvironment(environment);
   if (!isNonemptyString(clientId) || clientId.includes(':') || !isNonemptyString(clientSecret)) {
     throw new TypeError('Provide valid UAE PASS signing client credentials.');
   }
@@ -362,9 +354,8 @@ export function createUaePassSigningClient(config: UaePassSigningConfig): UaePas
         method: 'GET',
         headers: { Authorization: bearerHeader(accessToken), Accept: pdfType },
       }, 200);
-      const contentType = result.response.headers.get('content-type')?.split(';')[0].trim().toLowerCase();
-      if (contentType !== pdfType) {
-        void result.response.body?.cancel().catch(() => {});
+      if (mediaType(result.response) !== pdfType) {
+        discardBody(result.response);
         throw new UaePassSigningError('invalid_response', 'download', result.response.status);
       }
       const bytes = await readBody('download', result, (response) => readBoundedBytes(response, maxSignedPdfResponseBytes));

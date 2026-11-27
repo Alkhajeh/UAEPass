@@ -1,6 +1,9 @@
 import { Buffer } from 'node:buffer';
 
+import { UaePassBaseError } from '../errors.js';
 import {
+  assertEnvironment,
+  discardBody,
   isBearerToken,
   isBearerTokenResponse,
   isNonemptyString,
@@ -8,11 +11,14 @@ import {
   origins,
   parseCallbackUrl,
   readProviderJson,
+  send,
+  tokenTimeoutMs,
 } from '../internal/provider.js';
+import type { UaePassEnvironment } from '../types.js';
 import { parseUserInfo, type UaePassUserInfo } from './user-info.js';
 
 export interface UaePassConfig {
-  readonly environment: keyof typeof origins;
+  readonly environment: UaePassEnvironment;
   readonly clientId: string;
   readonly clientSecret: string;
   readonly redirectUri: string;
@@ -43,13 +49,9 @@ const errorMessages = {
 export type UaePassErrorCode = keyof typeof errorMessages;
 export type UaePassOperation = 'token' | 'userinfo';
 
-export class UaePassError extends Error {
-  constructor(
-    readonly code: UaePassErrorCode,
-    readonly operation: UaePassOperation,
-    readonly status?: number,
-  ) {
-    super(errorMessages[code]);
+export class UaePassError extends UaePassBaseError<UaePassErrorCode, UaePassOperation> {
+  constructor(code: UaePassErrorCode, operation: UaePassOperation, status?: number) {
+    super(code, operation, errorMessages[code], status);
     this.name = 'UaePassError';
   }
 }
@@ -84,17 +86,12 @@ async function request(
   url: URL,
   init: RequestInit,
 ): Promise<{ data: unknown; status: number }> {
-  const signal = AbortSignal.timeout(5000);
-  let response: Response;
-  try {
-    response = await fetch(url, { ...init, redirect: 'manual', signal });
-  } catch {
-    throw new UaePassError(signal.aborted ? 'timeout' : 'unavailable', operation);
-  }
+  const { response, signal } = await send(url, init, tokenTimeoutMs,
+    (code) => new UaePassError(code, operation));
 
   const { status } = response;
   if ((status >= 300 && status < 400) || status === 429 || status >= 500) {
-    void response.body?.cancel().catch(() => {});
+    discardBody(response);
     const code = status >= 400 ? 'unavailable' : 'invalid_response';
     throw new UaePassError(code, operation, status);
   }
@@ -114,9 +111,7 @@ async function request(
 
 export function createUaePassClient(config: UaePassConfig): UaePassClient {
   const { environment, clientId, clientSecret, redirectUri } = config;
-  if (environment !== 'staging' && environment !== 'production') {
-    throw new TypeError('Choose a UAE PASS environment.');
-  }
+  assertEnvironment(environment);
   if (!isNonemptyString(clientId) || clientId.includes(':') || !isNonemptyString(clientSecret)) {
     throw new TypeError('Provide valid UAE PASS client credentials.');
   }

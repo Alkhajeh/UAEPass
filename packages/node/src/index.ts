@@ -1,3 +1,6 @@
+export { UaePassBaseError } from './errors.js';
+export type { UaePassEnvironment } from './types.js';
+
 export { createUaePassClient, UaePassError } from './auth/client.js';
 export type {
   UaePassClient,

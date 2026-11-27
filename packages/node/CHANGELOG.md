@@ -1,3 +1,8 @@
+## Unreleased
+
+- Add `UaePassBaseError`, which `UaePassError`, `UaePassSigningError`, and `UaePassSigningValidationError` now extend.
+- Export the `UaePassEnvironment` type, and types for `UaePassUserType`, `UaePassProfileType`, and `UaePassGender`.
+
 ## 0.2.1
 
 - Add English and Arabic locale selection for the UAE PASS hosted signing screens.
