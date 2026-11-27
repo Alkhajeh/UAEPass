@@ -40,6 +40,7 @@ When the optional demo's exchange interface changes, run both sets of checks and
 - Flutter release tags use `flutter-v<version>` on the merged release commit. Match the tag version to the Flutter pubspec and changelog, and complete the [Flutter release checklist](#flutter-release-checklist). Pushing the tag starts the pub.dev workflow. [Publish workflow](.github/workflows/publish-flutter.yml)
 - Node release tags use `node-v<version>` on the merged release commit, matching `packages/node/package.json`. Set up `publish-node.yml` as a GitHub Actions Trusted Publisher with direct publish permission on npm before pushing the first Node release tag. [Node publish workflow](.github/workflows/publish-node.yml) · [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers/)
 - Publishing runs in the `pub.dev` and `npm` GitHub environments, limited to `flutter-v*` and `node-v*` tags. Both registries require the matching environment for trusted publishing, and both publish workflows reject tags that are not on `main` or do not match the package version.
+- The "Release tags" ruleset lets only repository admins create, move, or delete `flutter-v*` and `node-v*` tags.
 - Use a locally packed tarball for Node install checks.
 
 ### Flutter release checklist

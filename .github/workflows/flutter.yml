@@ -2,15 +2,22 @@ name: Flutter checks
 
 on:
   pull_request:
+  push:
+    branches: [main]
   workflow_call:
 
 permissions:
   contents: read
 
+concurrency:
+  group: flutter-checks-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   checks:
     name: ${{ matrix.package }}
-    runs-on: macos-26
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -30,6 +37,7 @@ jobs:
         with:
           flutter-version: '3.50.1'
           channel: stable
+          cache: true
       - run: flutter pub get
       - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze --no-pub

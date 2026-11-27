@@ -8,10 +8,15 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: publish-flutter
+  cancel-in-progress: false
+
 jobs:
   verify:
     name: Verify release tag
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     defaults:
       run:
         working-directory: packages/flutter
