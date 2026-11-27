@@ -87,7 +87,7 @@ export class UaePassSigningValidationError
 }
 
 function escapeXml(value: string): string {
-  return value.replace(/[&<>"'\r]/g, (character) => xmlEntities[character]);
+  return value.replace(/[&<>"'\r]/g, (character) => xmlEntities[character] ?? character);
 }
 
 function elements(parent: Element): Element[] {
@@ -100,8 +100,9 @@ function children(parent: Element, namespace: string, name: string): Element[] {
 
 function requiredChild(parent: Element, namespace: string, name: string): Element {
   const matches = children(parent, namespace, name);
-  if (matches.length !== 1) throw new Error('Unexpected XML element count.');
-  return matches[0];
+  const [match] = matches;
+  if (!match || matches.length !== 1) throw new Error('Unexpected XML element count.');
+  return match;
 }
 
 function elementText(element: Element): string {
@@ -138,7 +139,7 @@ function soapOutputs(
   const body = requiredChild(envelope, soap, 'Body');
   const responses = elements(body);
   const [response] = responses;
-  if (responses.length !== 1) throw new Error('Unexpected SOAP body.');
+  if (!response || responses.length !== 1) throw new Error('Unexpected SOAP body.');
   if (response.namespaceURI === soap && response.localName === 'Fault') {
     throw new UaePassSigningValidationError('rejected', operation, status);
   }
@@ -188,7 +189,7 @@ function verifiedSignature(outputs: Element, status: number): UaePassVerifiedPdf
   const identities = children(outputs, dss, 'SignerIdentity');
   if (identities.length === 0) return { signatureFieldName };
   const [identity] = identities;
-  if (identities.length !== 1 || identity.getAttribute('Format') !== signerIdentityFormat) {
+  if (!identity || identities.length !== 1 || identity.getAttribute('Format') !== signerIdentityFormat) {
     throw new Error('Unexpected signer identity format.');
   }
   const signerSubject = elementText(identity).trim();

@@ -142,26 +142,27 @@ function isId(value: unknown): value is string {
 }
 
 function isSigningStatus(value: unknown): value is UaePassSigningStatus {
-  return signingStatuses.some((status) => status === value);
+  return (signingStatuses as readonly unknown[]).includes(value);
 }
 
+// The document reference fields UAE PASS may return, and the path each one must have.
+const documentPaths = {
+  url: new RegExp(`^${documentsPath}/([a-zA-Z0-9_-]+)$`),
+  content: new RegExp(`^${documentsPath}/([a-zA-Z0-9_-]+)/content$`),
+};
+
+/** Returns the document ID when `id`, `url`, and `content` are valid and all name the same document. */
 function parseDocumentId(data: unknown, origin: string): string | undefined {
   if (!isRecord(data)) return undefined;
-  let id = data.id;
-  if (id !== undefined && !isId(id)) return undefined;
-  for (const key of ['url', 'content'] as const) {
+  const ids: unknown[] = data.id === undefined ? [] : [data.id];
+  for (const [key, path] of Object.entries(documentPaths)) {
     if (data[key] === undefined) continue;
     const url = parseProviderUrl(data[key]);
-    if (url?.origin !== origin || url.search || !url.pathname.startsWith(`${documentsPath}/`)) {
-      return undefined;
-    }
-    const suffix = key === 'content' ? '/content' : '';
-    if (suffix && !url.pathname.endsWith(suffix)) return undefined;
-    const urlId = url.pathname.slice(documentsPath.length + 1, url.pathname.length - suffix.length);
-    if (!isId(urlId) || (id !== undefined && id !== urlId)) return undefined;
-    id = urlId;
+    if (url?.origin !== origin || url.search) return undefined;
+    ids.push(path.exec(url.pathname)?.[1]);
   }
-  return isId(id) ? id : undefined;
+  const [id] = ids;
+  return isId(id) && ids.every((other) => other === id) ? id : undefined;
 }
 
 function parseSigningProcess(data: unknown, origin: string): UaePassSigningProcess | undefined {
@@ -175,8 +176,9 @@ function parseSigningProcess(data: unknown, origin: string): UaePassSigningProce
   const pending: unknown[] = data.tasks.pending;
   const tasks = pending.filter((task): task is Record<string, unknown> =>
     isRecord(task) && task.type === 'UserBrowserTask');
-  if (tasks.length !== 1) return undefined;
-  const approvalUrl = parseProviderUrl(tasks[0].url);
+  const [task] = tasks;
+  if (!task || tasks.length !== 1) return undefined;
+  const approvalUrl = parseProviderUrl(task.url);
   if (approvalUrl?.origin !== origin || approvalUrl.pathname !== `${signingPath}/ui`) {
     return undefined;
   }
