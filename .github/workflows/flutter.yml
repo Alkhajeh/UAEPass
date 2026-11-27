@@ -1,54 +1,104 @@
 name: Flutter checks
 
 on:
-  pull_request:
-  push:
-    branches: [main]
   workflow_call:
 
 permissions:
   contents: read
 
-concurrency:
-  group: flutter-checks-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+env:
+  FLUTTER_VERSION: '3.50.1'
 
 jobs:
-  checks:
-    name: ${{ matrix.package }}
+  plugin:
+    name: Plugin
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - package: Plugin
-            directory: packages/flutter
-          - package: Example
-            directory: packages/flutter/example
     defaults:
       run:
-        working-directory: ${{ matrix.directory }}
+        working-directory: packages/flutter
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.50.1'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
       - run: flutter pub get
       - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze --no-pub
       - run: flutter test --no-pub
-      - if: matrix.package == 'Plugin'
-        run: >-
+      - run: >-
           flutter test --no-pub --platform chrome
           test/web_authorization_test.dart test/signing_client_test.dart
-      - if: matrix.package == 'Example'
-        run: flutter test --no-pub --platform chrome test/web_signing_test.dart
-      - if: matrix.package == 'Example'
-        run: >-
+      - run: flutter pub publish --dry-run
+
+  example:
+    name: Example
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: packages/flutter/example
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze --no-pub
+      - run: flutter test --no-pub
+      - run: flutter test --no-pub --platform chrome test/web_signing_test.dart
+      - run: >-
           flutter build web --no-pub
           --dart-define=UAEPASS_WEB_REDIRECT_URI=http://localhost:8000
+
+  android:
+    name: Android build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: packages/flutter/example
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build apk --debug --no-pub
+
+  ios:
+    name: iOS build
+    runs-on: macos-26
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: packages/flutter/example
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build ios --debug --no-codesign --no-pub

@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      flutter: ${{ steps.filter.outputs.flutter }}
+      node: ${{ steps.filter.outputs.node }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - id: filter
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          # Pushes to main run every package. Pull requests run the packages
+          # they change, and workflow changes run everything.
+          if [ "$EVENT_NAME" != pull_request ]; then
+            echo 'flutter=true' >> "$GITHUB_OUTPUT"
+            echo 'node=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # The pull request checkout is a merge commit; its first parent is
+          # the base branch.
+          files="$(git diff --name-only HEAD^1 HEAD)"
+          printf '%s\n' "$files"
+          changed() { grep -Eq "$1" <<< "$files"; }
+          flutter=false
+          node=false
+          if changed '^\.github/'; then flutter=true; node=true; fi
+          if changed '^packages/flutter/'; then flutter=true; fi
+          if changed '^packages/node/'; then node=true; fi
+          echo "flutter=$flutter" >> "$GITHUB_OUTPUT"
+          echo "node=$node" >> "$GITHUB_OUTPUT"
+
+  flutter:
+    needs: changes
+    if: needs.changes.outputs.flutter == 'true'
+    uses: ./.github/workflows/flutter.yml
+
+  node:
+    needs: changes
+    if: needs.changes.outputs.node == 'true'
+    uses: ./.github/workflows/node.yml
+
+  ci-ok:
+    name: ci-ok
+    if: always()
+    needs: [changes, flutter, node]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for result in $RESULTS; do
+            case "$result" in
+              success|skipped) ;;
+              *) exit 1 ;;
+            esac
+          done
