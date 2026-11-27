@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: publish-node
+  cancel-in-progress: false
+
 jobs:
   checks:
     uses: ./.github/workflows/node.yml
@@ -16,6 +20,7 @@ jobs:
     needs: checks
     runs-on: ubuntu-latest
     environment: npm
+    timeout-minutes: 10
     permissions:
       contents: read
       id-token: write
