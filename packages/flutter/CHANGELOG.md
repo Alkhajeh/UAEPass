@@ -1,3 +1,8 @@
+## 0.2.1
+
+- Improve the README and pub.dev Example tab with a bilingual screenshot, minimal mobile and web sign-in examples, and clearer setup checklists.
+- Update the example app to resume a pending signing approval, reset the web signing return on exit, and show hosted signing in Arabic.
+
 ## 0.2.0
 
 - Add the UAE PASS signing approval launcher and official English and Arabic signing buttons for Android, iOS, and web.
