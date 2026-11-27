@@ -24,6 +24,8 @@ npm ci
 npm test
 ```
 
+Pull request CI starts in [ci.yml](.github/workflows/ci.yml). It runs a package's checks when files under that package or `.github/` change, and runs every check on pushes to `main`. The `ci-ok` job is the one required check.
+
 When the optional demo's exchange interface changes, run both sets of checks and verify the exchange end to end. [Staging demo setup](README.md#optional-end-to-end-staging-demo)
 
 ## Integration boundaries
