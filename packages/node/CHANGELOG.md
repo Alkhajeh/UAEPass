@@ -1,3 +1,7 @@
+## Unreleased
+
+- Add English and Arabic locale selection for the UAE PASS hosted signing screens.
+
 ## 0.2.0
 
 - **Breaking change.** Remove `maxPdfBytes` from the signing validation client. Set `maxUploadPdfBytes` on the signing client to control the original upload size. It defaults to 10 MiB and can be raised to 20 MiB. Signed PDFs can grow during signing and long-term validation (LTV).

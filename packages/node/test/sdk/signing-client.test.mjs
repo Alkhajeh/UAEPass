@@ -63,6 +63,7 @@ test('runs the documented qualified PDF signing requests and preserves binary PD
       const form = await request.formData();
       assert.deepEqual([...form.keys()], ['process', 'document']);
       const process = JSON.parse(form.get('process'));
+      assert.deepEqual(process.ui_locales, ['en_US']);
       assert.equal(process.finish_callback_url, config.finishCallbackUrl);
       assert.equal(process.process_type, 'urn:safelayer:eidas:processes:document:sign:esigp');
       assert.deepEqual(process.labels, [['digitalid', 'server', 'qualified']]);
@@ -122,6 +123,30 @@ test('requests the explicit signing level and rejects unsupported levels before 
   for (const signatureLevel of ['auto', '', null]) {
     await assert.rejects(signing.createProcess({ ...createInput, signatureLevel }, accessToken), {
       name: 'TypeError', message: /supported UAE PASS signature level/,
+    });
+  }
+  assert.equal(fetch.mock.callCount(), 2);
+});
+
+test('sets the hosted signing locale while preserving the signature appearance', async (t) => {
+  const requests = [];
+  const fetch = t.mock.method(globalThis, 'fetch', async (_, init) => {
+    requests.push(JSON.parse(init.body.get('process')));
+    return Response.json(processResponse, { status: 201 });
+  });
+  const signing = createUaePassSigningClient(config);
+  const input = {
+    ...createInput,
+    signatureField: { ...createInput.signatureField, appearance: UaePassSignatureAppearance.SignerAndDateTime },
+  };
+  await signing.createProcess({ ...input, locale: 'en' }, accessToken);
+  await signing.createProcess({ ...input, locale: 'ar' }, accessToken);
+  assert.deepEqual(requests.map((request) => request.ui_locales), [['en_US'], ['ar_AE']]);
+  assert.deepEqual(requests[1].signer, requests[0].signer);
+
+  for (const locale of ['ar_AE', 'fr', '', null]) {
+    await assert.rejects(signing.createProcess({ ...input, locale }, accessToken), {
+      name: 'TypeError', message: /supported UAE PASS signing locale/,
     });
   }
   assert.equal(fetch.mock.callCount(), 2);
