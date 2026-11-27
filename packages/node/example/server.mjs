@@ -103,6 +103,11 @@ export async function createExampleServer({
     if (levels.length > 1 || (requestedLevel !== undefined && !signatureLevels.has(requestedLevel))) {
       return json(response, 400, { error: 'invalid_level' });
     }
+    const locales = url.searchParams.getAll('locale');
+    const [requestedLocale] = locales;
+    if (locales.length > 1 || (requestedLocale !== undefined && requestedLocale !== 'en' && requestedLocale !== 'ar')) {
+      return json(response, 400, { error: 'invalid_locale' });
+    }
     let code;
     if (request.headers['content-type'] !== undefined) {
       if (mediaType(request) !== 'application/json') return json(response, 415, { error: 'invalid_authorization' });
@@ -117,13 +122,17 @@ export async function createExampleServer({
     if (requestedLevel !== undefined && requestedLevel !== signatureLevel) {
       return json(response, 409, { error: 'level_conflict' });
     }
+    const locale = transaction?.locale ?? requestedLocale ?? 'en';
+    if (requestedLocale !== undefined && requestedLocale !== locale) {
+      return json(response, 409, { error: 'locale_conflict' });
+    }
     const surface = singleQuery(url, 'return') === 'web' ? 'web' : 'native';
     if (!transaction) {
       // An expired ID stays reserved until its final cleanup completes.
       if (appTransactions.has(transactionId)) return json(response, 404, { error: 'unavailable' });
       if (!code) return json(response, 404, { error: 'authorization_required' });
       if (appTransactions.size >= maxEntries) return json(response, 503, { error: 'unavailable' });
-      transaction = { tokenHash, signatureLevel, surface, expiresAt: Date.now() + sessionLifetimeSeconds * 1000 };
+      transaction = { tokenHash, signatureLevel, locale, surface, expiresAt: Date.now() + sessionLifetimeSeconds * 1000 };
       appTransactions.set(transactionId, transaction);
       authorizeTransaction(transaction, code);
     }
@@ -193,10 +202,11 @@ export async function createExampleServer({
     ['GET ' + routes.root, ({ response, url, session }) => {
       // Form POSTs need the browser's same-origin Origin header.
       response.setHeader('Referrer-Policy', 'same-origin');
-      return homePage(response, session, singleQuery(url, 'notice'));
+      const locale = session?.profile ? session.locale : singleQuery(url, 'locale');
+      return homePage(response, session, singleQuery(url, 'notice'), locale === 'ar' ? 'ar' : 'en');
     }],
 
-    ['POST ' + routes.login, ({ response, id, session }) => {
+    ['POST ' + routes.login, ({ response, url, id, session }) => {
       const job = session?.job;
       if (job?.busy || job?.cleanupPending || ['awaiting', 'approved', 'start-uncertain'].includes(job?.state)) {
         return redirect(response, routes.root);
@@ -205,12 +215,13 @@ export async function createExampleServer({
       if (sessions.size >= maxEntries) return page(response, 503, html`<p>Too many staging sessions. Try again later.</p>`);
       const newId = nonce();
       const state = nonce();
-      sessions.set(newId, { state, expiresAt: Date.now() + authLifetimeSeconds * 1000 });
+      const locale = (singleQuery(url, 'locale') ?? (session?.profile ? session.locale : undefined)) === 'ar' ? 'ar' : 'en';
+      sessions.set(newId, { state, locale, expiresAt: Date.now() + authLifetimeSeconds * 1000 });
       setSessionCookie(response, newId, authLifetimeSeconds);
       const authorize = new URL('/idshub/authorize', stagingOrigin);
       authorize.search = new URLSearchParams({
         client_id: clientId, redirect_uri: origin + routes.callback, response_type: 'code',
-        scope: 'urn:uae:digitalid:profile:general', state, ui_locales: 'en',
+        scope: 'urn:uae:digitalid:profile:general', state, ui_locales: locale,
         acr_values: 'urn:safelayer:tws:policies:authentication:level:low',
       });
       return redirect(response, authorize.href);
@@ -220,11 +231,13 @@ export async function createExampleServer({
       if (!matchingNonce(session?.state, singleQuery(url, 'state'))) {
         return page(response, 403, html`<p>Sign-in could not be correlated.</p>${backLink}`);
       }
+      const { locale } = session;
+      const noticeUrl = (notice) => `${routes.root}?${locale === 'ar' ? 'locale=ar&' : ''}notice=${notice}`;
       const code = singleQuery(url, 'code');
       if (!code || url.searchParams.has('error')) {
         sessions.delete(id);
         const cancellation = !url.searchParams.has('code') && loginCancellationErrors.has(singleQuery(url, 'error'));
-        return redirect(response, routes.root + (cancellation ? '?notice=canceled' : '?notice=error'));
+        return redirect(response, noticeUrl(cancellation ? 'canceled' : 'error'));
       }
       // Consume the state while keeping this session identifiable during the exchange.
       delete session.state;
@@ -237,9 +250,9 @@ export async function createExampleServer({
       // A newer sign-in replaced this session while the exchange was in flight.
       if (sessions.get(id) !== session) return redirect(response, routes.root);
       sessions.delete(id);
-      if (!profile || session.expiresAt <= Date.now()) return redirect(response, routes.root + '?notice=error');
+      if (!profile || session.expiresAt <= Date.now()) return redirect(response, noticeUrl('error'));
       const newId = nonce();
-      sessions.set(newId, { profile: signingProfile(profile), expiresAt: Date.now() + sessionLifetimeSeconds * 1000 });
+      sessions.set(newId, { profile: signingProfile(profile), locale, expiresAt: Date.now() + sessionLifetimeSeconds * 1000 });
       setSessionCookie(response, newId, sessionLifetimeSeconds);
       return redirect(response, routes.root);
     }],

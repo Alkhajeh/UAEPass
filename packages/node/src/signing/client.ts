@@ -58,6 +58,8 @@ export type UaePassSignatureAppearance =
 export interface UaePassCreateSigningProcessInput {
   readonly pdf: Uint8Array;
   readonly filename: string;
+  /** Language of the hosted review and approval screens. Defaults to English. */
+  readonly locale?: 'en' | 'ar';
   /** The UAE PASS signing level to request. Defaults to qualified. */
   readonly signatureLevel?: UaePassSignatureLevel;
   readonly signatureField: {
@@ -247,7 +249,7 @@ function createProcessForm(
   finishCallbackUrl: string,
   maxUploadPdfBytes: number,
 ): FormData {
-  const { pdf, filename, signatureField, signatureLevel = UaePassSignatureLevel.Qualified } = input;
+  const { pdf, filename, locale = 'en', signatureField, signatureLevel = UaePassSignatureLevel.Qualified } = input;
   if (!isPdf(pdf) || !isNonemptyString(filename) || /[\u0000-\u001f\u007f/\\]/.test(filename)) {
     throw new TypeError('Provide PDF bytes and a valid document filename.');
   }
@@ -256,6 +258,9 @@ function createProcessForm(
   }
   if (signatureLevel !== UaePassSignatureLevel.Qualified && signatureLevel !== UaePassSignatureLevel.Advanced) {
     throw new TypeError('Choose a supported UAE PASS signature level.');
+  }
+  if (locale !== 'en' && locale !== 'ar') {
+    throw new TypeError('Choose a supported UAE PASS signing locale.');
   }
   if (!isRecord(signatureField) || !isXmlText(signatureField.name) || /[\u0000-\u001f\u007f]/.test(signatureField.name)) {
     throw new TypeError('Provide a valid signature field name.');
@@ -280,7 +285,7 @@ function createProcessForm(
         },
       },
     },
-    ui_locales: ['en_US'],
+    ui_locales: [locale === 'ar' ? 'ar_AE' : 'en_US'],
     finish_callback_url: finishCallbackUrl,
     views: { document_agreement: { skip_server_id: 'false' } },
     timestamp: { provider_id: 'urn:uae:tws:generation:policy:digitalid' },

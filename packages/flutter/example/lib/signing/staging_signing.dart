@@ -129,11 +129,16 @@ class _StagingSigningState extends State<StagingSigning> {
   }, retry: _retryStart);
 
   Future<void> _authorize() async {
-    final attempt = _attempt ??= SigningTransaction.start(_signatureLevel);
+    final attempt = _attempt ??= SigningTransaction.start(
+      _signatureLevel,
+      locale: Localizations.localeOf(context).languageCode == 'ar'
+          ? 'ar'
+          : 'en',
+    );
     if (kIsWeb) {
       final result =
           widget.webSandbox?.startSigningAuthorization(
-            Localizations.localeOf(context),
+            Locale(attempt.locale),
             attempt,
           ) ??
           const UaePassFailure<void>(UaePassFailureReason.authorizationFailed);
@@ -163,7 +168,9 @@ class _StagingSigningState extends State<StagingSigning> {
   Future<void> _requestSigning({String? code}) async {
     final attempt = _attempt;
     if (attempt == null) return;
-    final query = '?level=${attempt.level.name}${kIsWeb ? '&return=web' : ''}';
+    final query =
+        '?level=${attempt.level.name}&locale=${attempt.locale}'
+        '${kIsWeb ? '&return=web' : ''}';
     final response = await widget.requestBackend(
       '$_app/transactions/${attempt.id}$query',
       method: 'PUT',
@@ -304,7 +311,9 @@ class _StagingSigningState extends State<StagingSigning> {
             'unavailable' ||
             'start-failed' ||
             'level_conflict' ||
-            'invalid_level' => tr(
+            'invalid_level' ||
+            'locale_conflict' ||
+            'invalid_locale' => tr(
               'The request could not be completed. Try again.',
               'تعذّر إكمال الطلب. حاول مرة أخرى.',
             ),

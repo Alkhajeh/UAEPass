@@ -25,6 +25,7 @@ const _attempt = SigningTransaction(
   'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
   'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
   DemoSignatureLevel.advanced,
+  locale: 'ar',
 );
 
 void _setLocation(Uri uri) => web.window.history.replaceState(
@@ -71,6 +72,19 @@ BackendResponse _pendingApproval() => _signingResponse({
 });
 
 void main() {
+  test(
+    'signing transactions restore both current and older stored intents',
+    () {
+      expect(SigningTransaction.decode(_attempt.encode())?.locale, 'ar');
+      final legacy = jsonEncode([
+        _attempt.id,
+        _attempt.token,
+        _attempt.level.name,
+      ]);
+      expect(SigningTransaction.decode(legacy)?.locale, 'en');
+    },
+  );
+
   testWidgets(
     'web signing can reload the return before and after verification',
     (tester) async {
@@ -168,7 +182,7 @@ void main() {
             if (method == 'PUT') {
               expect(
                 path,
-                '/signing/app/transactions/${_attempt.id}?level=advanced&return=web',
+                '/signing/app/transactions/${_attempt.id}?level=advanced&locale=ar&return=web',
               );
               starts++;
               return _pendingApproval();

@@ -120,6 +120,7 @@ if (status === 'finished') {
 
 ### Signing options
 
+- **`locale`** accepts `'en'` (default) or `'ar'` for the UAE PASS hosted document review and approval screens. The SDK sends `en_US` or `ar_AE`, respectively. The visible PDF stamp uses the configured `signatureField.appearance` preset.
 - **`signatureLevel`** accepts `UaePassSignatureLevel.Qualified` (default) or `UaePassSignatureLevel.Advanced`. Qualified requires an SOP3 account with a qualified certificate. Advanced requires an eligible SOP2 or SOP3 account with an advanced certificate and a signing client authorized for Advanced. [UAE PASS signing scenarios](https://docs.uaepass.ae/guidelines/use-cases/standard-digital-signature-scenarios-for-service-provider-use-cases)
 - **`signatureField.name`** is required. Save it with the transaction so you can verify the signature field during finalization.
 - **`signatureField.location`** is optional. Set `page` to a one-based page number or `'last'` and supply `rectangle: { x, y, width, height }` in PDF coordinates. Omit `location` to let UAE PASS place the signature. [UAE PASS signer process options](https://docs.uaepass.ae/feature-guides/signature-integration-guide/digital-signature-single-document/signing-guide/untitled/2.-creating-the-document-signature-process)

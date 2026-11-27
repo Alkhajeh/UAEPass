@@ -257,6 +257,29 @@ test('Flutter can request advanced signing and the transaction keeps its selecte
   assert.equal(signingClient.createProcess.mock.callCount(), 1);
 });
 
+test('Flutter can choose Arabic when starting signing and resume with the original locale', async (t) => {
+  const { send, signingClient, exchangeClient } = await listen(t);
+  const options = appRequest('PUT', transactionHeaders, { code: 'fixture-code' });
+  for (const query of ['?locale=ar_AE', '?locale=', '?locale=ar&locale=en']) {
+    const response = await send(firstTransaction + query, options);
+    assert.equal(response.status, 400);
+    assert.deepEqual(JSON.parse(response.body), { error: 'invalid_locale' });
+  }
+  assert.equal(exchangeClient.getUserInfoFromCode.mock.callCount(), 0);
+  const initial = await send(firstTransaction + '?locale=ar', options);
+  assert.equal(initial.status, 200);
+  assert.equal(signingClient.createProcess.mock.calls[0].arguments[0].locale, 'ar');
+
+  const retry = appRequest('PUT');
+  assert.deepEqual((await send(firstTransaction, retry)).body, initial.body);
+  assert.deepEqual((await send(firstTransaction + '?locale=ar', retry)).body, initial.body);
+  const conflict = await send(firstTransaction + '?locale=en', retry);
+  assert.equal(conflict.status, 409);
+  assert.deepEqual(JSON.parse(conflict.body), { error: 'locale_conflict' });
+  assert.equal(signingClient.createProcess.mock.callCount(), 1);
+  assert.equal(exchangeClient.getUserInfoFromCode.mock.callCount(), 1);
+});
+
 test('one listener serves browser signing and exchanges codes with only a success flag', { timeout: 5000 }, async (t) => {
   const getUserInfoFromCode = t.mock.fn(async (code) => {
     if (code === 'fixture-timeout') throw new UaePassError('timeout', 'token');
@@ -387,6 +410,25 @@ test('the signing demo validates OAuth state, exchanges once, and rejects foreig
   assert.equal(signingClient.createProcess.mock.callCount(), 0);
 });
 
+test('the standalone demo carries Arabic from sign-in to signing and the result page', async (t) => {
+  const { send, signingClient } = await listen(t);
+  assert.match((await send('/signing')).body.toString(), /href="\/signing\?locale=ar"/);
+  const home = await send('/signing?locale=ar');
+  assert.match(home.body.toString(), /<html lang="ar" dir="rtl">/);
+  assert.match(home.body.toString(), /action="\/signing\/login\?locale=ar"/);
+
+  const login = await send('/signing/login?locale=ar', { method: 'POST' });
+  const query = new URL(login.headers.location).searchParams;
+  assert.equal(query.get('ui_locales'), 'ar');
+  const callback = await send(callbackUrl(query.get('state'), 'fixture-code'), { cookie: sessionCookie(login) });
+  const cookie = sessionCookie(callback);
+  assert.match((await send(callback.headers.location, { cookie })).body.toString(), /التوقيع بالهوية الرقمية/);
+  assert.equal((await start(send, cookie)).headers.location, approvalUrl);
+  assert.equal(signingClient.createProcess.mock.calls[0].arguments[0].locale, 'ar');
+  const returned = await finish(send, cookie);
+  assert.match((await send(returned.headers.location, { cookie })).body.toString(), /تم التحقق من المستند الموقّع/);
+});
+
 test('the signing demo distinguishes documented OAuth cancellations from other callback failures', { timeout: 5000 }, async (t) => {
   const { send, authClient } = await listen(t);
   for (const [fields, notice] of [
@@ -454,6 +496,7 @@ test('the signing demo confirms the provider result and publishes only the final
   assert.equal(started.headers.location, approvalUrl);
   const [[input, token]] = signingClient.createProcess.mock.calls.map(({ arguments: args }) => args);
   assert.deepEqual(Buffer.from(input.pdf), review.body);
+  assert.equal(input.locale, 'en');
   assert.equal(input.signatureField.appearance, UaePassSignatureAppearance.SignerAndDateTime);
   assert.equal(token, 'fixture-token');
 

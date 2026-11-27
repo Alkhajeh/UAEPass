@@ -69,6 +69,8 @@ Run the [Node staging server](../../node/example/README.md) with its public sand
 
 For web signing with the bundled server, run the Flutter example at `http://localhost:8000`. The server sends the browser back to that origin after UAE PASS approval.
 
+Choose English or Arabic from the home screen before starting signing. The demo uses that language for UAE PASS document review and approval, and keeps it when you resume the same request. The sample PDF and visible signature labels are in English.
+
 1. Select **Sign a document**, choose **Qualified** (the default) or **Advanced**, then select **Sign with UAE PASS**. The demo starts UAE PASS authorization and sends the resulting code to the backend to create the signing transaction.
 2. In UAE PASS, tap the document link to review the sample PDF. On Android and iOS, use Back to close the viewer and return to the same approval. Complete approval in UAE PASS.
 3. On Android and iOS, the embedded signing window closes at the UAE PASS return and the demo checks the result. On web, the browser returns to the example at `http://localhost:8000`. Use **Check signing result** if the result is still pending.

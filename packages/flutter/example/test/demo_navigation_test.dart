@@ -113,7 +113,10 @@ void main() {
     await tester.tap(find.byType(UaePassSigningButton));
     await tester.pumpAndSettle();
     expect(find.text(backendUnavailableMessage(false)), findsOneWidget);
-    expect(requests.single.path, endsWith('?level=advanced'));
+    expect(Uri.parse(requests.single.path).queryParameters, {
+      'level': 'advanced',
+      'locale': 'en',
+    });
     expect(requests.single.code, 'fixture-code');
     expect(requests.single.token, matches(r'^[a-zA-Z0-9_-]{32}$'));
 

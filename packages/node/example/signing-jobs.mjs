@@ -161,6 +161,7 @@ export function createSigningJobs({ signingClient, validationClient, pdf, direct
         job.process = await signingClient.createProcess({
           ...sampleDocument,
           pdf,
+          locale: owner.locale,
           ...(owner.signatureLevel ? { signatureLevel: owner.signatureLevel } : {}),
         }, token);
       } catch (error) {
