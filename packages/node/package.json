@@ -1,6 +1,6 @@
 {
   "name": "@alkhajeh/uaepass-server",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Server-side UAE PASS authentication and PDF signing clients.",
   "license": "MIT",
   "repository": {

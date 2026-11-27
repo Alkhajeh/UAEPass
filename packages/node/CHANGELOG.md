@@ -1,4 +1,4 @@
-## Unreleased
+## 0.2.1
 
 - Add English and Arabic locale selection for the UAE PASS hosted signing screens.
 
